@@ -382,7 +382,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
         <div><label><input type="checkbox" data-pk="stampa.datum" style="width:auto;transform:scale(1.3);margin-right:8px">Датум на PDF-у</label><br><label><input type="checkbox" data-pk="stampa.oznake" style="width:auto;transform:scale(1.3);margin-right:8px">Ознаке ⚠ на PDF-у</label></div>
       </div></div>
     <div class="setting"><label class="f">Ворд фајл са дописима (одатле помоћник чита допуне родослова)</label><div class="row"><span id="wordName" class="help">није изабран</span> <button class="small" id="wordPick">Изабери фајл</button> <button class="small" id="wordForget">Заборави</button></div><div class="help">Текст који није о родослову помоћник прескаче. Памти се докле је прочитано, па се сваки пут обрађују само нови редови.</div></div>
-    <div class="setting"><label class="f">Извештај за Бориса (разговори, трајања, грешке — без кључева)</label><div class="row"><button class="small" id="reportBtn">📤 Сачувај извештај</button></div></div>
+    <div class="setting"><label class="f">Извештај за Бориса (разговори, трајања, грешке — без кључева)</label><div class="row"><button class="small" id="reportBtn">📤 Сачувај извештај</button> <button class="small" id="reportSend">Пошаљи сада</button></div><div class="help" id="izvStatus"></div><div class="help">Извештаји се после сваког разговора сами шаљу Борису (ако је уписана адреса сервиса). Адреса: <input id="s_izvUrl" style="width:320px;display:inline-block" placeholder="(уграђена)"> лозинка: <input id="s_izvKljuc" type="password" style="width:160px;display:inline-block"></div></div>
     <div class="setting"><label class="f">Жеље за нове могућности (записује их помоћник, за Бориса)</label><div id="zeljeList"></div></div>
     <div class="setting help">Верзија програма: <b id="verLbl"></b> &nbsp; <button class="small" id="checkUpd">Провери да ли постоји нова верзија</button></div>
     <hr>
@@ -450,7 +450,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.11.5';
+const APP_VERSION='2026.10.11.6';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -495,7 +495,7 @@ function commit(label){ // после сваке измене
   setStatus(); if(label) toast(label);
 }
 function pushHistory(){ history.push(JSON.stringify(D)); if(history.length>80) history.shift(); $('#undoBtn').disabled=false; }
-function undo(){ if(!history.length) return; const dn=D.dnevnik, iz=D.izgovor, wp=D.wordPrethodno; D = JSON.parse(history.pop()); D.dnevnik=dn; if(iz) D.izgovor=iz; if(wp) D.wordPrethodno=wp; commit('Поништено'); if(selId && !P.has(selId)) selId=null; renderList(); renderForm(); if(history.length===0) $('#undoBtn').disabled=true; }
+function undo(){ if(!history.length) return; const dn=D.dnevnik, iz=D.izgovor, wp=D.wordPrethodno, dp=D.dnevnikPoslato; D = JSON.parse(history.pop()); D.dnevnik=dn; if(iz) D.izgovor=iz; if(wp) D.wordPrethodno=wp; if(dp) D.dnevnikPoslato=dp; commit('Поништено'); if(selId && !P.has(selId)) selId=null; renderList(); renderForm(); if(history.length===0) $('#undoBtn').disabled=true; }
 function setStatus(){ const s=$('#status'); if(dirty){ s.textContent='Измене нису сачуване у фајл'; s.className='dirty'; } else { s.textContent='Сачувано'; s.className=''; } }
 
 /* ------------------------------------------------ поставке штампе и приказа (чувају се у фајлу) */
@@ -1003,6 +1003,13 @@ async function importWord(voice){ if(wordBusy) return; wordBusy=true; const tell
     addMsg('ai',esc(msg)).appendChild(box); conv.pending=pend; if(voice){ talkState('speak','Говорим…'); await say(msg); } else speak(msg);
   }catch(e){ console.warn(e); logEv('грешка',{gde:'ворд',x:String(e.message||e)}); await tellV('Нешто није у реду при читању Ворда: '+(e.message||e)); }
   finally{ wordBusy=false; } }
+const IZV_URL='https://rodoslov-izvestaji.blmed84.workers.dev', IZV_KLJUC='ThNQwgsR5w7GjXePk31J';
+let izvBusy=false;
+async function sendReport(){ const url=settings.izvUrl||IZV_URL, kljuc=settings.izvKljuc||IZV_KLJUC; if(!url||!/^https:/.test(url)||izvBusy) return false; if(!navigator.onLine) return false;
+  const dn=Array.isArray(D.dnevnik)?D.dnevnik:[]; const from=D.dnevnikPoslato||0; if(from>=dn.length && !D.izvPoslatiZelje) return true; izvBusy=true;
+  const r={verzija:APP_VERSION, kada:stamp(), od:from, podesavanja:Object.fromEntries(Object.entries(settings).filter(([k])=>!/claude|eleven|azureKey|gemini$|voices|izv/.test(k))), postavke:post(), izgovor:izg(), zelje:D.zelje||[], osoba:D.persons.length, izmenjeno:D.izmenjeno, dnevnik:dn.slice(from)};
+  try{ const x=await fetch(url.replace(/\/$/,'')+'/izvestaj',{method:'POST',headers:{'Content-Type':'application/json','X-Kljuc':kljuc},body:JSON.stringify(r)}); if(!x.ok) throw new Error('HTTP '+x.status); D.dnevnikPoslato=dn.length; D.izvPoslatiZelje=false; D.izvPoslednji=stamp(); try{ localStorage.setItem(LS_DATA, JSON.stringify(D)); }catch(e){} izvBusy=false; const e=$('#izvStatus'); if(e) e.textContent='Последњи извештај послат: '+D.izvPoslednji.replace('T',' '); return true; }
+  catch(e){ console.warn('извештај',e); izvBusy=false; return false; } }
 async function saveReport(){ const r={verzija:APP_VERSION, kada:stamp(), podesavanja:Object.fromEntries(Object.entries(settings).filter(([k])=>!/claude|eleven|azureKey|gemini$|voices/.test(k))), postavke:post(), izgovor:izg(), zelje:D.zelje||[], osoba:D.persons.length, dnevnik:D.dnevnik||[]};
   const blob=new Blob([JSON.stringify(r,null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Извештај родослов '+stamp().slice(0,10)+'.json'; a.click(); toast('Извештај је сачуван у „Преузимања“. Пошаљите га Борису.',6000); }
 
@@ -1142,7 +1149,7 @@ function runImmediate(ops){ let changed=false; const after=[];
     if(k==='подешавање'){ const key=o['кључ'], val=o['вредност'];
       if(key==='izgled.slova'){ const m={mala:'17',obicna:'19',velika:'22'}; if(m[val]){ settings.fs=m[val]; document.documentElement.style.setProperty('--fs',settings.fs+'px'); localStorage.setItem(LS_SET,JSON.stringify(settings)); } }
       else if(setPost(key,val)){ changed=true; if(key==='stablo.generacije'){ $('#treeDepth').value=String(val); collapsed.clear(); expanded.clear(); } } }
-    else if(k==='жеља'){ if(!Array.isArray(D.zelje)) D.zelje=[]; D.zelje.push({datum:stamp(), tekst:String(o['текст']||'')}); changed=true; }
+    else if(k==='жеља'){ if(!Array.isArray(D.zelje)) D.zelje=[]; D.zelje.push({datum:stamp(), tekst:String(o['текст']||'')}); D.izvPoslatiZelje=true; changed=true; }
     else if(k==='прикажи') showPerson(o.id, o['где']);
     else if(k==='покажи_дугме') highlight(o['дугме']);
     else if(k==='pdf') after.push(()=>makePdf(o));
@@ -1287,7 +1294,7 @@ async function startConversation(){
     const after=conv.after; conv.after=[]; for(const f of after){ await f(); await sleep(400); }
   }
   stopConversation(); }
-function stopConversation(){ if(conv.on) logEv('крај',{razlog:conv.razlog||'дугме', izjava:conv.n||0, min:Math.round((performance.now()-(conv.t0||performance.now()))/600)/100}); if(dnevnikNew){ dnevnikNew=false; saveQuiet(); } conv.on=false; sayGen++; if(conv.stopListen) conv.stopListen(); if(curAudio){ try{ curAudio.pause(); }catch(e){} } $('#talkBtn').classList.remove('on'); $('#talkBtn').textContent='🎙 Започни разговор'; talkState('','Кликните на зелено дугме и реците шта желите.'); }
+function stopConversation(){ const wasOn=conv.on; if(conv.on) logEv('крај',{razlog:conv.razlog||'дугме', izjava:conv.n||0, min:Math.round((performance.now()-(conv.t0||performance.now()))/600)/100}); if(dnevnikNew){ dnevnikNew=false; saveQuiet(); } if(wasOn) setTimeout(sendReport,1500); conv.on=false; sayGen++; if(conv.stopListen) conv.stopListen(); if(curAudio){ try{ curAudio.pause(); }catch(e){} } $('#talkBtn').classList.remove('on'); $('#talkBtn').textContent='🎙 Започни разговор'; talkState('','Кликните на зелено дугме и реците шта желите.'); }
 
 const PREMADE=[['Никола (српски, мушки)','LmECtQKlHFHPX4psgBT1'],['Sarah','EXAVITQu4vr4xnSDxMaL'],['Laura','FGY2WhTYpPnrIDTdsKH5'],['Charlotte','XB0fDUnXU5powFXDhCwa'],['Alice','Xb7hH8MSUJpSbSDYk0k2'],['Matilda','XrExE9yKIg1WjnnlVkGX'],['Jessica','cgSgspJ2msm6clMCkdW9'],['Lily','pFZP5JQG7iQjIQuC4Bku'],['Aria','9BWtsMINqrJLrRacOk9x'],['Rachel','21m00Tcm4TlvDq8ikWAM'],['Domi','AZnzlk1XvdvUeBnXmlld']];
 const VOW='аеиоу';
@@ -1351,8 +1358,8 @@ function fillPostUI(){ $$('[data-pk]').forEach(el=>{ const v=getPost(el.dataset.
   const z=$('#zeljeList'); const list=Array.isArray(D.zelje)?D.zelje:[]; z.innerHTML=list.length?'':'<div class="help">Нема записаних жеља.</div>';
   list.forEach((w,i)=>{ const r=document.createElement('div'); r.className='zelja'; r.innerHTML=`<span><b>${esc((w.datum||'').slice(0,10))}</b> — ${esc(w.tekst)}</span><button class="small">✕</button>`; r.querySelector('button').onclick=()=>{ D.zelje.splice(i,1); commit(); fillPostUI(); }; z.appendChild(r); }); }
 function bindSettings(){
-  const d=$('#settingsDlg'); const f={s_stt:'stt',s_claude:'claude',s_claudeModel:'claudeModel',s_eleven:'eleven',s_voice:'voice',s_ttsModel:'ttsModel',s_gemini:'gemini',s_geminiModel:'geminiModel',s_speed:'speed',s_stab:'stab',s_pron:'pron',s_ttsEngine:'ttsEngine',s_azureKey:'azureKey',s_azureRegion:'azureRegion',s_azureVoice:'azureVoice',s_azSpeed:'azSpeed',s_azPron:'azPron'};
-  $('#settingsBtn').onclick=()=>{ fillPostUI(); for(const [el,k] of Object.entries(f)) $('#'+el).value=settings[k]??''; fillVoiceSel(); $('#s_speedVal').textContent='×'+(+settings.speed||1).toFixed(2); $('#s_azSpeedVal').textContent='×'+(+settings.azSpeed||1).toFixed(2); showTtsBlocks(); $('#s_tts').checked=!!settings.tts; $('#s_autolekt').checked=!!settings.autolekt; $$('#fsSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===String(settings.fs))); d.showModal(); };
+  const d=$('#settingsDlg'); const f={s_stt:'stt',s_claude:'claude',s_claudeModel:'claudeModel',s_eleven:'eleven',s_voice:'voice',s_ttsModel:'ttsModel',s_gemini:'gemini',s_geminiModel:'geminiModel',s_speed:'speed',s_stab:'stab',s_pron:'pron',s_ttsEngine:'ttsEngine',s_azureKey:'azureKey',s_azureRegion:'azureRegion',s_azureVoice:'azureVoice',s_azSpeed:'azSpeed',s_azPron:'azPron',s_izvUrl:'izvUrl',s_izvKljuc:'izvKljuc'};
+  $('#settingsBtn').onclick=()=>{ fillPostUI(); $('#izvStatus').textContent=D.izvPoslednji?'Последњи извештај послат: '+D.izvPoslednji.replace('T',' '):(IZV_URL||settings.izvUrl?'Још ниједан извештај није послат.':'Слање није подешено.'); for(const [el,k] of Object.entries(f)) $('#'+el).value=settings[k]??''; fillVoiceSel(); $('#s_speedVal').textContent='×'+(+settings.speed||1).toFixed(2); $('#s_azSpeedVal').textContent='×'+(+settings.azSpeed||1).toFixed(2); showTtsBlocks(); $('#s_tts').checked=!!settings.tts; $('#s_autolekt').checked=!!settings.autolekt; $$('#fsSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===String(settings.fs))); d.showModal(); };
   const readSet=()=>{ for(const [el,k] of Object.entries(f)) settings[k]=String($('#'+el).value).trim(); if($('#s_voiceSel').value) settings.voice=$('#s_voiceSel').value; };
   $('#settingsClose').onclick=()=>{ readSet(); settings.tts=$('#s_tts').checked; settings.autolekt=$('#s_autolekt').checked; localStorage.setItem(LS_SET,JSON.stringify(settings)); d.close(); toast('Подешавања сачувана'); };
   $$('#fsSeg button').forEach(b=>b.onclick=()=>{ $$('#fsSeg button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); settings.fs=b.dataset.v; document.documentElement.style.setProperty('--fs',settings.fs+'px'); });
@@ -1373,6 +1380,7 @@ function bindSettings(){
     if(await confirmDlg(`Учитати податке из фајла <b>${esc(f.name)}</b> (${j.persons.length} особа, измењено ${esc(j.izmenjeno||'?')})? Садашњи подаци (${D.persons.length} особа) биће замењени.`)){ pushHistory(); D=j; commit('Подаци учитани'); selId=null; renderList(); renderForm(); d.close(); } e.target.value=''; };
 }
 function init(){
+  setTimeout(sendReport, 4000);
   if(!settings.speedMigr){ if(settings.claudeModel==='claude-sonnet-5-5') settings.claudeModel='claude-haiku-5-5'; settings.speedMigr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(!settings.nikolaMigr){ settings.voice='LmECtQKlHFHPX4psgBT1'; settings.ttsEngine='eleven'; settings.nikolaMigr=true; if(Array.isArray(settings.voices)&&!settings.voices.some(v=>v[1]==='LmECtQKlHFHPX4psgBT1')) settings.voices.unshift(['Никола (српски, мушки)','LmECtQKlHFHPX4psgBT1']); localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(settings.ttsModel==='eleven_multilingual_v2' && !settings.ttsMigrated){ settings.ttsModel='eleven_v3'; settings.ttsMigrated=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
@@ -1381,7 +1389,7 @@ function init(){
   treeRoot=D.koren; textRoot=D.koren; $('#treeDepth').value=String(post().stablo.generacije||'2');
   $$('nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));
   $('#saveBtn').onclick=saveFile; $('#helpBtn').onclick=()=>$('#helpDlg').showModal(); $('#helpClose').onclick=()=>$('#helpDlg').close(); $('#undoBtn').onclick=undo; $('#undoBtn').disabled=true;
-  bindForm(); bindTree(); bindText(); bindMics(); bindSettings(); $('#aiSend').onclick=aiSend; $('#wordBtn').onclick=()=>importWord(false); $('#wordPick').onclick=()=>pickWordFile().catch(()=>{}); $('#wordForget').onclick=async()=>{ try{ await idb.set('word',null); }catch(e){} fillWordUI(); }; $('#reportBtn').onclick=saveReport; fillWordUI(); $('#talkBtn').onclick=startConversation; bindPreview();
+  bindForm(); bindTree(); bindText(); bindMics(); bindSettings(); $('#aiSend').onclick=aiSend; $('#wordBtn').onclick=()=>importWord(false); $('#wordPick').onclick=()=>pickWordFile().catch(()=>{}); $('#wordForget').onclick=async()=>{ try{ await idb.set('word',null); }catch(e){} fillWordUI(); }; $('#reportBtn').onclick=saveReport; $('#reportSend').onclick=async()=>{ D.izvPoslatiZelje=true; toast((await sendReport())?'Извештај је послат.':'Слање није успело (нема адресе или мреже).',4000); }; fillWordUI(); $('#talkBtn').onclick=startConversation; bindPreview();
   $('#updInstall').onclick=installUpdate; $('#updLater').onclick=()=>{ $('#updBanner').style.display='none'; };
   setTimeout(()=>{ if(navigator.onLine!==false) checkUpdate(false); },1500);
   $('#aiInput').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); aiSend(); } });
