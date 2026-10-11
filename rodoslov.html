@@ -467,7 +467,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.11.12';
+const APP_VERSION='2026.10.11.13';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -1665,7 +1665,7 @@ function bindSettings(){
   $('#s_speed').oninput=()=>{ $('#s_speedVal').textContent='×'+(+$('#s_speed').value).toFixed(2); };
   $('#s_azSpeed').oninput=()=>{ $('#s_azSpeedVal').textContent='×'+(+$('#s_azSpeed').value).toFixed(2); };
   $('#s_ttsEngine').onchange=showTtsBlocks;
-  $('#testAzure').onclick=async()=>{ readSet(); if(!settings.azureKey){ toast('Прво упишите Azure кључ.'); return; } $('#testAzure').disabled=true; try{ await speakAzure('Добар дан. Ја сам ваш помоћник за родослов. Данас можемо да допунимо податке о унуцима. Како могу да помогнем?'); }catch(e){ toast('Глас: '+(e.message||e),7000); } $('#testAzure').disabled=false; };
+  $('#testAzure').onclick=async()=>{ readSet(); if(!settings.azureKey && !azWorkerOk){ toast('Прво упишите Azure кључ (или укључите сервис).'); return; } $('#testAzure').disabled=true; try{ await speakAzure('Добар дан. Ја сам ваш помоћник за родослов. Данас можемо да допунимо податке о унуцима. Како могу да помогнем?'); }catch(e){ toast('Глас: '+(e.message||e),7000); } $('#testAzure').disabled=false; };
   $('#loadVoices').onclick=async()=>{ const key=$('#s_eleven').value.trim(); if(!key){ toast('Прво упишите ElevenLabs кључ.'); return; } $('#loadVoices').disabled=true; try{ const v=await loadVoices(key); settings.voices=v; localStorage.setItem(LS_SET,JSON.stringify(settings)); fillVoiceSel(); toast(`Учитано гласова: ${v.length}`); }catch(e){ toast(e.message||String(e),7000); } $('#loadVoices').disabled=false; };
   $$('[data-pk]').forEach(el=>el.addEventListener('change',()=>{ setPost(el.dataset.pk, el.type==='checkbox'?el.checked:el.value); commit(); if(/^knjiga\./.test(el.dataset.pk)){ if($('#textView').classList.contains('active')) renderReport(); if(PV.on){ PV.B=null; renderPreview(); } } }));
   $('#checkUpd').onclick=()=>checkUpdate(true);
