@@ -130,6 +130,18 @@ table.pt td,table.pt th{padding:4px 12px;border-bottom:1px solid #eee5d2;text-al
 table.pt input{width:auto;transform:scale(1.3)}
 .zelja{display:flex;gap:8px;align-items:flex-start;padding:4px 0;border-bottom:1px dashed #eee5d2;font-size:.92em}
 .zelja span{flex:1}
+/* --- преглед штампе --- */
+#prev{display:none;position:fixed;inset:0;z-index:40;background:#5b5b5b;flex-direction:column}
+#prev.on{display:flex}
+#prevBar{display:flex;gap:10px;align-items:center;padding:10px 14px;background:var(--paper);border-bottom:1px solid var(--line);flex-wrap:wrap}
+#prevBar .sp{flex:1}
+#prevBar .big{font-size:1.1em;font-weight:600}
+#prevStage{flex:1;position:relative;overflow:hidden}
+.paper{background:#fff;box-shadow:0 3px 16px rgba(0,0,0,.45);transform-origin:top left;position:absolute;overflow:hidden;box-sizing:border-box;color:#000}
+.paper h2,#printArea .ppage h2{margin:0 0 6px;font-family:"Segoe UI",Arial,sans-serif;color:#000}
+.paper .pnote,#printArea .ppage .pnote{font-size:9pt;color:#555;margin:0 0 6px;font-family:"Segoe UI",Arial,sans-serif}
+#prevTalk{display:flex;align-items:center;gap:8px}
+#prevTalk span.dot{width:18px;height:18px;border-radius:50%;background:#cfc6b4;display:inline-block}
 /* --- дијалози --- */
 dialog{border:1px solid var(--line);border-radius:14px;padding:0;max-width:720px;width:92vw;font-size:var(--fs)}
 dialog::backdrop{background:rgba(40,30,10,.35)}
@@ -250,6 +262,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
       <select id="treeDepth" style="width:auto"><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="99">све</option></select>
       <button id="fitBtn">Уклопи</button><button id="zoomIn">＋</button><button id="zoomOut">－</button>
       <span class="sp"></span>
+      <button id="previewBtn">👁 Преглед</button>
       <button id="printTreeBtn" class="primary">🖨 Штампај / PDF</button>
     </div>
     <div id="treeWrap"><svg id="treeSvg"><g id="treeG"></g></svg></div>
@@ -321,7 +334,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
     <p class="help">Шта тачно пише у „Сажето“ и „Пуно“ подешава се у ⚙ Подешавања, или само реците помоћнику.</p>
     <p class="help">У прозору за штампање који се отвори изаберите штампач, или „Сачувај као PDF“ (Save as PDF) да добијете PDF фајл.</p>
   </div>
-  <div class="df"><button id="printCancel">Одустани</button><button id="printOk" class="primary">Настави</button></div>
+  <div class="df"><button id="printCancel">Одустани</button><button id="printPreview">👁 Преглед</button><button id="printOk" class="primary">Настави</button></div>
 </dialog>
 
 <!-- упутство -->
@@ -355,6 +368,15 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
         <tr><td>Места</td><td><input type="checkbox" data-pk="sazeto.mesta"></td><td><input type="checkbox" data-pk="puno.mesta"></td></tr>
         <tr><td>Напомене</td><td><input type="checkbox" data-pk="sazeto.napomene"></td><td><input type="checkbox" data-pk="puno.napomene"></td></tr></table>
       <div class="grid" style="margin-top:10px">
+        <div><label class="f">Окренутост странице</label><select data-pk="stampa.orijentacija"><option value="polozeno">Положено (водоравно)</option><option value="uspravno">Усправно</option></select></div>
+        <div><label class="f">Стабло на страни</label><select data-pk="stampa.poravnanje"><option value="centar">На средини</option><option value="levo">Лево</option></select></div>
+        <div><label class="f">Слова у кућицама</label><select data-pk="stampa.slova"><option value="mala">Ситнија</option><option value="srednja">Обична</option><option value="velika">Крупнија</option></select></div>
+        <div><label class="f">Размаци</label><select data-pk="stampa.razmak"><option value="zbijeno">Збијено</option><option value="normalno">Обично</option><option value="siroko">Широко</option></select></div>
+        <div><label class="f">Колико нараштаја испод корена</label><select data-pk="stampa.generacije"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="99">све</option></select></div>
+        <div><label class="f">Величина наслова</label><select data-pk="stampa.naslovVelicina"><option value="mali">Мали</option><option value="srednji">Средњи</option><option value="veliki">Велики</option></select></div>
+        <div><label><input type="checkbox" data-pk="stampa.zaglavlje" style="width:auto;transform:scale(1.3);margin-right:8px">Заглавље гране и објашњење</label><br><label><input type="checkbox" data-pk="stampa.brojStrana" style="width:auto;transform:scale(1.3);margin-right:8px">Бројеви страна</label><br><label><input type="checkbox" data-pk="stampa.okviri" style="width:auto;transform:scale(1.3);margin-right:8px">Оквири око кућица</label></div>
+      </div>
+      <div class="grid" style="margin-top:10px">
         <div><label class="f">Наслов на PDF-у (празно = подразумевани)</label><input data-pk="stampa.naslov"></div>
         <div><label><input type="checkbox" data-pk="stampa.datum" style="width:auto;transform:scale(1.3);margin-right:8px">Датум на PDF-у</label><br><label><input type="checkbox" data-pk="stampa.oznake" style="width:auto;transform:scale(1.3);margin-right:8px">Ознаке ⚠ на PDF-у</label></div>
       </div></div>
@@ -363,7 +385,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
     <hr>
     <div class="setting"><label class="f">Диктирање (мотор за препознавање говора)</label>
       <select id="s_stt"><option value="chrome">Chrome (бесплатно, без кључа)</option><option value="scribe">ElevenLabs Scribe</option><option value="gemini">Google Gemini</option></select></div>
-    <div class="setting"><label class="f">Claude API кључ (лектура и помоћник)</label><input id="s_claude" type="password" placeholder="sk-ant-…"><div class="help">Модел: <input id="s_claudeModel" style="width:260px;display:inline-block" value="claude-sonnet-5-5"></div></div>
+    <div class="setting"><label class="f">Claude API кључ (лектура и помоћник)</label><input id="s_claude" type="password" placeholder="sk-ant-…"><div class="help">Модел: <input id="s_claudeModel" style="width:260px;display:inline-block" value="claude-haiku-5-5"> <span class="help">(claude-haiku-5-5 је најбржи; claude-sonnet-5-5 је пажљивији, али спорији)</span></div></div>
     <div class="setting"><label class="f">ElevenLabs API кључ (диктат Scribe и глас)</label><input id="s_eleven" type="password"></div>
     <div class="setting"><label class="f">Сервис за глас помоћнице</label>
       <select id="s_ttsEngine"><option value="eleven">ElevenLabs</option><option value="azure">Microsoft Azure Speech (српски гласови)</option></select></div>
@@ -403,6 +425,17 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
   <div class="df"><button id="settingsClose" class="primary">Затвори</button></div>
 </dialog>
 
+<div id="prev">
+  <div id="prevBar">
+    <span class="big">Преглед штампе</span>
+    <button id="prevPrev">◀ Претходна</button><span id="prevPage" class="big"></span><button id="prevNext">Следећа ▶</button>
+    <span class="seg" id="prevMode"><button data-v="s">Сажето</button><button data-v="p">Пуно</button></span>
+    <span class="sp"></span>
+    <span id="prevTalk"><span class="dot" id="prevDot"></span><span id="prevTalkTxt"></span></span>
+    <button id="prevPrint" class="primary">🖨 Штампај / PDF</button><button id="prevClose">✕ Затвори</button>
+  </div>
+  <div id="prevStage"></div>
+</div>
 <div id="printArea"></div>
 <div id="toast"></div>
 
@@ -412,7 +445,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.11.2';
+const APP_VERSION='2026.10.11.3';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -422,7 +455,7 @@ let P = new Map();     // id -> особа
 let KIDS = new Map();  // id -> [деца]
 let MAR = new Map();   // id -> [бракови]
 let selId = null, dirty = false, history = [];
-let settings = Object.assign({stt:'chrome', claude:'', claudeModel:'claude-sonnet-5-5', eleven:'', voice:'LmECtQKlHFHPX4psgBT1', ttsModel:'eleven_v3', speed:0.9, stab:0.5, voices:null, pron:'', ttsEngine:'eleven', azureKey:'', azureRegion:'westeurope', azureVoice:'sr-RS-SophieNeural', azSpeed:0.95, azPron:'', gemini:'', geminiModel:'gemini-2.5-flash', tts:true, autolekt:true, fs:'19'},
+let settings = Object.assign({stt:'chrome', claude:'', claudeModel:'claude-haiku-5-5', eleven:'', voice:'LmECtQKlHFHPX4psgBT1', ttsModel:'eleven_v3', speed:0.9, stab:0.5, voices:null, pron:'', ttsEngine:'eleven', azureKey:'', azureRegion:'westeurope', azureVoice:'sr-RS-SophieNeural', azSpeed:0.95, azPron:'', gemini:'', geminiModel:'gemini-2.5-flash', tts:true, autolekt:true, fs:'19'},
   JSON.parse(localStorage.getItem(LS_SET) || '{}'));
 
 function toast(t, ms=2600){ const e=$('#toast'); e.textContent=t; e.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>e.classList.remove('show'), ms); }
@@ -461,11 +494,11 @@ function undo(){ if(!history.length) return; D = JSON.parse(history.pop()); comm
 function setStatus(){ const s=$('#status'); if(dirty){ s.textContent='Измене нису сачуване у фајл'; s.className='dirty'; } else { s.textContent='Сачувано'; s.className=''; } }
 
 /* ------------------------------------------------ поставке штампе и приказа (чувају се у фајлу) */
-const POST_DEF={ stampa:{papir:'A4', raspored:'grane', velicina:'srednja', crnobelo:false, naslov:'', datum:true, oznake:true},
+const POST_DEF={ stampa:{papir:'A4', raspored:'grane', velicina:'srednja', crnobelo:false, naslov:'', datum:true, oznake:true, orijentacija:'polozeno', poravnanje:'centar', slova:'srednja', razmak:'normalno', generacije:'99', naslovVelicina:'srednji', zaglavlje:true, brojStrana:true, okviri:true},
   sazeto:{nadimci:true, godine:true, supruznici:true, mesta:false, napomene:false},
   puno:{nadimci:true, godine:true, supruznici:true, mesta:true, napomene:true},
   stablo:{generacije:'2'} };
-const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99']};
+const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99'],'stampa.orijentacija':['polozeno','uspravno'],'stampa.poravnanje':['centar','levo'],'stampa.slova':['mala','srednja','velika'],'stampa.razmak':['zbijeno','normalno','siroko'],'stampa.generacije':['2','3','4','5','6','7','8','99'],'stampa.naslovVelicina':['mali','srednji','veliki'],'stampa.zaglavlje':'bool','stampa.brojStrana':'bool','stampa.okviri':'bool'};
 for(const m of ['sazeto','puno']) for(const f of ['nadimci','godine','supruznici','mesta','napomene']) POST_SCHEMA[m+'.'+f]='bool';
 function post(){ if(!D.postavke) D.postavke={}; for(const k in POST_DEF) D.postavke[k]=Object.assign({},POST_DEF[k],D.postavke[k]||{}); return D.postavke; }
 function setPost(path,val){ const t=POST_SCHEMA[path]; if(!t) return false; if(t==='bool') val=(val===true||val==='true'||val==='да'||val===1); else if(t==='text') val=String(val??'').slice(0,200); else { val=String(val); if(!t.includes(val)) return false; } const [a,b]=path.split('.'); post()[a][b]=val; return true; }
@@ -648,11 +681,12 @@ function cyrToLat(s){ return (s||'').replace(/[Ѐ-ӿ]/g, c=>CYR2LAT[c]||c); }
 
 /* ============================================================ стабло */
 let treeRoot=null, treeMode='s', treeSel=null, collapsed=new Set(), expanded=new Set(), view={x:40,y:40,k:1};
-const NODE_W={s:160,p:230}, FONT=12, LH=15, PAD=6, HGAP=18, VGAP=60;
+const NODE_W={s:160,p:230}, PAD=6; let FONT=12, LH=15, HGAP=18, VGAP=60; let CUT=new Set();
+function kidsP(id){ return CUT.has(id)?[]:children(id); }
 const measureCtx=document.createElement('canvas').getContext('2d'); measureCtx.font=`${FONT}px "Segoe UI",Arial,sans-serif`;
 function wrap(text, maxW, bold=false){ measureCtx.font=`${bold?'bold ':''}${FONT}px "Segoe UI",Arial,sans-serif`; const words=String(text).split(/\s+/).filter(Boolean); const lines=[]; let cur='';
   for(const w of words){ const t=cur?cur+' '+w:w; if(measureCtx.measureText(t).width<=maxW||!cur) cur=t; else { lines.push(cur); cur=w; } } if(cur) lines.push(cur); return lines; }
-function nodeLines(p, mode, width){ const f=fieldsFor(mode); const W=(width||NODE_W[mode])-2*PAD; const L=[];
+function nodeLines(p, mode, width){ const f=fieldsFor(mode); const W=(width||Math.round(NODE_W[mode]*FONT/12))-2*PAD; const L=[];
   for(const l of wrap(nmF(p,f),W,true)) L.push({t:l,c:'nm'});
   const y=yrs(p); if(y&&f.godine) L.push({t:y,c:'mt'});
   if(f.supruznici) for(const {m,s} of spouses(p.id)){ const sp=spouses(p.id).length; let t='∞ '+(sp>1?roman(m.red||1)+' ':'')+nmF(s,f); const sy=yrs(s); if(sy&&f.godine) t+=' ('+sy+')'; if(f.mesta&&s.mesto) t+=', '+s.mesto; for(const l of wrap(t,W)) L.push({t:l,c:'sp'}); }
@@ -660,13 +694,13 @@ function nodeLines(p, mode, width){ const f=fieldsFor(mode); const W=(width||NOD
   if(f.napomene&&p.nap){ const ls=wrap(p.nap,W); const cut=ls.slice(0,3); if(ls.length>3) cut[2]=cut[2].replace(/.{2}$/,'')+'…'; for(const l of cut) L.push({t:l,c:'mt'}); }
   return L; }
 function layout(rootId, mode, maxDepth, coll, exp=new Set()){ // враћа {nodes, edges, w, h}
-  const nodes=[], edges=[]; const W=NODE_W[mode], IND=16;
+  const nodes=[], edges=[]; const W=Math.round(NODE_W[mode]*FONT/12), IND=16;
   const build=(id, depth)=>{ const p=P.get(id); const lines=nodeLines(p,mode); const n={id,p,depth,lines,w:W,h:lines.length*LH+2*PAD+4,kids:[],hidden:0,stacked:false};
-    const ch=children(id); const canExpand=exp.has(id) || (depth<maxDepth && !coll.has(id));
+    const ch=kidsP(id); const canExpand=exp.has(id) || (depth<maxDepth && !coll.has(id));
     if(ch.length && canExpand){
-      if(ch.every(c=>!children(c.id).length)){ n.stacked=true; for(const c of ch){ const ls=nodeLines(c,mode,W-IND); const k={id:c.id,p:c,depth:depth+1,lines:ls,w:W-IND,h:ls.length*LH+2*PAD+4,kids:[],hidden:0,stacked:false,inStack:true}; n.kids.push(k); nodes.push(k); } }
+      if(ch.every(c=>!kidsP(c.id).length)){ n.stacked=true; for(const c of ch){ const ls=nodeLines(c,mode,W-IND); const k={id:c.id,p:c,depth:depth+1,lines:ls,w:W-IND,h:ls.length*LH+2*PAD+4,kids:[],hidden:0,stacked:false,inStack:true}; n.kids.push(k); nodes.push(k); } }
       else for(const c of ch) n.kids.push(build(c.id,depth+1)); }
-    else n.hidden=countDesc(id);
+    else n.hidden=CUT.has(id)?0:countDesc(id);
     nodes.push(n); return n; };
   const root=build(rootId,0);
   const levelH=[]; for(const n of nodes){ if(n.inStack) continue; levelH[n.depth]=Math.max(levelH[n.depth]||0,n.h); }
@@ -721,16 +755,16 @@ function bindTree(){
   $('#printTreeBtn').onclick=()=>{ const d=$('#printDlg'); $$('#printMode button').forEach(x=>x.classList.toggle('on',x.dataset.v===treeMode)); const s=post().stampa; $('#pr_raspored').value=s.raspored; $('#pr_papir').value=s.papir; $('#pr_velicina').value=s.velicina; $('#pr_crnobelo').value=String(!!s.crnobelo); d.showModal(); };
   $$('#printMode button').forEach(b=>b.onclick=()=>{ $$('#printMode button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
   $('#printCancel').onclick=()=>$('#printDlg').close();
-  $('#printOk').onclick=()=>{ $('#printDlg').close(); const mode=$('#printMode .on').dataset.v; setPost('stampa.raspored',$('#pr_raspored').value); setPost('stampa.papir',$('#pr_papir').value); setPost('stampa.velicina',$('#pr_velicina').value); setPost('stampa.crnobelo',$('#pr_crnobelo').value); commit(); printTree(mode); };
+  $('#printOk').onclick=()=>{ $('#printDlg').close(); const mode=$('#printMode .on').dataset.v; setPost('stampa.raspored',$('#pr_raspored').value); setPost('stampa.papir',$('#pr_papir').value); setPost('stampa.velicina',$('#pr_velicina').value); setPost('stampa.crnobelo',$('#pr_crnobelo').value); commit(); printTree(mode, treeRoot); };
 }
 
 /* ------------------------------------------------ штампање стабла */
-function leafCount(id, coll){ const ch=children(id); if(!ch.length||coll.has(id)) return 1; if(ch.every(c=>!children(c.id).length)) return 1; let s=0; for(const c of ch) s+=leafCount(c.id,coll); return s; }
+function leafCount(id, coll){ const ch=kidsP(id); if(!ch.length||coll.has(id)) return 1; if(ch.every(c=>!kidsP(c.id).length)) return 1; let s=0; for(const c of ch) s+=leafCount(c.id,coll); return s; }
 function paginate(rootId, maxLeaves){ // враћа [{root, coll:Set}] – странице
   const pages=[]; const queue=[rootId];
   while(queue.length){ const r=queue.shift();
     const parent=new Map(); const internal=[]; const st=[r];
-    while(st.length){ const x=st.pop(); for(const c of children(x)){ if(parent.has(c.id)) continue; parent.set(c.id,x); if(children(c.id).length) internal.push(c.id); st.push(c.id); } }
+    while(st.length){ const x=st.pop(); for(const c of kidsP(x)){ if(parent.has(c.id)) continue; parent.set(c.id,x); if(kidsP(c.id).length) internal.push(c.id); st.push(c.id); } }
     const coll=new Set(internal);
     while(true){ const frontier=[...coll].filter(x=>!coll.has(parent.get(x)) || parent.get(x)===r); if(!frontier.length) break;
       let best=null, bestLc=Infinity; for(const x of frontier){ const t=new Set(coll); t.delete(x); const lc=leafCount(r,t); if(lc<=maxLeaves && lc<bestLc){ best=x; bestLc=lc; } }
@@ -741,30 +775,71 @@ function paginate(rootId, maxLeaves){ // враћа [{root, coll:Set}] – ст�
   return pages;
 }
 function ensurePrintStyle(){ let style=$('#printStyle'); if(!style){ style=document.createElement('style'); style.id='printStyle'; document.head.appendChild(style); } return style; }
-function printExtraCss(){ const s=post().stampa; let c=''; if(s.crnobelo) c+='#printArea .node rect{fill:#fff!important;stroke:#000!important}#printArea .edge{stroke:#000!important}#printArea text{fill:#000!important}#printArea .doc .yrs,#printArea .doc .warn{color:#000!important}';
-  if(!s.oznake) c+='#printArea .node.prov rect{stroke-dasharray:none!important;stroke:#8c7a5c!important;stroke-width:1.2!important}#printArea .warn{display:none}'; return c; }
+function printExtraCss(){ const s=post().stampa; let c=''; if(s.crnobelo) c+='#printArea .doc .yrs,#printArea .doc .warn{color:#000!important}'; if(!s.oznake) c+='#printArea .warn{display:none}'; return c; }
 function printTitle(){ return post().stampa.naslov || D.naslov || 'Родослов'; }
-function printTree(mode){ mode=mode||treeMode; const s=post().stampa;
-  const area=$('#printArea'); area.innerHTML=''; const style=ensurePrintStyle(); const extra=printExtraCss(); const title=printTitle(); const dateStr=s.datum?' · '+new Date().toLocaleDateString('sr-RS'):'';
-  if(s.raspored==='celo'){ const L=layout(treeRoot, mode, 99, new Set()); const pxW=L.w+40, pxH=L.h+80; let mmW=pxW*25.4/96, mmH=pxH*25.4/96; const MAX=5000; const sc=Math.min(1, MAX/mmW, MAX/mmH); mmW*=sc; mmH*=sc;
-    style.textContent=`@page{size:${mmW.toFixed(1)}mm ${mmH.toFixed(1)}mm;margin:0}`+extra;
-    area.innerHTML=`<div class="ppage" style="width:${mmW}mm;height:${mmH}mm;overflow:hidden"><svg xmlns="http://www.w3.org/2000/svg" width="${mmW}mm" height="${mmH}mm" viewBox="0 0 ${pxW} ${pxH}"><text x="20" y="28" font-size="20" font-weight="bold" font-family="Segoe UI,Arial">${esc(title+dateStr)}</text><g transform="translate(20,50)">${svgTree(L,{mode,noToggle:true,sel:'-'})}</g></svg></div>`; }
-  else { const a3=s.papir==='A3'; const pw=a3?420:297, ph=a3?297:210, m=10; style.textContent=`@page{size:${pw}mm ${ph}mm;margin:${m}mm}`+extra;
-    const ML={A4:{mala:13,srednja:9,velika:6},A3:{mala:19,srednja:13,velika:9}};
-    const availW=(pw-2*m)*96/25.4, availH=(ph-2*m)*96/25.4-60; const maxLeaves=ML[a3?'A3':'A4'][s.velicina]||9;
-    const pages=paginate(treeRoot, maxLeaves); const pageNo=new Map(pages.map((pg,i)=>[pg.root,i+1])); const ref={}; for(const [id,n] of pageNo) ref[id]=n;
-    pages.forEach((pg,i)=>{ const L=layout(pg.root, mode, 99, pg.coll); const sc=Math.min(availW/L.w, availH/L.h, 1.7); const p=P.get(pg.root); const par=P.get(p.otac)||P.get(p.majka);
+function svgStyle(){ const s=post().stampa; let c='.pt .node rect{fill:#fff;stroke:#8c7a5c;stroke-width:1.2}.pt .node.f rect{fill:#fff6f4}.pt .node.m rect{fill:#f4f8ff}.pt .node.prov rect{stroke:#b3261e;stroke-dasharray:4 3}.pt text{font-family:"Segoe UI",Arial,sans-serif;fill:#2b2416}.pt .nm{font-weight:700}.pt .sp{fill:#4a3f2d}.pt .mt{fill:#6b604c}.pt .tg{fill:#7a4a1e;font-weight:700}.pt .edge{fill:none;stroke:#8c7a5c;stroke-width:1.2}.pt .refpage{fill:#7a4a1e;font-style:italic}';
+  if(s.crnobelo) c+='.pt .node rect,.pt .node.f rect,.pt .node.m rect{fill:#fff;stroke:#000}.pt text,.pt .sp,.pt .mt,.pt .tg,.pt .refpage{fill:#000}.pt .edge{stroke:#000}';
+  if(!s.oznake) c+='.pt .node.prov rect{stroke:'+(s.crnobelo?'#000':'#8c7a5c')+';stroke-dasharray:none}';
+  if(!s.okviri) c+='.pt .node rect,.pt .node.prov rect{stroke:none}';
+  return c; }
+function withLook(fn){ const s=post().stampa; const sv=[FONT,LH,HGAP,VGAP]; FONT={mala:10.5,srednja:12,velika:14}[s.slova]||12; LH=Math.round(FONT*1.25); const k={zbijeno:0.6,normalno:1,siroko:1.5}[s.razmak]||1; HGAP=Math.round(18*k); VGAP=Math.round(60*k);
+  try{ return fn(); } finally{ [FONT,LH,HGAP,VGAP]=sv; } }
+function setCut(root, gen){ CUT=new Set(); if(gen==='99'||!gen) return; const g=+gen; const q=[[root,0]]; while(q.length){ const [x,d]=q.shift(); if(d>=g){ CUT.add(x); continue; } for(const c of children(x)) q.push([c.id,d+1]); } }
+function paperPx(){ const s=post().stampa; const a3=s.papir==='A3'; let w=a3?420:297, h=a3?297:210; if(s.orijentacija==='uspravno') [w,h]=[h,w]; const k=96/25.4; return {wmm:w,hmm:h,mmm:10,w:w*k,h:h*k,m:10*k}; }
+function hdrPt(){ return {mali:12,srednji:14,veliki:18}[post().stampa.naslovVelicina]||14; }
+function buildTreePages(mode, rootId){ mode=mode||treeMode; rootId=(rootId&&P.has(rootId))?rootId:(treeRoot&&P.has(treeRoot)?treeRoot:D.koren);
+  return withLook(()=>{ const s=post().stampa; setCut(rootId, s.generacije); try{
+    const title=printTitle(); const dateStr=s.datum?new Date().toLocaleDateString('sr-RS'):''; const pp=paperPx(); const st=svgStyle(); const out={pp, pages:[], celo:false, root:rootId, mode};
+    const names=L=>L.nodes.map(n=>shortName(n.p)+(f=>f.supruznici?spouses(n.id).map(x=>' ∞ '+shortName(x.s)).join(''):'')(fieldsFor(mode)));
+    if(s.raspored==='celo'){ const L=layout(rootId, mode, 99, new Set()); const sc=Math.min(1, 1800/Math.max(L.w,1)*3); const svgW=L.w, svgH=L.h+20;
+      out.celo=true; out.pp={w:L.w+80, h:L.h+140, m:30, wmm:(L.w+80)*25.4/96, hmm:(L.h+140)*25.4/96};
+      out.pages.push({hdrText:title+(dateStr?' · '+dateStr:''), noteText:'', svgW, svgH, svg:`<svg xmlns="http://www.w3.org/2000/svg" class="pt" width="${svgW}" height="${svgH}" viewBox="0 0 ${L.w} ${L.h+20}"><style>${st}</style><g>${svgTree(L,{mode,noToggle:true,sel:'-'})}</g></svg>`, ids:L.nodes.map(n=>n.id), names:names(L)}); return out; }
+    const base={A4:{mala:13,srednja:9,velika:6},A3:{mala:19,srednja:13,velika:9}}[s.papir==='A3'?'A3':'A4']; let maxLeaves=base[s.velicina]||9; if(s.orijentacija==='uspravno') maxLeaves=Math.max(3,Math.round(maxLeaves*0.65));
+    const pages=paginate(rootId, maxLeaves); const pageNo=new Map(pages.map((pg,i)=>[pg.root,i+1])); const ref={}; for(const [id,n] of pageNo) ref[id]=n;
+    const hpx=hdrPt()*96/72; const headH=hpx+10+((s.zaglavlje||s.brojStrana||s.datum)?22:0);
+    const availW=pp.w-2*pp.m, availH=pp.h-2*pp.m-headH;
+    pages.forEach((pg,i)=>{ const L=layout(pg.root, mode, 99, pg.coll); const sc=Math.min(availW/L.w, availH/(L.h+20), 1.7); const p=P.get(pg.root); const par=P.get(p.otac)||P.get(p.majka);
       const refs={...ref}; delete refs[pg.root];
-      const hdr = i===0? `${esc(title)}` : `Грана: ${esc(fullName(p))}${par?` — ${p.pol==='ж'?'кћи':'син'}; отац/мајка: ${esc(shortName(par))}, страна ${pageNo.get(findPageRoot(par.id,pages))}`:''}`;
-      area.insertAdjacentHTML('beforeend', `<div class="ppage"><h2>${hdr}</h2><p class="pnote">Страна ${i+1} од ${pages.length}${dateStr}. ${mode==='s'?'Сажети приказ.':'Пуни приказ.'} Ознака „→ страна N“ значи да се грана наставља на тој страни.</p><svg xmlns="http://www.w3.org/2000/svg" width="${L.w*sc}" height="${L.h*sc+20}" viewBox="0 0 ${L.w} ${L.h+20}"><g>${svgTree(L,{mode,noToggle:true,sel:'-',pageRef:refs})}</g></svg></div>`); }); }
-  setTimeout(()=>window.print(), 100);
-}
+      let hdrText = i===0 ? title : (s.zaglavlje ? `Грана: ${fullName(p)}${par?` — ${p.pol==='ж'?'кћи':'син'}: ${shortName(par)}, страна ${pageNo.get(findPageRoot(par.id,pages))}`:''}` : '');
+      const noteParts=[]; if(s.brojStrana) noteParts.push(`Страна ${i+1} од ${pages.length}`); if(s.datum&&i===0) noteParts.push(dateStr); if(s.zaglavlje) noteParts.push((mode==='s'?'Сажети приказ.':'Пуни приказ.')+' Ознака „→ страна N“ значи да се грана наставља на тој страни.');
+      const svgW=L.w*sc, svgH=(L.h+20)*sc;
+      out.pages.push({hdrText, noteText:noteParts.join(' · '), svgW, svgH, svg:`<svg xmlns="http://www.w3.org/2000/svg" class="pt" width="${svgW}" height="${svgH}" viewBox="0 0 ${L.w} ${L.h+20}"><style>${st}</style><g>${svgTree(L,{mode,noToggle:true,sel:'-',pageRef:refs})}</g></svg>`, ids:L.nodes.map(n=>n.id), names:names(L)}); });
+    return out; } finally { CUT=new Set(); } }); }
+function pageHtml(pg){ const s=post().stampa; const al=s.poravnanje==='levo'?'left':'center';
+  return `<div class="ppage" style="text-align:${al}">${pg.hdrText?`<h2 style="font-size:${hdrPt()}pt;text-align:${al}">${esc(pg.hdrText)}</h2>`:''}${pg.noteText?`<p class="pnote" style="text-align:${al}">${esc(pg.noteText)}</p>`:''}<div style="display:flex;justify-content:${al==='center'?'center':'flex-start'}">${pg.svg}</div></div>`; }
+function printTree(mode, rootId){ const B=buildTreePages(mode, rootId); const style=ensurePrintStyle(); const area=$('#printArea');
+  if(B.celo) style.textContent=`@page{size:${B.pp.wmm.toFixed(1)}mm ${B.pp.hmm.toFixed(1)}mm;margin:8mm}`+printExtraCss();
+  else style.textContent=`@page{size:${B.pp.wmm}mm ${B.pp.hmm}mm;margin:${B.pp.mmm}mm}`+printExtraCss();
+  area.innerHTML=B.pages.map(pageHtml).join(''); setTimeout(()=>window.print(), 100); }
+
+/* ------------------------------------------------ преглед штампе */
+const PV={on:false, page:0, B:null, mode:'s', root:null};
+function openPreview(page, mode, rootId){ PV.on=true; if(mode) PV.mode=mode; else if(!PV.mode) PV.mode=treeMode; if(rootId&&P.has(rootId)) { PV.root=rootId; treeRoot=rootId; } else PV.root=treeRoot||D.koren; if(page) PV.page=Math.max(0,(+page)-1); $('#prev').classList.add('on'); renderPreview(); }
+function closePreview(){ PV.on=false; $('#prev').classList.remove('on'); }
+function renderPreview(){ if(!PV.on) return; PV.B=buildTreePages(PV.mode, PV.root); const B=PV.B; PV.page=Math.min(PV.page, B.pages.length-1); const pg=B.pages[PV.page];
+  $('#prevPage').textContent=`Страна ${PV.page+1} од ${B.pages.length}`; $$('#prevMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===PV.mode));
+  const stage=$('#prevStage'); const r=stage.getBoundingClientRect(); const W=B.pp.w, H=B.pp.h; const k=Math.min((r.width-40)/W,(r.height-40)/H);
+  stage.innerHTML=`<div class="paper" style="width:${W}px;height:${H}px;padding:${B.pp.m}px;left:${(r.width-W*k)/2}px;top:${(r.height-H*k)/2}px;transform:scale(${k})">${pageHtml(pg)}</div>`; }
+function bindPreview(){ $('#prevPrev').onclick=()=>{ if(PV.page>0){ PV.page--; renderPreview(); } }; $('#prevNext').onclick=()=>{ if(PV.B&&PV.page<PV.B.pages.length-1){ PV.page++; renderPreview(); } };
+  $('#prevClose').onclick=closePreview; $('#prevPrint').onclick=()=>printTree(PV.mode, PV.root);
+  $$('#prevMode button').forEach(b=>b.onclick=()=>{ PV.mode=b.dataset.v; renderPreview(); });
+  $('#previewBtn').onclick=()=>openPreview(1, treeMode, treeRoot);
+  $('#printPreview').onclick=()=>{ $('#printDlg').close(); const mode=$('#printMode .on').dataset.v; setPost('stampa.raspored',$('#pr_raspored').value); setPost('stampa.papir',$('#pr_papir').value); setPost('stampa.velicina',$('#pr_velicina').value); setPost('stampa.crnobelo',$('#pr_crnobelo').value); commit(); openPreview(1, mode, treeRoot); };
+  window.addEventListener('resize',()=>{ if(PV.on) renderPreview(); });
+  document.addEventListener('keydown',e=>{ if(!PV.on) return; if(e.key==='ArrowRight') $('#prevNext').click(); if(e.key==='ArrowLeft') $('#prevPrev').click(); if(e.key==='Escape') closePreview(); }); }
+function svgImage(svg){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error('слика')); i.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg); }); }
+async function pageToJpeg(B, idx){ const pg=B.pages[idx]; const s=post().stampa; let W=B.pp.w, H=B.pp.h; const k=Math.min(1.25, 1600/W, 1600/H); const cv=document.createElement('canvas'); cv.width=Math.round(W*k); cv.height=Math.round(H*k);
+  const c=cv.getContext('2d'); c.scale(k,k); c.fillStyle='#fff'; c.fillRect(0,0,W,H); const al=s.poravnanje==='levo'?'left':'center'; const x0=al==='center'?W/2:B.pp.m; c.textAlign=al; let y=B.pp.m;
+  if(pg.hdrText){ const hpx=hdrPt()*96/72; c.font=`bold ${hpx}px "Segoe UI",Arial,sans-serif`; c.fillStyle='#000'; c.fillText(pg.hdrText,x0,y+hpx); y+=hpx+10; }
+  if(pg.noteText){ c.font='12px "Segoe UI",Arial,sans-serif'; c.fillStyle='#555'; c.fillText(pg.noteText,x0,y+12); y+=22; }
+  try{ const img=await svgImage(pg.svg); const dx=al==='center'?(W-pg.svgW)/2:B.pp.m; c.drawImage(img,dx,y,pg.svgW,pg.svgH); }catch(e){ console.warn(e); }
+  return cv.toDataURL('image/jpeg',0.82).split(',')[1]; }
 function printText(){ const s=post().stampa; const fs={mala:'10pt',srednja:'11pt',velika:'13pt'}[s.velicina]||'11pt';
   ensurePrintStyle().textContent=`@page{size:${s.papir==='A3'?'A3':'A4'};margin:18mm 16mm}#printArea .doc{font-size:${fs}!important}`+printExtraCss();
   $('#printArea').innerHTML=reportHtml(textRoot||D.koren,textMode); setTimeout(()=>window.print(),100); }
 function findPageRoot(id, pages){ // страна на којој је особа приказана
   for(const pg of pages) if(pg.root===id) return id;
-  for(const pg of pages){ const st=[pg.root]; while(st.length){ const x=st.pop(); if(x===id) return pg.root; if(pg.coll.has(x)&&x!==pg.root) continue; for(const c of children(x)) st.push(c.id); } } return pages[0].root; }
+  for(const pg of pages){ const st=[pg.root]; while(st.length){ const x=st.pop(); if(x===id) return pg.root; if(pg.coll.has(x)&&x!==pg.root) continue; for(const c of kidsP(x)) st.push(c.id); } } return pages[0].root; }
 
 /* ============================================================ текст (извештај) */
 let textMode='s', textRoot=null;
@@ -828,10 +903,10 @@ async function sttGemini(blob){ const b64=await new Promise((res,rej)=>{ const f
 function knownNames(){ const s=new Set(); for(const p of D.persons){ if(p.ime) s.add(p.ime); if(p.prezime) s.add(p.prezime); if(p.nadimak) s.add(p.nadimak); if(p.mesto) s.add(p.mesto); } return [...s]; }
 
 /* ============================================================ Claude */
-async function claude(system, messages, maxTokens=2000){
+async function claude(system, messages, maxTokens=2000, model){
   if(!settings.claude) throw new Error('Није уписан Claude API кључ (⚙ Подешавања).');
   const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':settings.claude,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:settings.claudeModel, max_tokens:maxTokens, system, messages})});
+    body:JSON.stringify({model:model||settings.claudeModel, max_tokens:maxTokens, system, messages})});
   if(!r.ok){ let t=''; try{ t=(await r.json()).error?.message||''; }catch(e){} throw new Error('Claude '+r.status+' '+t); }
   const j=await r.json(); return (j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join(''); }
 async function lektura(text){
@@ -840,6 +915,8 @@ async function lektura(text){
 
 /* ------------------------------------------------ помоћник */
 let chatHist=[]; // {role, content}
+function connectedSet(){ const set=new Set(); const st=[D.koren]; while(st.length){ const x=st.pop(); if(!x||set.has(x)) continue; set.add(x); for(const k of KIDS.get(x)||[]) st.push(k); } for(const id of [...set]) for(const {s} of spouses(id)) set.add(s.id); return set; }
+function unconnected(){ const c=connectedSet(); return D.persons.filter(p=>!c.has(p.id)); }
 function dataDump(){ const L=[]; for(const p of D.persons){ const sp=spouses(p.id).map(({m,s})=>`${s.id}(${roman(m.red||1)})`).join(','); L.push([p.id, shortName(p), p.pol, yrs(p), p.otac?'о:'+p.otac:'', p.majka?'м:'+p.majka:'', sp?'бр:'+sp:'', p.mesto||'', (p.nap||'').slice(0,80)].join('|')); } return L.join('\n'); }
 const UPUTSTVO=`КАКО СЕ КОРИСТИ ПРОГРАМ (за твоја објашњења; корисник ово не види):
 • Програм има четири дела, дугмад горе у врху: „Особе“, „Стабло“, „Текст“ и „Помоћник“. Горе десно су „Поништи“ (враћа последњу измену), „Сачувај“ (уписује све у фајл), „?“ (кратко упутство) и ⚙ (подешавања — за Бориса).
@@ -849,10 +926,12 @@ const UPUTSTVO=`КАКО СЕ КОРИСТИ ПРОГРАМ (за твоја о�
 • Чување: дугме „Сачувај“ горе десно. Ако горе црвеним пише „Измене нису сачуване у фајл“, треба кликнути „Сачувај“. Ако Chrome пита „Дозволити да сајт мења фајл?“, кликне се „Дозволи“. Кад разговарате, ти чуваш сама после сваке измене.
 • Стабло: кружић са бројем испод особе (нпр. +5) отвара скривене потомке, кружић „−“ их затвара. Точкић миша увећава и умањује, превлачење мишем помера. „Уклопи“ смешта цело стабло на екран. Двоклик на особу отвара њен образац. „Корен“ је особа на врху стабла.
 • PDF и штампа: у делу „Стабло“ (или „Текст“) кликне се „Штампај / PDF“ горе десно, у прозору „Штампање стабла“ кликне се „Настави“. Отвори се Chrome прозор за штампање: десно, код „Одредиште“, треба да пише „Сачувај као PDF“ (ако пише име штампача, кликне се на то и изабере „Сачувај као PDF“), па се кликне плаво дугме „Сачувај“ доле десно; затим се изабере „Радна површина“, упише име фајла и кликне „Сачувај“. За штампу на папиру, код „Одредиште“ се изабере штампач и кликне „Штампај“.
+• Преглед штампе: у делу „Стабло“ дугме „👁 Преглед“ (или у прозору „Штампање стабла“) отвара преко целог екрана стране онакве какве ће бити одштампане; горе су „◀ Претходна“, „Следећа ▶“, „Сажето/Пуно“, „Штампај / PDF“ и „✕ Затвори“. Ти га отвараш операцијом „преглед“.
+• Зашто неке особе нема у PDF-у: (а) особа није повезана са родословом — нема уписаног оца/мајку из родослова (види списак „НЕПОВЕЗАНЕ ОСОБЕ“); (б) штампа се само једна грана (корен није Милош); (в) ограничен је број нараштаја (stampa.generacije); (г) супруге и мужеви нису посебне кућице — пишу се у кућици супружника, па их нема ако је искључено „supruznici“; (д) особа је на некој другој страни (грана се наставља на страни N). Увек прво провери операцијом „провери“.
 • PDF се шаље рођацима као прилог у пошти или Вајберу. Борису се шаље сам фајл програма „Родослов Лакетића“ са радне површине.
 КАКО ОБЈАШЊАВАШ: корисник се слабо сналази на рачунару. Кад пита како се нешто ради, увек прво понуди да ти то урадиш уместо њега (упис, PDF, приказ особе). Ако ипак жели сам, објасни САМО ПРВИ КОРАК, једном или две кратке реченице, и додај измену „покажи_дугме“ да то дугме затрепери на екрану; на крају питај „Јавите ми кад кликнете.“ Кад каже да је готово, дај следећи корак. Никад не набрајај више корака одједном.`;
 function aiSystem(){ return [
- {type:'text', text:`Ти си љубазни помоћник у програму „Родослов породице Лакетић“. Говориш у мушком роду (нпр. „уписао сам“, „променио сам“). Корисник је старији господин који је родослов саставио; разговара с тобом гласом, а твоје одговоре чује изговорене. Обраћај му се са „Ви“, без имена, топло, мирно и кратко: највише две-три кратке реченице. Пиши српском ћирилицом, екавски. Никад не користи техничке изразе ни стране речи. Године пиши цифрама.
+ {type:'text', cache_control:{type:'ephemeral'}, text:`Ти си љубазни помоћник у програму „Родослов породице Лакетић“. Говориш у мушком роду (нпр. „уписао сам“, „променио сам“). Корисник је старији господин који је родослов саставио; разговара с тобом гласом, а твоје одговоре чује изговорене. Обраћај му се са „Ви“, без имена, топло, мирно и кратко: највише две-три кратке реченице. Пиши српском ћирилицом, екавски. Никад не користи техничке изразе ни стране речи. Године пиши цифрама.
 
 Можеш:
 1. Да мењаш родослов (додаш особу, измениш податак, упишеш брак, обришеш). То се изводи тек кад корисник потврди, зато у „порука“ кратко кажи шта ћеш уписати и заврши питањем „Да ли да упишем?“
@@ -885,12 +964,25 @@ function aiSystem(){ return [
 - {"оп":"прикажи","id":"...","где":"особа"|"стабло"}
 - {"оп":"покажи_дугме","дугме":"особе"|"стабло"|"текст"|"помоћник"|"сачувај"|"поништи"|"претрага"|"нова_особа"|"додај_дете"|"додај_брак"|"штампај"|"корен"|"уклопи"|"разговор"}
 - {"оп":"жеља","текст":"кратак опис жеље за Бориса"}
+- {"оп":"преглед","страна":1,"приказ":"сажето"|"пуно","корен":"id или null"} — отвара преглед штампе на екрану (корисник и ти видите исто)
+- {"оп":"погледај","стране":[1,2]} — програм ти пошаље СЛИКЕ тих страна (највише 3) какве ће бити одштампане, са списком особа на свакој; онда одговараш у следећем кораку
+- {"оп":"провери","id":"..."} — програм ти каже да ли је особа у стаблу и PDF-у, на којој страни, а ако није — зашто; онда одговараш у следећем кораку
+- {"оп":"затвори_преглед"}
+
+ИЗГЛЕД ШТАМПЕ И PDF-а — додатни кључеви за „подешавање“:
+  stampa.orijentacija: "polozeno"|"uspravno";  stampa.poravnanje: "centar"|"levo" (стабло и наслов на средини или лево)
+  stampa.slova: "mala"|"srednja"|"velika" (слова у кућицама);  stampa.razmak: "zbijeno"|"normalno"|"siroko" (размаци између кућица)
+  stampa.generacije: "2"…"8" или "99" (колико нараштаја испод корена се штампа);  stampa.naslovVelicina: "mali"|"srednji"|"veliki"
+  stampa.zaglavlje: true/false (ред „Грана: …“ и објашњење на свакој страни);  stampa.brojStrana: true/false;  stampa.okviri: true/false (оквири око кућица)
+  stampa.velicina: "mala"|"srednja"|"velika" — колико кућица стаје на једну страну (ситније = више на страни, мање страна)
+
+КАКО ВОДИШ КОРИСНИКА КРОЗ ИЗРАДУ PDF-а: 1) отвори преглед („преглед“) и реци да на екрану види прву страну; 2) питај шта би желео другачије; 3) кад говори о изгледу („ово горе лево“, „име на средини“, „превише ситно“), прво погледај страну („погледај“) да видиш тачно што и он види, па тек онда предложи и одмах изведи подешавање — преглед се сам освежи — и кратко реци шта се променило и питај да ли је сад добро; 4) кад је задовољан, понуди „pdf“. Скоро свака жеља о изгледу може се остварити подешавањима и избором корена (гране); само ако заиста не може, запиши „жељу“ за Бориса — и тада реци шта си ипак могао да урадиш.
 
 Године само као број („1952“) или празно. Кад корисник каже „умро/умрла“, упиши годину у „smrt“; „неожењен/неудата“ у „nap“. Напомене пиши лепим, кратким српским.
 
 ${UPUTSTVO}`},
  {type:'text', text:`ПОДАЦИ РОДОСЛОВА (ред: id|име „надимак“ презиме|пол|године|о:отац|м:мајка|бр:бракови(редни)|место|напомена):\n${dataDump()}`, cache_control:{type:'ephemeral'}},
- {type:'text', text:`ТРЕНУТНА ПОДЕШАВАЊА: ${JSON.stringify(post())}. Величина слова у програму: ${({'17':'mala','19':'obicna','22':'velika'})[String(settings.fs)]||'obicna'}. Сада је отворен део: ${({personsView:'Особе',treeView:'Стабло',textView:'Текст',aiView:'Помоћник'})[($$('.view.active')[0]||{}).id]||''}.`} ]; }
+ {type:'text', text:`ТРЕНУТНА ПОДЕШАВАЊА: ${JSON.stringify(post())}. ${previewInfo()} НЕПОВЕЗАНЕ ОСОБЕ (нису у стаблу): ${(u=>u.length?u.slice(0,40).map(p=>p.id+' '+shortName(p)+(yrs(p)?' ('+yrs(p)+')':'')).join('; ')+(u.length>40?' …и још '+(u.length-40):''):'нема')(unconnected())}. Величина слова у програму: ${({'17':'mala','19':'obicna','22':'velika'})[String(settings.fs)]||'obicna'}. Сада је отворен део: ${({personsView:'Особе',treeView:'Стабло',textView:'Текст',aiView:'Помоћник'})[($$('.view.active')[0]||{}).id]||''}.`} ]; }
 function addMsg(cls, html){ const d=document.createElement('div'); d.className='msg '+cls; d.innerHTML=html; $('#chat').appendChild(d); $('#chat').scrollTop=1e9; return d; }
 function describeOp(op){ const nm=id=>{ const p=P.get(id); return p?fullName(p):'(непозната особа)'; };
   if(op['оп']==='додај'){ let s=`Додајем: <b>${esc([op.ime,op.nadimak?`„${op.nadimak}“`:'',op.prezime].filter(Boolean).join(' '))}</b>${op.pol==='ж'?' (ж)':' (м)'}${op.rodj||op.smrt?` (${esc(op.rodj||'?')}${op.smrt?'–'+esc(op.smrt):''})`:''}`;
@@ -907,7 +999,23 @@ function applyOps(ops){ pushHistory(); const made=[];
     else if(op['оп']==='брак'&&P.has(op.a)&&P.has(op.b)){ D.marriages.push({id:newId('b'), a:op.a, b:op.b, red:+op.red||1, nap:op.nap||''}); index(); }
     else if(op['оп']==='обриши'&&P.has(op.id)){ const id=op.id; D.persons=D.persons.filter(x=>x.id!==id); D.marriages=D.marriages.filter(m=>m.a!==id&&m.b!==id); for(const x of D.persons){ if(x.otac===id) x.otac=null; if(x.majka===id) x.majka=null; } index(); } }
   commit('Измене изведене'); renderList(); if(made.length) select(made[0]); return made; }
-const IMMEDIATE=new Set(['подешавање','pdf','жеља','прикажи','покажи_дугме']);
+const IMMEDIATE=new Set(['подешавање','pdf','жеља','прикажи','покажи_дугме','преглед','затвори_преглед','погледај','провери']);
+function previewInfo(){ if(!PV.on||!PV.B) return 'Преглед штампе није отворен.'; const pg=PV.B.pages[PV.page]; const r=P.get(PV.B.root);
+  return `ПРЕГЛЕД ШТАМПЕ ЈЕ ОТВОРЕН: страна ${PV.page+1} од ${PV.B.pages.length}, ${PV.mode==='p'?'пуни':'сажети'} приказ, корен: ${r?shortName(r):''}. На тој страни су: ${pg.names.slice(0,60).join('; ')}${pg.names.length>60?' …':''}.`; }
+function checkPerson(id){ const p=P.get(id); if(!p) return `Особа ${id} не постоји.`; const c=connectedSet(); const nm=fullName(p);
+  if(!c.has(id)) return `${nm}: НИЈЕ повезан${p.pol==='ж'?'а':''} са родословом — нема уписаног оца ни мајке који су у стаблу${p.otac||p.majka?' (уписан родитељ ни сам није повезан)':''}. Зато те особе нема ни на екрану ни у PDF-у. Решење: упиши тој особи оца или мајку („измени“ са otac/majka).`;
+  const host = (P.get(id)&&isDescendant(id, D.koren)) ? id : (spouses(id).map(x=>x.s.id).find(x=>isDescendant(x,D.koren)));
+  const B=buildTreePages(PV.on?PV.mode:treeMode, PV.on?PV.B&&PV.B.root:treeRoot); const pi=B.pages.findIndex(pg=>pg.ids.includes(host));
+  let t=`${nm}: повезан${p.pol==='ж'?'а':''} је са родословом`+(host!==id?` (као супружник особе ${shortName(P.get(host))}, пише се у њеној кућици${fieldsFor(B.mode).supruznici?'':' — АЛИ супружници су сада искључени у овом приказу'})`:'')+'. ';
+  if(pi>=0) t+=`У тренутној штампи (корен ${shortName(P.get(B.root))}) налази се на страни ${pi+1} од ${B.pages.length}.`;
+  else { const inBranch=isDescendant(host,B.root); t+= inBranch ? `У тренутној штампи те особе НЕМА јер је ограничен број нараштаја (stampa.generacije=${post().stampa.generacije}).` : `У тренутној штампи те особе НЕМА јер се штампа само грана особе ${shortName(P.get(B.root))}, а она није у тој грани.`; }
+  return t; }
+async function followupContent(ops){ const parts=[]; const txt=[];
+  for(const o of ops){ if(o['оп']==='провери') txt.push(checkPerson(o.id));
+    if(o['оп']==='погледај'){ const B=PV.on&&PV.B?PV.B:buildTreePages(treeMode, treeRoot); let want=(Array.isArray(o['стране'])?o['стране']:[PV.on?PV.page+1:1]).map(Number).filter(n=>n>=1&&n<=B.pages.length).slice(0,3); if(!want.length) want=[1];
+      for(const n of want){ parts.push({type:'text', text:`Страна ${n} од ${B.pages.length}. Особе на страни: ${B.pages[n-1].names.slice(0,60).join('; ')}`}); try{ parts.push({type:'image', source:{type:'base64', media_type:'image/jpeg', data:await pageToJpeg(B,n-1)}}); }catch(e){ console.warn(e); } } } }
+  return [{type:'text', text:'[програм: резултат провере — сада одговори кориснику]'+(txt.length?'\n'+txt.join('\n'):'')}, ...parts]; }
+function stripImages(){ for(const m of chatHist){ if(Array.isArray(m.content)&&m.content.some(c=>c.type==='image')) m.content=m.content.filter(c=>c.type!=='image').map(c=>c.type==='text'?c:{type:'text',text:'[слика стране]'}).concat([{type:'text',text:'[слике страна су биле приказане]'}]); } }
 const BTN_SEL={'особе':'nav button[data-view=personsView]','стабло':'nav button[data-view=treeView]','текст':'nav button[data-view=textView]','помоћник':'nav button[data-view=aiView]','сачувај':'#saveBtn','поништи':'#undoBtn','претрага':'#search','нова_особа':'#newBtn','додај_дете':'#addDete','додај_брак':'#addBrak','штампај':null,'корен':'#rootBtn','уклопи':'#fitBtn','разговор':'#talkBtn'};
 function highlight(name){ let sel=BTN_SEL[name]; if(name==='штампај') sel=$('#textView').classList.contains('active')?'#printTextBtn':'#printTreeBtn';
   if(name==='корен'||name==='уклопи'||name==='штампај'&&sel==='#printTreeBtn'){ if(!$('#treeView').classList.contains('active')) showView('treeView'); }
@@ -916,7 +1024,7 @@ function highlight(name){ let sel=BTN_SEL[name]; if(name==='штампај') sel
 function parseJson(out){ try{ return JSON.parse(out.replace(/^\s*```(?:json)?|```\s*$/g,'').trim()); }catch(e){ const m=/\{[\s\S]*\}/.exec(out); if(m) try{ return JSON.parse(m[0]); }catch(x){} } return null; }
 function trimHist(){ if(chatHist.length>24) chatHist=chatHist.slice(-16); while(chatHist.length&&chatHist[0].role!=='user') chatHist.shift(); }
 function showPerson(id, where){ if(!P.has(id)) return; if(where==='стабло'){ showView('treeView'); treeSel=id; let up=P.get(id), n=0; while(n<2){ const par=P.get(up.otac)||P.get(up.majka); if(!par) break; up=par; n++; } treeRoot=up.id; collapsed.clear(); expanded.clear(); expanded.add(id); renderTree(false,id); } else { showView('personsView'); listFilter=''; $('#search').value=''; renderList(); select(id); } }
-function makePdf(o){ const mode=(o['приказ']==='пуно')?'p':'s'; const root=P.has(o['корен'])?o['корен']:D.koren; if(o['врста']==='текст'){ textRoot=root; textMode=mode; showView('textView'); printText(); } else { treeRoot=root; treeMode=mode; showView('treeView'); printTree(mode); } }
+function makePdf(o){ const mode=(o['приказ']==='пуно')?'p':(o['приказ']==='сажето'?'s':(PV.on?PV.mode:'s')); const root=P.has(o['корен'])?o['корен']:(PV.on&&PV.B?PV.B.root:D.koren); if(o['врста']==='текст'){ textRoot=root; textMode=mode; showView('textView'); printText(); } else { treeRoot=root; treeMode=mode; if(!PV.on) showView('treeView'); printTree(mode, root); } }
 function runImmediate(ops){ let changed=false; const after=[];
   for(const o of ops){ const k=o['оп'];
     if(k==='подешавање'){ const key=o['кључ'], val=o['вредност'];
@@ -925,8 +1033,10 @@ function runImmediate(ops){ let changed=false; const after=[];
     else if(k==='жеља'){ if(!Array.isArray(D.zelje)) D.zelje=[]; D.zelje.push({datum:stamp(), tekst:String(o['текст']||'')}); changed=true; }
     else if(k==='прикажи') showPerson(o.id, o['где']);
     else if(k==='покажи_дугме') highlight(o['дугме']);
-    else if(k==='pdf') after.push(()=>makePdf(o)); }
-  if(changed){ commit(); saveQuiet(); if($('#treeView').classList.contains('active')) renderTree(); if($('#textView').classList.contains('active')) renderReport(); }
+    else if(k==='pdf') after.push(()=>makePdf(o));
+    else if(k==='преглед'){ const mode=o['приказ']==='пуно'?'p':(o['приказ']==='сажето'?'s':null); openPreview(o['страна']||1, mode, o['корен']); }
+    else if(k==='затвори_преглед') closePreview(); }
+  if(changed){ commit(); saveQuiet(); if($('#treeView').classList.contains('active')) renderTree(); if($('#textView').classList.contains('active')) renderReport(); if(PV.on) renderPreview(); }
   return after; }
 async function confirmPending(p){ applyOps(p.ops); if(p.box) p.box.innerHTML='<b>✔ Уписано.</b>'; chatHist.push({role:'user',content:'[програм: измене су изведене]'}); const ok=await saveQuiet(); return ok?'Уписано и сачувано.':'Уписано. Кад завршите, кликните Сачувај горе десно.'; }
 const YES=/^(да|даа|да да|може|можеш|важи|упиши|уради|јесте|тако је|у реду|ок|океј|добро|наравно|потврђујем|хоћу|ајде|упиши то|уради то)(\s|$)/;
@@ -941,14 +1051,24 @@ async function handleUtterance(text, voice){
   if(!settings.claude){ const m='Помоћник још није укључен. У подешавањима треба уписати кључ — то ће урадити Борис.'; addMsg('ai',esc(m)); return m; }
   chatHist.push({role:'user',content:text}); trimHist();
   const filler = voice ? say('Само тренутак.') : null; if(voice) talkState('think','Размишљам…'); const wait=addMsg('sys','Размишљам…');
-  let out; try{ out=await claude(aiSystem(), chatHist, 3000); }catch(e){ wait.remove(); chatHist.pop(); const m='Нешто није у реду са везом. Покушајте поново за минут.'; addMsg('ai',esc(m)+'<br><small>'+esc(e.message||e)+'</small>'); if(filler) await filler; return m; }
-  wait.remove(); chatHist.push({role:'assistant',content:out}); trimHist();
+  let slowT = voice ? setTimeout(()=>{ if(conv.on) say('Још само мало.'); }, 9000) : null;
+  let out, j, msg='', ops=[], rounds=0, after=[]; let talking=null;
+  try{
+    while(true){
+      out=await claude(aiSystem(), chatHist, 1500); chatHist.push({role:'assistant',content:out}); trimHist();
+      j=parseJson(out); if(!j) break; msg=String(j['порука']||''); ops=Array.isArray(j['измене'])?j['измене']:[];
+      const look=ops.filter(o=>o['оп']==='погледај'||o['оп']==='провери');
+      if(look.length && rounds<2){ rounds++; after=after.concat(runImmediate(ops.filter(o=>IMMEDIATE.has(o['оп'])&&!look.includes(o))));
+        if(msg){ addMsg('ai',esc(msg)); if(voice){ if(filler) await filler; talking=say(msg); } }
+        chatHist.push({role:'user',content:await followupContent(look)}); if(talking){ await talking; talking=null; talkState('think','Гледам…'); } continue; }
+      break; }
+  }catch(e){ clearTimeout(slowT); wait.remove(); stripImages(); const m='Нешто није у реду са везом. Покушајте поново за минут.'; addMsg('ai',esc(m)+'<br><small>'+esc(e.message||e)+'</small>'); if(filler) await filler; return m; }
+  clearTimeout(slowT); wait.remove(); stripImages();
   if(filler) await filler;
-  const j=parseJson(out); if(!j){ addMsg('ai',esc(out)); return out; }
-  const msg=String(j['порука']||''); const ops=Array.isArray(j['измене'])?j['измене']:[];
-  const now=ops.filter(o=>IMMEDIATE.has(o['оп'])), conf=ops.filter(o=>!IMMEDIATE.has(o['оп']));
+  if(!j){ addMsg('ai',esc(out)); return out; }
+  const now=ops.filter(o=>IMMEDIATE.has(o['оп'])&&o['оп']!=='погледај'&&o['оп']!=='провери'), conf=ops.filter(o=>!IMMEDIATE.has(o['оп']));
   const d=addMsg('ai',esc(msg));
-  const after=runImmediate(now);
+  after=after.concat(runImmediate(now));
   if(conf.length){ const box=document.createElement('div'); box.className='ops'; box.innerHTML=`<div><b>Предложене измене:</b></div><ul>${conf.map(o=>`<li>${describeOp(o)}</li>`).join('')}</ul><div class="btns"><button class="primary">Да, упиши</button><button>Не</button></div>`;
     const pend={ops:conf, box}; const [y,n]=box.querySelectorAll('button');
     y.onclick=async()=>{ if(conv.pending===pend) conv.pending=null; const r=await confirmPending(pend); addMsg('ai',esc(r)); if(!conv.on) speak(r); };
@@ -962,7 +1082,7 @@ async function aiSend(){
 
 /* ------------------------------------------------ разговор гласом */
 let audioCtx=null;
-function talkState(s, txt){ const d=$('#talkDot'); d.className=s||''; if(txt!=null) $('#talkText').textContent=txt; }
+function talkState(s, txt){ const d=$('#talkDot'); d.className=s||''; if(txt!=null) $('#talkText').textContent=txt; const pd=$('#prevDot'); if(pd){ pd.style.background={listen:'#2f6b3a',speech:'#17a34a',think:'#c98a1a',speak:'#1a4fa3'}[s]||'#cfc6b4'; $('#prevTalkTxt').textContent=conv.on?(txt||''):''; } }
 async function getMic(){ if(!micStream||!micStream.active){ micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}); micStream.getTracks().forEach(t=>t.onended=()=>{ micStream=null; }); } return micStream; }
 async function transcribe(blob){ if(settings.stt==='gemini'&&settings.gemini) return sttGemini(blob); if(settings.eleven) return sttScribe(blob); if(settings.gemini) return sttGemini(blob); throw new Error('нема кључа за препознавање говора'); }
 function useChromeStt(){ return settings.stt==='chrome' || (!settings.eleven && !settings.gemini); }
@@ -988,7 +1108,7 @@ function listenVad(maxWaitMs){ return new Promise(async(res)=>{
     const thr=Math.max(floor*3, 0.015);
     if(rms>thr){ speechMs+=dt; silenceMs=0; if(!started && speechMs>220){ started=true; talkState('speech','Слушам…'); } }
     else if(started) silenceMs+=dt; else speechMs=Math.max(0,speechMs-dt);
-    if(started && (silenceMs>1500 || now-t0>60000)) finish(true);
+    if(started && (silenceMs>1250 || now-t0>60000)) finish(true);
     else if(!started && now-t0>maxWaitMs) finish(false);
   },50);
 });}
@@ -1020,13 +1140,13 @@ async function startConversation(){
     const after=conv.after; conv.after=[]; for(const f of after){ f(); await sleep(400); }
   }
   stopConversation(); }
-function stopConversation(){ conv.on=false; if(conv.stopListen) conv.stopListen(); if(curAudio){ try{ curAudio.pause(); }catch(e){} } $('#talkBtn').classList.remove('on'); $('#talkBtn').textContent='🎙 Започни разговор'; talkState('','Кликните на зелено дугме и реците шта желите.'); }
+function stopConversation(){ conv.on=false; sayGen++; if(conv.stopListen) conv.stopListen(); if(curAudio){ try{ curAudio.pause(); }catch(e){} } $('#talkBtn').classList.remove('on'); $('#talkBtn').textContent='🎙 Започни разговор'; talkState('','Кликните на зелено дугме и реците шта желите.'); }
 
 const PREMADE=[['Никола (српски, мушки)','LmECtQKlHFHPX4psgBT1'],['Sarah','EXAVITQu4vr4xnSDxMaL'],['Laura','FGY2WhTYpPnrIDTdsKH5'],['Charlotte','XB0fDUnXU5powFXDhCwa'],['Alice','Xb7hH8MSUJpSbSDYk0k2'],['Matilda','XrExE9yKIg1WjnnlVkGX'],['Jessica','cgSgspJ2msm6clMCkdW9'],['Lily','pFZP5JQG7iQjIQuC4Bku'],['Aria','9BWtsMINqrJLrRacOk9x'],['Rachel','21m00Tcm4TlvDq8ikWAM'],['Domi','AZnzlk1XvdvUeBnXmlld']];
 function applyPron(text){ const rules=(settings.pron||'').split(/\n/).map(l=>l.split('=')).filter(a=>a.length>=2).map(a=>[a[0].trim(), a.slice(1).join('=').trim()]).filter(a=>a[0]);
   for(const [w,r] of rules){ const re=new RegExp('(^|[^\\p{L}])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=[^\\p{L}]|$)','gu'); text=text.replace(re,(m,pre)=>pre+r); } return text; }
 let curAudio=null;
-async function speak(text){ if(!settings.tts||!text||!ttsReady()) return; try{ await playBlob(await ttsBlob(text)); }catch(e){ console.warn(e); toast('Глас: '+(e.message||e),5000); } }
+async function speak(text){ if(!settings.tts||!text||!ttsReady()) return; await say(text); }
 function xmlEsc(t){ return String(t).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c])); }
 function azureSsml(text){ const rules=(settings.azPron||'').split(/\n/).map(l=>l.split('=')).filter(a=>a.length>=2).map(a=>[a[0].trim(), a.slice(1).join('=').trim()]).filter(a=>a[0]);
   const toks=[]; let t=text;
@@ -1053,8 +1173,11 @@ function ttsReady(){ return settings.ttsEngine==='azure' ? !!settings.azureKey :
 async function ttsBlob(text){ const az=settings.ttsEngine==='azure'; const key=(az?'az|'+settings.azureVoice+'|'+settings.azSpeed:'el|'+settings.voice+'|'+settings.ttsModel+'|'+settings.speed)+'|'+text; if(ttsCache.has(key)) return ttsCache.get(key);
   const b= az ? await azureBlob(text) : await elevenBlob(text); if(text.length<80) ttsCache.set(key,b); return b; }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let sayGen=0;
+function splitSentences(t){ const raw=String(t).split(/(?<=[.!?…])\s+/).filter(Boolean); const out=[]; for(const r of raw){ if(out.length && (out[out.length-1].length<30)) out[out.length-1]+=' '+r; else out.push(r); } return out.slice(0,8); }
 async function say(text){ if(!text) return; if(!ttsReady()){ await sleep(Math.min(5000, 900+45*text.length)); return; }
-  try{ await playBlob(await ttsBlob(text)); }catch(e){ console.warn(e); toast('Глас: '+(e.message||e),5000); await sleep(1200); } }
+  const gen=++sayGen; const parts=splitSentences(text); const blobs=parts.map(p=>ttsBlob(p).catch(e=>{ console.warn(e); toast('Глас: '+(e.message||e),5000); return null; }));
+  for(const b of blobs){ const bb=await b; if(gen!==sayGen) return; if(bb) await playBlob(bb); if(gen!==sayGen) return; } }
 async function loadVoices(key){ const r=await fetch('https://api.elevenlabs.io/v1/voices',{headers:{'xi-api-key':key}}); if(!r.ok){ if(r.status===401) throw new Error('Кључ нема дозволу „Voices: Read“ — укључите је у подешавањима кључа на elevenlabs.io.'); throw new Error('ElevenLabs '+r.status); } const j=await r.json(); return (j.voices||[]).map(v=>[v.name+(v.labels&&v.labels.gender?` (${v.labels.gender==='female'?'ж':'м'}${v.labels.language?', '+v.labels.language:''})`:''), v.voice_id]); }
 function showTtsBlocks(){ const az=$('#s_ttsEngine').value==='azure'; $('#azureBlock').style.display=az?'block':'none'; $('#elevenBlock').style.display=az?'none':'block'; }
 function fillVoiceSel(){ const sel=$('#s_voiceSel'); const list=(settings.voices&&settings.voices.length)?settings.voices:PREMADE; sel.innerHTML=list.map(([n,id])=>`<option value="${id}">${esc(n)}</option>`).join('')+`<option value="">(ручно уписан id)</option>`; sel.value=list.some(x=>x[1]===settings.voice)?settings.voice:''; $('#s_voice').value=settings.voice||''; }
@@ -1087,6 +1210,7 @@ function bindSettings(){
     if(await confirmDlg(`Учитати податке из фајла <b>${esc(f.name)}</b> (${j.persons.length} особа, измењено ${esc(j.izmenjeno||'?')})? Садашњи подаци (${D.persons.length} особа) биће замењени.`)){ pushHistory(); D=j; commit('Подаци учитани'); selId=null; renderList(); renderForm(); d.close(); } e.target.value=''; };
 }
 function init(){
+  if(!settings.speedMigr){ if(settings.claudeModel==='claude-sonnet-5-5') settings.claudeModel='claude-haiku-5-5'; settings.speedMigr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(!settings.nikolaMigr){ settings.voice='LmECtQKlHFHPX4psgBT1'; settings.ttsEngine='eleven'; settings.nikolaMigr=true; if(Array.isArray(settings.voices)&&!settings.voices.some(v=>v[1]==='LmECtQKlHFHPX4psgBT1')) settings.voices.unshift(['Никола (српски, мушки)','LmECtQKlHFHPX4psgBT1']); localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(settings.ttsModel==='eleven_multilingual_v2' && !settings.ttsMigrated){ settings.ttsModel='eleven_v3'; settings.ttsMigrated=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   loadData(); document.documentElement.style.setProperty('--fs',(settings.fs||19)+'px');
@@ -1094,7 +1218,7 @@ function init(){
   treeRoot=D.koren; textRoot=D.koren; $('#treeDepth').value=String(post().stablo.generacije||'2');
   $$('nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));
   $('#saveBtn').onclick=saveFile; $('#helpBtn').onclick=()=>$('#helpDlg').showModal(); $('#helpClose').onclick=()=>$('#helpDlg').close(); $('#undoBtn').onclick=undo; $('#undoBtn').disabled=true;
-  bindForm(); bindTree(); bindText(); bindMics(); bindSettings(); $('#aiSend').onclick=aiSend; $('#talkBtn').onclick=startConversation;
+  bindForm(); bindTree(); bindText(); bindMics(); bindSettings(); $('#aiSend').onclick=aiSend; $('#talkBtn').onclick=startConversation; bindPreview();
   $('#updInstall').onclick=installUpdate; $('#updLater').onclick=()=>{ $('#updBanner').style.display='none'; };
   setTimeout(()=>{ if(navigator.onLine!==false) checkUpdate(false); },1500);
   $('#aiInput').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); aiSend(); } });
