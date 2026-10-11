@@ -450,7 +450,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.11.6';
+const APP_VERSION='2026.10.11.7';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -999,7 +999,8 @@ async function importWord(voice){ if(wordBusy) return; wordBusy=true; const tell
     n.onclick=()=>{ if(conv.pending===pend) conv.pending=null; box.innerHTML='<i>Одбачено.</i>'; };
     const nAdd=ops.filter(o=>o['оп']==='додај').length, nMod=ops.length-nAdd;
     const names=ops.filter(o=>o['оп']==='додај').slice(0,4).map(o=>[o.ime,o.prezime].filter(Boolean).join(' ')).join(', ');
-    const msg=`У Ворду сам нашао ${nAdd?nAdd+(nAdd===1?' нову особу':' нових особа'):''}${nAdd&&nMod?' и ':''}${nMod?nMod+(nMod===1?' допуну':' допуна'):''}${names?': '+names+(nAdd>4?' и други':''):''}. ${chunks.length>6?'Има још, па ћемо после поново. ':''}Списак је на екрану.${note?' '+note.trim():''} Да ли да упишем све?`;
+    const pl=(n,a,b,c)=>{ const d=n%10, h=n%100; return n+' '+(d===1&&h!==11?a:(d>=2&&d<=4&&(h<12||h>14)?b:c)); };
+    const msg=`У Ворду сам нашао ${nAdd?pl(nAdd,'нову особу','нове особе','нових особа'):''}${nAdd&&nMod?' и ':''}${nMod?pl(nMod,'допуну','допуне','допуна'):''}${names?': '+names+(nAdd>4?' и други':''):''}. ${chunks.length>6?'Има још, па ћемо после поново. ':''}Списак је на екрану.${note?' '+note.trim():''} Да ли да упишем све?`;
     addMsg('ai',esc(msg)).appendChild(box); conv.pending=pend; if(voice){ talkState('speak','Говорим…'); await say(msg); } else speak(msg);
   }catch(e){ console.warn(e); logEv('грешка',{gde:'ворд',x:String(e.message||e)}); await tellV('Нешто није у реду при читању Ворда: '+(e.message||e)); }
   finally{ wordBusy=false; } }
