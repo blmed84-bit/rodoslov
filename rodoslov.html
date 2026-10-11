@@ -412,6 +412,8 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
       <div class="help">Најприроднији су гласови изворних говорника: на elevenlabs.io отворите <b>Voice Library</b>, филтрирајте језик <b>Serbian</b>, додајте глас у „My Voices“, па овде кликните „Учитај моје гласове“.</div>
     </div>
     <div class="setting"><label class="f">Google Gemini API кључ (диктат Gemini)</label><input id="s_gemini" type="password"><div class="help">Модел: <input id="s_geminiModel" style="width:260px;display:inline-block" value="gemini-2.5-flash"></div></div>
+    <div class="setting"><label class="f">Колико дуго помоћник чека кад застанете у говору</label><select data-pk="razgovor.pauza" style="width:auto"><option value="1.5">1,5 секунди</option><option value="2">2 секунде</option><option value="2.5">2,5 секунде (препоручено)</option><option value="3">3 секунде</option><option value="3.5">3,5 секунде</option><option value="4">4 секунде</option><option value="5">5 секунди</option></select><div class="help">Ако вас помоћник прекида пре него што завршите реченицу, повећајте. Може и гласом: „Чекај дуже док говорим.“</div></div>
+    <div class="setting"><label class="f">Научени нагласци имена (помоћник их учи кад му кажете да погрешно изговара)</label><div id="izgList"></div></div>
     <div class="setting"><label><input type="checkbox" id="s_tts" style="width:auto;transform:scale(1.3);margin-right:8px">Помоћник говори наглас</label></div>
     <div class="setting"><label><input type="checkbox" id="s_autolekt" style="width:auto;transform:scale(1.3);margin-right:8px">После диктата аутоматски уради лектуру (ако постоји Claude кључ)</label></div>
     <p class="help">Кључеви се чувају само на овом рачунару, не уписују се у фајл родослова.</p>
@@ -445,7 +447,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.11.3';
+const APP_VERSION='2026.10.11.4';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -490,15 +492,15 @@ function commit(label){ // после сваке измене
   setStatus(); if(label) toast(label);
 }
 function pushHistory(){ history.push(JSON.stringify(D)); if(history.length>80) history.shift(); $('#undoBtn').disabled=false; }
-function undo(){ if(!history.length) return; D = JSON.parse(history.pop()); commit('Поништено'); if(selId && !P.has(selId)) selId=null; renderList(); renderForm(); if(history.length===0) $('#undoBtn').disabled=true; }
+function undo(){ if(!history.length) return; const dn=D.dnevnik, iz=D.izgovor; D = JSON.parse(history.pop()); D.dnevnik=dn; if(iz) D.izgovor=iz; commit('Поништено'); if(selId && !P.has(selId)) selId=null; renderList(); renderForm(); if(history.length===0) $('#undoBtn').disabled=true; }
 function setStatus(){ const s=$('#status'); if(dirty){ s.textContent='Измене нису сачуване у фајл'; s.className='dirty'; } else { s.textContent='Сачувано'; s.className=''; } }
 
 /* ------------------------------------------------ поставке штампе и приказа (чувају се у фајлу) */
 const POST_DEF={ stampa:{papir:'A4', raspored:'grane', velicina:'srednja', crnobelo:false, naslov:'', datum:true, oznake:true, orijentacija:'polozeno', poravnanje:'centar', slova:'srednja', razmak:'normalno', generacije:'99', naslovVelicina:'srednji', zaglavlje:true, brojStrana:true, okviri:true},
   sazeto:{nadimci:true, godine:true, supruznici:true, mesta:false, napomene:false},
   puno:{nadimci:true, godine:true, supruznici:true, mesta:true, napomene:true},
-  stablo:{generacije:'2'} };
-const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99'],'stampa.orijentacija':['polozeno','uspravno'],'stampa.poravnanje':['centar','levo'],'stampa.slova':['mala','srednja','velika'],'stampa.razmak':['zbijeno','normalno','siroko'],'stampa.generacije':['2','3','4','5','6','7','8','99'],'stampa.naslovVelicina':['mali','srednji','veliki'],'stampa.zaglavlje':'bool','stampa.brojStrana':'bool','stampa.okviri':'bool'};
+  stablo:{generacije:'2'}, razgovor:{pauza:'2.5'} };
+const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99'],'stampa.orijentacija':['polozeno','uspravno'],'stampa.poravnanje':['centar','levo'],'stampa.slova':['mala','srednja','velika'],'stampa.razmak':['zbijeno','normalno','siroko'],'stampa.generacije':['2','3','4','5','6','7','8','99'],'stampa.naslovVelicina':['mali','srednji','veliki'],'stampa.zaglavlje':'bool','stampa.brojStrana':'bool','stampa.okviri':'bool','razgovor.pauza':['1.5','2','2.5','3','3.5','4','5']};
 for(const m of ['sazeto','puno']) for(const f of ['nadimci','godine','supruznici','mesta','napomene']) POST_SCHEMA[m+'.'+f]='bool';
 function post(){ if(!D.postavke) D.postavke={}; for(const k in POST_DEF) D.postavke[k]=Object.assign({},POST_DEF[k],D.postavke[k]||{}); return D.postavke; }
 function setPost(path,val){ const t=POST_SCHEMA[path]; if(!t) return false; if(t==='bool') val=(val===true||val==='true'||val==='да'||val===1); else if(t==='text') val=String(val??'').slice(0,200); else { val=String(val); if(!t.includes(val)) return false; } const [a,b]=path.split('.'); post()[a][b]=val; return true; }
@@ -923,7 +925,7 @@ const UPUTSTVO=`КАКО СЕ КОРИСТИ ПРОГРАМ (за твоја о�
 • Особе: лево је списак свих особа и поље „Претрага“ изнад њега. Упише се део имена, па се кликне на особу у списку. Десно се отвори њен образац: Име, Надимак, Презиме, Пол, Рођен/а, Умро/ла, Место, Напомена. Шта се упише, памти се одмах.
 • Испод обрасца су делови Родитељи, Бракови и Деца. Дугме „+ Додај дете“ (у делу Деца) пита за име детета, па се дете отвори као нова особа. Дугме „+ Додај брак“ отвара прозор за избор супружника: упише се део имена и кликне „Изабери“, или се доле упише ново име и презиме и кликне „Направи“. На дну обрасца је „Обриши особу“ и „Прикажи у стаблу“.
 • Поред сваког поља је дугме са микрофоном: клик, говори се, па клик на квадратић ■ да се заврши.
-• Чување: дугме „Сачувај“ горе десно. Ако горе црвеним пише „Измене нису сачуване у фајл“, треба кликнути „Сачувај“. Ако Chrome пита „Дозволити да сајт мења фајл?“, кликне се „Дозволи“. Кад разговарате, ти чуваш сама после сваке измене.
+• Чување: дугме „Сачувај“ горе десно. Ако горе црвеним пише „Измене нису сачуване у фајл“, треба кликнути „Сачувај“. Ако Chrome пита „Дозволити да сајт мења фајл?“, кликне се „Дозволи“. Кад разговарате, ти чуваш сам после сваке измене.
 • Стабло: кружић са бројем испод особе (нпр. +5) отвара скривене потомке, кружић „−“ их затвара. Точкић миша увећава и умањује, превлачење мишем помера. „Уклопи“ смешта цело стабло на екран. Двоклик на особу отвара њен образац. „Корен“ је особа на врху стабла.
 • PDF и штампа: у делу „Стабло“ (или „Текст“) кликне се „Штампај / PDF“ горе десно, у прозору „Штампање стабла“ кликне се „Настави“. Отвори се Chrome прозор за штампање: десно, код „Одредиште“, треба да пише „Сачувај као PDF“ (ако пише име штампача, кликне се на то и изабере „Сачувај као PDF“), па се кликне плаво дугме „Сачувај“ доле десно; затим се изабере „Радна површина“, упише име фајла и кликне „Сачувај“. За штампу на папиру, код „Одредиште“ се изабере штампач и кликне „Штампај“.
 • Преглед штампе: у делу „Стабло“ дугме „👁 Преглед“ (или у прозору „Штампање стабла“) отвара преко целог екрана стране онакве какве ће бити одштампане; горе су „◀ Претходна“, „Следећа ▶“, „Сажето/Пуно“, „Штампај / PDF“ и „✕ Затвори“. Ти га отвараш операцијом „преглед“.
@@ -968,6 +970,8 @@ function aiSystem(){ return [
 - {"оп":"погледај","стране":[1,2]} — програм ти пошаље СЛИКЕ тих страна (највише 3) какве ће бити одштампане, са списком особа на свакој; онда одговараш у следећем кораку
 - {"оп":"провери","id":"..."} — програм ти каже да ли је особа у стаблу и PDF-у, на којој страни, а ако није — зашто; онда одговараш у следећем кораку
 - {"оп":"затвори_преглед"}
+- {"оп":"научи_изговор","реч":"Миладин","слог":null} — кад корисник каже да погрешно изговараш неко име или реч (нагласак), или хоће да те научи. Програм после твоје поруке сам води разговор: замоли га да изговори реч, сам чује нагласак, изговори реч и пита „Да ли је овако?“. Ако корисник већ каже на ком је слогу нагласак („на другом слогу“), упиши „слог“: 2 (последњи = -1), иначе null. Реч пиши у основном облику (номинатив), једну реч. Твоја порука тада је кратка, нпр. „Добро, научите ме.“
+- {"оп":"подешавање","кључ":"razgovor.pauza","вредност":"3"} — колико секунди тишине чекаш пре него што одговориш ("1.5"…"5"). Ако корисник каже да га прекидаш или да не стигне да заврши, повећај за 1 („Чекаћу дуже.“).
 
 ИЗГЛЕД ШТАМПЕ И PDF-а — додатни кључеви за „подешавање“:
   stampa.orijentacija: "polozeno"|"uspravno";  stampa.poravnanje: "centar"|"levo" (стабло и наслов на средини или лево)
@@ -983,7 +987,10 @@ function aiSystem(){ return [
 ${UPUTSTVO}`},
  {type:'text', text:`ПОДАЦИ РОДОСЛОВА (ред: id|име „надимак“ презиме|пол|године|о:отац|м:мајка|бр:бракови(редни)|место|напомена):\n${dataDump()}`, cache_control:{type:'ephemeral'}},
  {type:'text', text:`ТРЕНУТНА ПОДЕШАВАЊА: ${JSON.stringify(post())}. ${previewInfo()} НЕПОВЕЗАНЕ ОСОБЕ (нису у стаблу): ${(u=>u.length?u.slice(0,40).map(p=>p.id+' '+shortName(p)+(yrs(p)?' ('+yrs(p)+')':'')).join('; ')+(u.length>40?' …и још '+(u.length-40):''):'нема')(unconnected())}. Величина слова у програму: ${({'17':'mala','19':'obicna','22':'velika'})[String(settings.fs)]||'obicna'}. Сада је отворен део: ${({personsView:'Особе',treeView:'Стабло',textView:'Текст',aiView:'Помоћник'})[($$('.view.active')[0]||{}).id]||''}.`} ]; }
-function addMsg(cls, html){ const d=document.createElement('div'); d.className='msg '+cls; d.innerHTML=html; $('#chat').appendChild(d); $('#chat').scrollTop=1e9; return d; }
+let lastLat=0;
+function logConv(k, html){ if(!Array.isArray(D.dnevnik)) D.dnevnik=[]; const x=String(html).replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').trim(); if(!x) return; const e={t:stamp(), k, x:x.slice(0,1500)}; if(k==='п'&&lastLat){ e.ms=lastLat; lastLat=0; } D.dnevnik.push(e); if(D.dnevnik.length>3000) D.dnevnik=D.dnevnik.slice(-2500); dnevnikNew=true; try{ localStorage.setItem(LS_DATA, JSON.stringify(D)); }catch(err){} }
+let dnevnikNew=false;
+function addMsg(cls, html){ if(cls==='me') logConv('о',html); else if(cls==='ai') logConv('п',html); const d=document.createElement('div'); d.className='msg '+cls; d.innerHTML=html; $('#chat').appendChild(d); $('#chat').scrollTop=1e9; return d; }
 function describeOp(op){ const nm=id=>{ const p=P.get(id); return p?fullName(p):'(непозната особа)'; };
   if(op['оп']==='додај'){ let s=`Додајем: <b>${esc([op.ime,op.nadimak?`„${op.nadimak}“`:'',op.prezime].filter(Boolean).join(' '))}</b>${op.pol==='ж'?' (ж)':' (м)'}${op.rodj||op.smrt?` (${esc(op.rodj||'?')}${op.smrt?'–'+esc(op.smrt):''})`:''}`;
     if(op.otac) s+=`, отац: ${nm(op.otac)}`; if(op.majka) s+=`, мајка: ${nm(op.majka)}`; if(op.brak&&op.brak.sa) s+=`, у браку са: ${nm(op.brak.sa)}`; if(op.mesto) s+=`, место: ${esc(op.mesto)}`; if(op.nap) s+=`, напомена: ${esc(op.nap)}`; return s; }
@@ -999,7 +1006,7 @@ function applyOps(ops){ pushHistory(); const made=[];
     else if(op['оп']==='брак'&&P.has(op.a)&&P.has(op.b)){ D.marriages.push({id:newId('b'), a:op.a, b:op.b, red:+op.red||1, nap:op.nap||''}); index(); }
     else if(op['оп']==='обриши'&&P.has(op.id)){ const id=op.id; D.persons=D.persons.filter(x=>x.id!==id); D.marriages=D.marriages.filter(m=>m.a!==id&&m.b!==id); for(const x of D.persons){ if(x.otac===id) x.otac=null; if(x.majka===id) x.majka=null; } index(); } }
   commit('Измене изведене'); renderList(); if(made.length) select(made[0]); return made; }
-const IMMEDIATE=new Set(['подешавање','pdf','жеља','прикажи','покажи_дугме','преглед','затвори_преглед','погледај','провери']);
+const IMMEDIATE=new Set(['научи_изговор','подешавање','pdf','жеља','прикажи','покажи_дугме','преглед','затвори_преглед','погледај','провери']);
 function previewInfo(){ if(!PV.on||!PV.B) return 'Преглед штампе није отворен.'; const pg=PV.B.pages[PV.page]; const r=P.get(PV.B.root);
   return `ПРЕГЛЕД ШТАМПЕ ЈЕ ОТВОРЕН: страна ${PV.page+1} од ${PV.B.pages.length}, ${PV.mode==='p'?'пуни':'сажети'} приказ, корен: ${r?shortName(r):''}. На тој страни су: ${pg.names.slice(0,60).join('; ')}${pg.names.length>60?' …':''}.`; }
 function checkPerson(id){ const p=P.get(id); if(!p) return `Особа ${id} не постоји.`; const c=connectedSet(); const nm=fullName(p);
@@ -1035,7 +1042,8 @@ function runImmediate(ops){ let changed=false; const after=[];
     else if(k==='покажи_дугме') highlight(o['дугме']);
     else if(k==='pdf') after.push(()=>makePdf(o));
     else if(k==='преглед'){ const mode=o['приказ']==='пуно'?'p':(o['приказ']==='сажето'?'s':null); openPreview(o['страна']||1, mode, o['корен']); }
-    else if(k==='затвори_преглед') closePreview(); }
+    else if(k==='затвори_преглед') closePreview();
+    else if(k==='научи_изговор') after.push(()=>learnPron(o['реч'], o['слог'])); }
   if(changed){ commit(); saveQuiet(); if($('#treeView').classList.contains('active')) renderTree(); if($('#textView').classList.contains('active')) renderReport(); if(PV.on) renderPreview(); }
   return after; }
 async function confirmPending(p){ applyOps(p.ops); if(p.box) p.box.innerHTML='<b>✔ Уписано.</b>'; chatHist.push({role:'user',content:'[програм: измене су изведене]'}); const ok=await saveQuiet(); return ok?'Уписано и сачувано.':'Уписано. Кад завршите, кликните Сачувај горе десно.'; }
@@ -1049,7 +1057,7 @@ async function handleUtterance(text, voice){
     if(pend.box) pend.box.innerHTML='<i>Одбачено.</i>';
     if(NO.test(t) && words<=3){ chatHist.push({role:'user',content:'[програм: корисник је одбио предложене измене]'}); return 'Добро, ништа нисам мењао. Шта желите?'; } }
   if(!settings.claude){ const m='Помоћник још није укључен. У подешавањима треба уписати кључ — то ће урадити Борис.'; addMsg('ai',esc(m)); return m; }
-  chatHist.push({role:'user',content:text}); trimHist();
+  chatHist.push({role:'user',content:text}); trimHist(); const tStart=performance.now();
   const filler = voice ? say('Само тренутак.') : null; if(voice) talkState('think','Размишљам…'); const wait=addMsg('sys','Размишљам…');
   let slowT = voice ? setTimeout(()=>{ if(conv.on) say('Још само мало.'); }, 9000) : null;
   let out, j, msg='', ops=[], rounds=0, after=[]; let talking=null;
@@ -1063,7 +1071,7 @@ async function handleUtterance(text, voice){
         chatHist.push({role:'user',content:await followupContent(look)}); if(talking){ await talking; talking=null; talkState('think','Гледам…'); } continue; }
       break; }
   }catch(e){ clearTimeout(slowT); wait.remove(); stripImages(); const m='Нешто није у реду са везом. Покушајте поново за минут.'; addMsg('ai',esc(m)+'<br><small>'+esc(e.message||e)+'</small>'); if(filler) await filler; return m; }
-  clearTimeout(slowT); wait.remove(); stripImages();
+  clearTimeout(slowT); wait.remove(); stripImages(); lastLat=Math.round(performance.now()-tStart);
   if(filler) await filler;
   if(!j){ addMsg('ai',esc(out)); return out; }
   const now=ops.filter(o=>IMMEDIATE.has(o['оп'])&&o['оп']!=='погледај'&&o['оп']!=='провери'), conf=ops.filter(o=>!IMMEDIATE.has(o['оп']));
@@ -1087,20 +1095,22 @@ async function getMic(){ if(!micStream||!micStream.active){ micStream=await navi
 async function transcribe(blob){ if(settings.stt==='gemini'&&settings.gemini) return sttGemini(blob); if(settings.eleven) return sttScribe(blob); if(settings.gemini) return sttGemini(blob); throw new Error('нема кључа за препознавање говора'); }
 function useChromeStt(){ return settings.stt==='chrome' || (!settings.eleven && !settings.gemini); }
 function listenChrome(maxWaitMs){ return new Promise(res=>{ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR){ res(''); return; }
-  const r=new SR(); r.lang='sr-RS'; r.interimResults=false; r.continuous=false; let txt=''; let fin=false; const done=()=>{ if(fin) return; fin=true; clearTimeout(to); conv.stopListen=null; res(txt); };
-  r.onresult=e=>{ for(let i=e.resultIndex;i<e.results.length;i++) if(e.results[i].isFinal) txt+=(txt?' ':'')+e.results[i][0].transcript; };
-  r.onspeechstart=()=>talkState('speech','Слушам…'); r.onerror=()=>{}; r.onend=done;
-  const to=setTimeout(()=>{ try{ r.stop(); }catch(e){} },maxWaitMs);
+  const r=new SR(); r.lang='sr-RS'; r.interimResults=true; r.continuous=true; let txt=''; let fin=false; let heard=false, lastAct=performance.now(); const PAUSE=pauseMs(); const t0=performance.now();
+  const done=()=>{ if(fin) return; fin=true; clearInterval(iv); conv.stopListen=null; res(txt); };
+  r.onresult=e=>{ heard=true; lastAct=performance.now(); for(let i=e.resultIndex;i<e.results.length;i++) if(e.results[i].isFinal) txt+=(txt?' ':'')+e.results[i][0].transcript; };
+  r.onspeechstart=()=>{ heard=true; lastAct=performance.now(); talkState('speech','Слушам…'); }; r.onerror=()=>{}; r.onend=done;
+  const iv=setInterval(()=>{ const now=performance.now(); if((heard && now-lastAct>PAUSE) || (!heard && now-t0>maxWaitMs) || now-t0>90000){ clearInterval(iv); try{ r.stop(); }catch(e){} } },100);
   conv.stopListen=()=>{ try{ r.abort(); }catch(e){} done(); }; try{ r.start(); }catch(e){ done(); } }); }
-function listenVad(maxWaitMs){ return new Promise(async(res)=>{
-  let stream; try{ stream=await getMic(); }catch(e){ toast('Микрофон није доступан: '+(e.message||e),6000); res(null); return; }
+function pauseMs(){ return Math.round((+post().razgovor.pauza||2.5)*1000); }
+function listenVad(maxWaitMs, raw){ return new Promise(async(res)=>{
+  let stream; try{ stream=await getMic(); }catch(e){ toast('Микрофон није доступан: '+(e.message||e),6000); res(raw?null:''); return; }
   if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended'){ try{ await audioCtx.resume(); }catch(e){} }
   const src=audioCtx.createMediaStreamSource(stream); const an=audioCtx.createAnalyser(); an.fftSize=1024; src.connect(an); const buf=new Float32Array(an.fftSize);
   const rec=new MediaRecorder(stream,{mimeType:'audio/webm'}); const chunks=[]; rec.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
-  const calib=[]; let floor=0.008, started=false, speechMs=0, silenceMs=0, finished=false; const t0=performance.now(); let last=t0;
+  const PAUSE=pauseMs(); const calib=[]; let floor=0.008, started=false, speechMs=0, silenceMs=0, finished=false; const t0=performance.now(); let last=t0;
   const finish=(ok)=>{ if(finished) return; finished=true; clearInterval(timer); try{ src.disconnect(); }catch(e){} conv.stopListen=null;
-    rec.onstop=async()=>{ if(!ok){ res(''); return; } const blob=new Blob(chunks,{type:'audio/webm'}); talkState('think','Препознајем…'); try{ res(await transcribe(blob)); }catch(e){ console.warn(e); toast('Препознавање говора: '+(e.message||e),6000); res(''); } };
-    try{ rec.stop(); }catch(e){ res(''); } };
+    rec.onstop=async()=>{ if(!ok){ res(raw?null:''); return; } const blob=new Blob(chunks,{type:'audio/webm'}); if(raw){ res(blob); return; } talkState('think','Препознајем…'); try{ res(await transcribe(blob)); }catch(e){ console.warn(e); toast('Препознавање говора: '+(e.message||e),6000); res(''); } };
+    try{ rec.stop(); }catch(e){ res(raw?null:''); } };
   conv.stopListen=()=>finish(false);
   rec.start(250);
   const timer=setInterval(()=>{ an.getFloatTimeDomainData(buf); let q=0; for(let i=0;i<buf.length;i++) q+=buf[i]*buf[i]; const rms=Math.sqrt(q/buf.length); const now=performance.now(), dt=now-last; last=now;
@@ -1108,11 +1118,40 @@ function listenVad(maxWaitMs){ return new Promise(async(res)=>{
     const thr=Math.max(floor*3, 0.015);
     if(rms>thr){ speechMs+=dt; silenceMs=0; if(!started && speechMs>220){ started=true; talkState('speech','Слушам…'); } }
     else if(started) silenceMs+=dt; else speechMs=Math.max(0,speechMs-dt);
-    if(started && (silenceMs>1250 || now-t0>60000)) finish(true);
+    if(started && (silenceMs>PAUSE || now-t0>90000)) finish(true);
     else if(!started && now-t0>maxWaitMs) finish(false);
   },50);
 });}
 async function listenOnce(maxWaitMs=40000){ return useChromeStt() ? listenChrome(maxWaitMs) : listenVad(maxWaitMs); }
+function ordinal(t){ t=' '+norm(t).replace(/[.,!?…;:"„“]/g,' ')+' ';
+  const M=[[/\s(последњ|задњ)/,-1],[/\s(прв|један|једном|1\s)/,1],[/\s(друг|два|2\s)/,2],[/\s(трећ|три|3\s)/,3],[/\s(четврт|четири|4\s)/,4],[/\s(пет|5\s)/,5]];
+  for(const [re,n] of M) if(re.test(t)) return n; return 0; }
+async function geminiStress(blob, word, n){ const b64=await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result.split(',')[1]); fr.onerror=rej; fr.readAsDataURL(blob); });
+  const body={contents:[{parts:[{text:`На снимку говорник (изворни говорник српског, из Пљеваља) изговара реч „${word}“ (слогови: ${sylls(word).join('-')}). Послушај пажљиво на ком је слогу нагласак. Одговори САМО једним бројем: редни број наглашеног слога (1 = први слог, највише ${n}).`},{inline_data:{mime_type:'audio/webm',data:b64}}]}]};
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(settings.geminiModel||'gemini-2.5-flash')}:generateContent?key=${encodeURIComponent(settings.gemini)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error('Gemini '+r.status); const j=await r.json(); const t=(j.candidates?.[0]?.content?.parts||[]).map(x=>x.text||'').join(''); const m=/\d/.exec(t); const k=m?+m[0]:0; return k>=1&&k<=n?k:0; }
+async function learnPron(word, slogGiven){
+  word=latToCyr(String(word||'').trim()).split(/\s+/)[0].replace(/[^\p{L}]/gu,''); if(!word) return; word=word[0].toUpperCase()+word.slice(1);
+  const n=nuclei(word).length; if(n<2){ const t=`Реч ${word} има само један слог, ту нагласак не може да се промени.`; addMsg('ai',esc(t)); await say(t); return; }
+  const tell=async(t)=>{ addMsg('ai',esc(t)); talkState('speak','Говорим…'); await say(t); };
+  const hear=async(ms)=>{ talkState('listen','Слушам вас…'); const h=latToCyr(((await listenOnce(ms||20000))||'').trim()); if(h) addMsg('me',esc(h)); return h; };
+  const old=izg().filter(e=>e.rec.toLowerCase()===word.toLowerCase()); D.izgovor=izg().filter(e=>!old.includes(e));
+  let slog=+slogGiven||0; if(slog===-1) slog=n; if(slog>n) slog=0;
+  if(!slog && settings.gemini){ await tell(`Реците ми једном, полако и јасно, име ${word}, онако како се правилно изговара.`); talkState('listen','Слушам вас…');
+    const blob=await listenVad(20000, true); if(blob){ talkState('think','Слушам нагласак…'); try{ slog=await geminiStress(blob, word, n); }catch(e){ console.warn(e); } } }
+  if(!slog){ await tell(`На ком слогу је нагласак: ${sylls(word).join(', ')}? Реците само: на првом, на другом${n>2?' или на трећем':''}.`); let k=ordinal(await hear()); if(k===-1) k=n; if(k>=1&&k<=n) slog=k; }
+  if(!slog){ D.izgovor=izg().concat(old); await tell('Нисам разумео. Покушаћемо други пут.'); return; }
+  const ways = settings.ttsEngine==='azure' ? ['ipa'] : ['akut','dugo','gravis','crtica','akut_dugo'];
+  for(const nacin of ways){ const e={rec:word, slog, nacin}; D.izgovor=izg().concat([e]); ttsCache.clear();
+    await tell(`Да ли је овако: ${word}?`); const a=norm(await hear(15000)).replace(/[.,!?…;:"„“]/g,' ').trim();
+    if(YES.test(a)||/^(тако|јесте|то је то|сад је добро|добро је|сада да)/.test(a)){ commit(); saveQuiet(); fillIzgUI(); await tell(`Добро, запамтио сам. Од сада ћу говорити ${word}.`); return; }
+    D.izgovor=izg().filter(x=>x!==e);
+    if(!/^(не|није|погрешно|никако|опет не)/.test(a) && a){ const k=ordinal(a); if(k){ slog=k===-1?n:k; } } }
+  D.izgovor=izg().concat(old); ttsCache.clear();
+  if(!Array.isArray(D.zelje)) D.zelje=[]; D.zelje.push({datum:stamp(), tekst:`Глас не уме да изговори „${word}“ са нагласком на ${slog}. слогу.`}); commit(); saveQuiet();
+  await tell(`Овим гласом нисам успео да изговорим ${word} како треба. Записао сам то Борису, он ће то поправити.`); }
+function fillIzgUI(){ const z=$('#izgList'); if(!z) return; const L=izg(); z.innerHTML=L.length?'':'<div class="help">Још нема научених нагласака.</div>';
+  L.forEach((e,i)=>{ const r=document.createElement('div'); r.className='zelja'; r.innerHTML=`<span><b>${esc(e.rec)}</b> — нагласак на ${e.slog}. слогу (${esc(sylls(e.rec).map((x,j)=>j===e.slog-1?x.toUpperCase():x).join('-'))}), начин: ${esc(e.nacin)}</span><button class="small">✕</button>`; r.querySelector('button').onclick=()=>{ D.izgovor.splice(i,1); ttsCache.clear(); commit(); fillIzgUI(); }; z.appendChild(r); }); }
 const BYE=/(довиђења|збогом|то је све|крај разговора|завршили смо|заврши разговор|хвала,? то је (све|то)|пријатно)/;
 async function startConversation(){
   if(conv.on){ stopConversation(); return; }
@@ -1137,12 +1176,27 @@ async function startConversation(){
     const reply=await handleUtterance(heard,true);
     if(!conv.on) break;
     if(reply){ talkState('speak','Говорим…'); await say(reply); }
-    const after=conv.after; conv.after=[]; for(const f of after){ f(); await sleep(400); }
+    const after=conv.after; conv.after=[]; for(const f of after){ await f(); await sleep(400); }
   }
   stopConversation(); }
-function stopConversation(){ conv.on=false; sayGen++; if(conv.stopListen) conv.stopListen(); if(curAudio){ try{ curAudio.pause(); }catch(e){} } $('#talkBtn').classList.remove('on'); $('#talkBtn').textContent='🎙 Започни разговор'; talkState('','Кликните на зелено дугме и реците шта желите.'); }
+function stopConversation(){ if(dnevnikNew){ dnevnikNew=false; saveQuiet(); } conv.on=false; sayGen++; if(conv.stopListen) conv.stopListen(); if(curAudio){ try{ curAudio.pause(); }catch(e){} } $('#talkBtn').classList.remove('on'); $('#talkBtn').textContent='🎙 Започни разговор'; talkState('','Кликните на зелено дугме и реците шта желите.'); }
 
 const PREMADE=[['Никола (српски, мушки)','LmECtQKlHFHPX4psgBT1'],['Sarah','EXAVITQu4vr4xnSDxMaL'],['Laura','FGY2WhTYpPnrIDTdsKH5'],['Charlotte','XB0fDUnXU5powFXDhCwa'],['Alice','Xb7hH8MSUJpSbSDYk0k2'],['Matilda','XrExE9yKIg1WjnnlVkGX'],['Jessica','cgSgspJ2msm6clMCkdW9'],['Lily','pFZP5JQG7iQjIQuC4Bku'],['Aria','9BWtsMINqrJLrRacOk9x'],['Rachel','21m00Tcm4TlvDq8ikWAM'],['Domi','AZnzlk1XvdvUeBnXmlld']];
+const VOW='аеиоу';
+function nuclei(w){ w=w.toLowerCase(); const out=[]; for(let i=0;i<w.length;i++){ const c=w[i]; if(VOW.includes(c)) out.push(i); else if(c==='р' && (i===0||!VOW.includes(w[i-1])) && (i===w.length-1||!VOW.includes(w[i+1])) && w.length>1) out.push(i); } return out; }
+function sylls(w){ const nu=nuclei(w); if(nu.length<2) return [w]; const cuts=[]; for(let k=1;k<nu.length;k++){ const a=nu[k-1], b=nu[k]; cuts.push(b-a>1?b-1:b); } const out=[]; let st=0; for(const c of cuts){ out.push(w.slice(st,c)); st=c; } out.push(w.slice(st)); return out; }
+function izg(){ if(!Array.isArray(D.izgovor)) D.izgovor=[]; return D.izgovor; }
+function findStress(w){ const lw=w.toLowerCase(); let best=null; for(const e of izg()){ const r=String(e.rec||'').toLowerCase(); if(r && lw.startsWith(r) && lw.length-r.length<=3 && (!best||r.length>best.rec.length)) best=e; } return best; }
+function stressWord(w, slog, nacin){ const nu=nuclei(w); const p=nu[Math.min(Math.max(1,+slog||1),nu.length)-1]; if(p==null) return w; const c=w[p];
+  if(nacin==='gravis') return w.slice(0,p+1)+'̀'+w.slice(p+1);
+  if(nacin==='dugo') return w.slice(0,p+1)+c.toLowerCase()+w.slice(p+1);
+  if(nacin==='akut_dugo') return w.slice(0,p+1)+'́'+c.toLowerCase()+w.slice(p+1);
+  if(nacin==='crtica'){ const sy=sylls(w); const k=Math.min(+slog||1, sy.length)-1; return sy.map((x,i)=>i===k?x.replace(/[аеиоурАЕИОУР]/,m=>m+'́'):x).join('-'); }
+  return w.slice(0,p+1)+'́'+w.slice(p+1); }
+function applyStress(text){ if(!izg().length) return text; return text.replace(/\p{L}+/gu, w=>{ const e=findStress(w); return e?stressWord(w,e.slog,e.nacin):w; }); }
+const IPA={а:'a',б:'b',в:'ʋ',г:'ɡ',д:'d',ђ:'dʑ',е:'e',ж:'ʒ',з:'z',и:'i',ј:'j',к:'k',л:'l',љ:'ʎ',м:'m',н:'n',њ:'ɲ',о:'o',п:'p',р:'r',с:'s',т:'t',ћ:'tɕ',у:'u',ф:'f',х:'x',ц:'ts',ч:'tʃ',џ:'dʒ',ш:'ʃ'};
+function ipaWord(w, slog){ const lw=latToCyr(w).toLowerCase(); const nu=nuclei(lw); const k=Math.min(Math.max(1,+slog||1),nu.length)-1; let mark=nu[k]; if(mark>0 && !VOW.includes(lw[mark-1]) && (k===0||mark-1>nu[k-1])) mark=mark-1;
+  let out=''; for(let i=0;i<lw.length;i++){ if(i===mark && nu.length>1) out+='ˈ'; out+=IPA[lw[i]]??lw[i]; } return out; }
 function applyPron(text){ const rules=(settings.pron||'').split(/\n/).map(l=>l.split('=')).filter(a=>a.length>=2).map(a=>[a[0].trim(), a.slice(1).join('=').trim()]).filter(a=>a[0]);
   for(const [w,r] of rules){ const re=new RegExp('(^|[^\\p{L}])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=[^\\p{L}]|$)','gu'); text=text.replace(re,(m,pre)=>pre+r); } return text; }
 let curAudio=null;
@@ -1151,6 +1205,7 @@ function xmlEsc(t){ return String(t).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt
 function azureSsml(text){ const rules=(settings.azPron||'').split(/\n/).map(l=>l.split('=')).filter(a=>a.length>=2).map(a=>[a[0].trim(), a.slice(1).join('=').trim()]).filter(a=>a[0]);
   const toks=[]; let t=text;
   for(const [w,r] of rules){ const re=new RegExp('(^|[^\\p{L}])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=[^\\p{L}]|$)','gu'); t=t.replace(re,(m,pre)=>{ toks.push([w,r]); return pre+'\u0001'+(toks.length-1)+'\u0001'; }); }
+  if(izg().length) t=t.replace(/\p{L}+/gu, w=>{ const e=findStress(w); if(!e) return w; toks.push([w,'ipa:'+ipaWord(w,e.slog)]); return '\u0001'+(toks.length-1)+'\u0001'; });
   let x=xmlEsc(t).replace(/\u0001(\d+)\u0001/g,(m,i)=>{ const [w,r]=toks[+i]; return /^ipa:/i.test(r) ? `<phoneme alphabet="ipa" ph="${xmlEsc(r.slice(4).trim())}">${xmlEsc(w)}</phoneme>` : xmlEsc(r); });
   const lang=(settings.azureVoice||'sr-RS-SophieNeural').split('-').slice(0,2).join('-');
   return `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${lang}"><voice name="${settings.azureVoice||'sr-RS-SophieNeural'}"><prosody rate="${(+settings.azSpeed||1).toFixed(2)}">${x}</prosody></voice></speak>`; }
@@ -1161,7 +1216,7 @@ async function azureBlob(text){ const region=(settings.azureRegion||'').trim().t
 async function speakAzure(text){ await playBlob(await azureBlob(text)); }
 async function speakNow(text){ await playBlob(await elevenBlob(text)); }
 async function elevenBlob(text){
-  const model=settings.ttsModel||'eleven_v3'; const v3=/v3/.test(model); let t=applyPron(text); t = v3 ? t : cyrToLat(t);
+  const model=settings.ttsModel||'eleven_v3'; const v3=/v3/.test(model); let t=applyStress(applyPron(text)); t = v3 ? t : cyrToLat(t);
   const body={text:t, model_id:model, voice_settings:{stability:+settings.stab||0.5, similarity_boost:0.75, speed:+settings.speed||1}}; if(/turbo|flash/.test(model)) body.language_code='hr';
   let r=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${settings.voice}?output_format=mp3_22050_32`,{method:'POST',headers:{'xi-api-key':settings.eleven,'Content-Type':'application/json'},body:JSON.stringify(body)});
   if(!r.ok && r.status===422){ delete body.voice_settings; r=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${settings.voice}?output_format=mp3_22050_32`,{method:'POST',headers:{'xi-api-key':settings.eleven,'Content-Type':'application/json'},body:JSON.stringify(body)}); }
@@ -1184,7 +1239,7 @@ function fillVoiceSel(){ const sel=$('#s_voiceSel'); const list=(settings.voices
 
 /* ============================================================ подешавања, приказ, старт */
 function showView(id){ $$('.view').forEach(v=>v.classList.toggle('active',v.id===id)); $$('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id)); if(id==='treeView'){ if(!curLayout) renderTree(true); else renderTree(); } if(id==='textView') renderReport(); if(id==='aiView' && !$('#chat').children.length) addMsg('ai','Кликните на зелено дугме „Започни разговор“ и реците шта желите. На пример: „Додај Милошу, Веричином сину, кћерку Ану рођену 2026.“, „Направи ми PDF стабла“ или „Како да сачувам?“'); }
-function fillPostUI(){ $$('[data-pk]').forEach(el=>{ const v=getPost(el.dataset.pk); if(el.type==='checkbox') el.checked=!!v; else el.value=v??''; }); $('#verLbl').textContent=APP_VERSION;
+function fillPostUI(){ $$('[data-pk]').forEach(el=>{ const v=getPost(el.dataset.pk); if(el.type==='checkbox') el.checked=!!v; else el.value=v??''; }); $('#verLbl').textContent=APP_VERSION; fillIzgUI();
   const z=$('#zeljeList'); const list=Array.isArray(D.zelje)?D.zelje:[]; z.innerHTML=list.length?'':'<div class="help">Нема записаних жеља.</div>';
   list.forEach((w,i)=>{ const r=document.createElement('div'); r.className='zelja'; r.innerHTML=`<span><b>${esc((w.datum||'').slice(0,10))}</b> — ${esc(w.tekst)}</span><button class="small">✕</button>`; r.querySelector('button').onclick=()=>{ D.zelje.splice(i,1); commit(); fillPostUI(); }; z.appendChild(r); }); }
 function bindSettings(){
