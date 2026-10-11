@@ -329,11 +329,12 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
   <div class="db">
     <p>Приказ: <span class="seg" id="printMode"><button data-v="s" class="on">Сажето</button><button data-v="p">Пуно</button></span></p>
     <div class="grid" style="grid-template-columns:1fr 1fr">
-      <div><label class="f">Распоред</label><select id="pr_raspored"><option value="grane">По гранама, на више страна</option><option value="celo">Цело стабло на једној великој страни (само PDF)</option><option value="plakat">Сажето цело стабло за велики папир (копирница)</option></select></div>
+      <div><label class="f">Распоред</label><select id="pr_raspored"><option value="grane">По гранама, на више страна</option><option value="celo">Цело стабло на једној великој страни (само PDF)</option><option value="plakat">Плакат — цело стабло на великом папиру (копирница)</option></select></div>
       <div><label class="f">Папир</label><select id="pr_papir"><option value="A4">А4 (водоравно)</option><option value="A3">А3 (водоравно)</option></select></div>
       <div><label class="f">Величина цртежа</label><select id="pr_velicina"><option value="mala">Ситније — више на једној страни</option><option value="srednja">Средње</option><option value="velika">Крупније — мање на једној страни</option></select></div>
       <div><label class="f">Боја</label><select id="pr_crnobelo"><option value="false">У боји</option><option value="true">Црно-бело</option></select></div>
     </div>
+    <div id="pr_plakatBox" style="display:none"><label class="f">Папир за плакат</label><select data-pk="stampa.plakatPapir" id="pr_plakatPapir"><option value="auto">Најмањи који је довољан (препоручено)</option><option value="A2">A2 (59,4 × 42 cm)</option><option value="A1">A1 (84,1 × 59,4 cm)</option><option value="A0">A0 (118,9 × 84,1 cm) — крупнија слова</option><option value="rolna">Ролна плотера 91,4 cm</option></select></div>
     <p class="help" id="pr_info" style="font-weight:600;color:#7a4a1e"></p>
     <p class="help">За штампу код куће најбољи је <b>текстуални родослов</b> (део „Текст“): књижица са садржајем и регистром имена. Цртеж стабла је за велики папир.</p>
     <p class="help">Шта тачно пише у „Сажето“ и „Пуно“ подешава се у ⚙ Подешавања, или само реците помоћнику.</p>
@@ -463,7 +464,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.11.8';
+const APP_VERSION='2026.10.11.9';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -512,12 +513,12 @@ function undo(){ if(!history.length) return; const dn=D.dnevnik, iz=D.izgovor, w
 function setStatus(){ const s=$('#status'); if(dirty){ s.textContent='Измене нису сачуване у фајл'; s.className='dirty'; } else { s.textContent='Сачувано'; s.className=''; } }
 
 /* ------------------------------------------------ поставке штампе и приказа (чувају се у фајлу) */
-const POST_DEF={ stampa:{papir:'A4', raspored:'grane', velicina:'srednja', crnobelo:false, naslov:'', datum:true, oznake:true, orijentacija:'polozeno', poravnanje:'centar', slova:'srednja', razmak:'normalno', generacije:'99', naslovVelicina:'srednji', zaglavlje:true, brojStrana:true, okviri:true},
+const POST_DEF={ stampa:{papir:'A4', raspored:'grane', velicina:'srednja', crnobelo:false, naslov:'', datum:true, oznake:true, orijentacija:'polozeno', poravnanje:'centar', slova:'srednja', razmak:'normalno', generacije:'99', naslovVelicina:'srednji', zaglavlje:true, brojStrana:true, okviri:true, plakatPapir:'auto'},
   sazeto:{nadimci:true, godine:true, supruznici:true, mesta:false, napomene:false},
   puno:{nadimci:true, godine:true, supruznici:true, mesta:true, napomene:true},
   stablo:{generacije:'2'}, razgovor:{pauza:'2.5'},
   knjiga:{format:'A5', slova:'srednja', sadrzaj:true, dubinaSadrzaja:'2', registar:true, novaStrana:true, naslovna:true, uvod:''} };
-const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo','plakat'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99'],'stampa.orijentacija':['polozeno','uspravno'],'stampa.poravnanje':['centar','levo'],'stampa.slova':['mala','srednja','velika'],'stampa.razmak':['zbijeno','normalno','siroko'],'stampa.generacije':['2','3','4','5','6','7','8','99'],'stampa.naslovVelicina':['mali','srednji','veliki'],'stampa.zaglavlje':'bool','stampa.brojStrana':'bool','stampa.okviri':'bool','razgovor.pauza':['1.5','2','2.5','3','3.5','4','5'],'knjiga.format':['A5','knjizica','A4'],'knjiga.slova':['mala','srednja','velika'],'knjiga.sadrzaj':'bool','knjiga.dubinaSadrzaja':['1','2','3'],'knjiga.registar':'bool','knjiga.novaStrana':'bool','knjiga.naslovna':'bool','knjiga.uvod':'text'};
+const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo','plakat'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99'],'stampa.orijentacija':['polozeno','uspravno'],'stampa.poravnanje':['centar','levo'],'stampa.slova':['mala','srednja','velika'],'stampa.razmak':['zbijeno','normalno','siroko'],'stampa.generacije':['2','3','4','5','6','7','8','99'],'stampa.naslovVelicina':['mali','srednji','veliki'],'stampa.zaglavlje':'bool','stampa.brojStrana':'bool','stampa.okviri':'bool','stampa.plakatPapir':['auto','A2','A1','A0','rolna'],'razgovor.pauza':['1.5','2','2.5','3','3.5','4','5'],'knjiga.format':['A5','knjizica','A4'],'knjiga.slova':['mala','srednja','velika'],'knjiga.sadrzaj':'bool','knjiga.dubinaSadrzaja':['1','2','3'],'knjiga.registar':'bool','knjiga.novaStrana':'bool','knjiga.naslovna':'bool','knjiga.uvod':'text'};
 for(const m of ['sazeto','puno']) for(const f of ['nadimci','godine','supruznici','mesta','napomene']) POST_SCHEMA[m+'.'+f]='bool';
 function post(){ if(!D.postavke) D.postavke={}; for(const k in POST_DEF) D.postavke[k]=Object.assign({},POST_DEF[k],D.postavke[k]||{}); return D.postavke; }
 function setPost(path,val){ const t=POST_SCHEMA[path]; if(!t) return false; if(t==='bool') val=(val===true||val==='true'||val==='да'||val===1); else if(t==='text') val=String(val??'').slice(0, path==='knjiga.uvod'?3000:200); else { val=String(val); if(!t.includes(val)) return false; } const [a,b]=path.split('.'); post()[a][b]=val; return true; }
@@ -771,7 +772,7 @@ function bindTree(){
   $$('#treeMode button').forEach(b=>b.onclick=()=>{ $$('#treeMode button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); treeMode=b.dataset.v; renderTree(true); });
   $('#treeDepth').onchange=()=>{ setPost('stablo.generacije',$('#treeDepth').value); collapsed.clear(); expanded.clear(); renderTree(true); };
   $('#rootBtn').onclick=async()=>{ const r=await pickPerson({title:'Корен стабла'}); if(r){ treeRoot=r; collapsed.clear(); expanded.clear(); renderTree(true); } };
-  $('#printTreeBtn').onclick=()=>{ const d=$('#printDlg'); $$('#printMode button').forEach(x=>x.classList.toggle('on',x.dataset.v===treeMode)); const s=post().stampa; $('#pr_raspored').value=s.raspored; $('#pr_papir').value=s.papir; $('#pr_velicina').value=s.velicina; $('#pr_crnobelo').value=String(!!s.crnobelo); d.showModal(); };
+  $('#printTreeBtn').onclick=()=>{ const d=$('#printDlg'); $$('#printMode button').forEach(x=>x.classList.toggle('on',x.dataset.v===treeMode)); const s=post().stampa; $('#pr_raspored').value=s.raspored; $('#pr_papir').value=s.papir; $('#pr_velicina').value=s.velicina; $('#pr_crnobelo').value=String(!!s.crnobelo); $('#pr_plakatPapir').value=s.plakatPapir||'auto'; $('#pr_raspored').dispatchEvent(new Event('change')); d.showModal(); };
   $$('#printMode button').forEach(b=>b.onclick=()=>{ $$('#printMode button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
   $('#printCancel').onclick=()=>$('#printDlg').close();
   $('#printOk').onclick=()=>{ $('#printDlg').close(); const mode=$('#printMode .on').dataset.v; setPost('stampa.raspored',$('#pr_raspored').value); setPost('stampa.papir',$('#pr_papir').value); setPost('stampa.velicina',$('#pr_velicina').value); setPost('stampa.crnobelo',$('#pr_crnobelo').value); commit(); printTree(mode, treeRoot); };
@@ -954,64 +955,80 @@ function printBook(rootId, mode){ const B=buildBook(rootId, mode); const F=B.F; 
 function bookSummary(B){ const F=B.F; const k=post().knjiga; const sheets=Math.ceil(B.pages.length/4);
   return `Текстуални родослов (књига): ${B.pages.length} страна формата ${F.key}${F.imposed?` — штампа се као књижица: ${sheets} листова A4, обострано, савијено на пола`:''}. Садржај: ${B.tocLen} стр., текст од стране ${B.bodyStart}, регистар имена: ${B.ixLen} стр.`; }
 
-/* ============================================================ сажето стабло за велики папир (плакат) */
+/* ============================================================ ПЛАКАТ — цело стабло на великом папиру */
 const PAPERS=[['A3',420,297],['A2',594,420],['A1',841,594],['A0',1189,841]];
 const ROLL_W=914; // ролна плотера у копирницама (91,4 cm), дужина по жељи
+const PL_TINT=['#e6eefa','#e5f2e1','#fbeadb','#f1e4f6','#fbf2cf','#e0f1f1','#f6e1e1'];
+const PL_LINE=['#3f6aa8','#4f8a43','#b26a2b','#86509c','#a88a14','#2d8585','#a54848'];
 let _pmc=null; function pMeasure(txt, size, bold){ if(!_pmc) _pmc=document.createElement('canvas').getContext('2d'); _pmc.font=`${bold?'bold ':''}${size*10}px "Segoe UI",Arial,sans-serif`; return _pmc.measureText(txt).width/10; }
-function posterLayout(rootId, mode, B, Lmax){ const f=fieldsFor(mode);
-  const S={box:3.6, boxSm:2.8, col:3.0, list:2.35, lh:2.95, ind:3.2, pad:1.6, hgap:4, vgap:9, colGap:3};
+function posterLayout(rootId, mode, B, Ht){ const f=fieldsFor(mode);
+  const S={box:3.7, boxSm:2.7, col:3.0, list:2.35, lh:2.95, ind:3.0, pad:1.5, hgap:4, vgap:10, gap:2.4, spine:2.2};
   const nm=p=>nmF(p,f)+((f.godine&&yrs(p))?` (${yrs(p)})`:'');
   const spT=p=>f.supruznici?spouses(p.id).map(({s:q})=>'∞ '+nmF(q,f)+((f.godine&&yrs(q))?` (${yrs(q)})`:'')):[];
-  const nodes=[], cols=[], edges=[];
-  // колона: особа на дубини B (или особа без деце изнад B) + сви њени потомци као увучен списак
-  const mkCol=(id)=>{ const p=P.get(id); const head=[{t:nm(p),b:true,s:S.col}, ...spT(p).map(t=>({t,s:S.list*0.95}))]; const lines=[];
+  const nodes=[], cols=[], edges=[], stacks=[];
+  const mkCol=(id, br)=>{ const p=P.get(id); const head=[{t:nm(p),b:true,s:S.col}, ...spT(p).map(t=>({t,s:S.list*0.95}))]; const lines=[];
     const walk=(x,d)=>{ for(const c of children(x)){ const sp=spT(c); lines.push({t:nm(c)+(sp.length?'  '+sp.join('; '):''), d, has:children(c.id).length>0}); walk(c.id,d+1); } }; walk(id,0);
-    const chunks=[]; let cur=[]; for(const l of lines){ if(cur.length>=Lmax){ chunks.push(cur); cur=[]; } cur.push(l); } if(cur.length||!chunks.length) chunks.push(cur);
+    const hh=head.length*S.lh*1.12+S.pad*2; const per0=Math.max(4,Math.floor((Ht-hh-S.pad)/S.lh)), perN=Math.max(4,Math.floor((Ht-S.lh-2*S.pad)/S.lh));
+    const chunks=[]; let cur=[], lim=per0; for(const l of lines){ if(cur.length>=lim){ chunks.push(cur); cur=[]; lim=perN; } cur.push(l); } chunks.push(cur);
     const hw=Math.max(...head.map(h=>pMeasure(h.t,h.s,h.b)));
-    const cw=chunks.map((ch,i)=>Math.max(i===0?hw:pMeasure('(наставак)',S.list), ...ch.map(l=>l.d*S.ind+pMeasure(l.t,S.list,l.has)))+2*S.pad);
-    const hh=head.length*S.lh*1.15+S.pad*2; const ch=chunks.map((c,i)=>(i===0?hh:S.lh+S.pad*2)+c.length*S.lh+S.pad);
-    return {id, head, chunks, cw, ch, hh, w:cw.reduce((a,b)=>a+b,0)+S.colGap*(chunks.length-1)}; };
-  const place=(id, depth, x0)=>{ const p=P.get(id); const ch=children(id);
-    if(depth>=B || !ch.length){ const c=mkCol(id); c.x=x0; c.depth=depth; cols.push(c); return {w:c.w, cx:x0+c.cw[0]/2, top:c, kind:'col'}; }
-    const lines=[{t:nm(p),b:true,s:depth===0?S.box*1.25:S.box}, ...spT(p).map(t=>({t,s:S.boxSm}))]; const bw=Math.max(...lines.map(l=>pMeasure(l.t,l.s,l.b)))+2*S.pad; const bh=lines.reduce((a,l)=>a+l.s*1.25,0)+2*S.pad;
-    const mark=[nodes.length, cols.length, edges.length];
-    const run=(start)=>{ let x=start; const kids=[]; for(const c of ch){ const r=place(c.id, depth+1, x); kids.push(r); x+=r.w+S.hgap; } return {kids, span:x-S.hgap-start}; };
+    const cw=chunks.map((ch,i)=>Math.max(i===0?hw:pMeasure('(наставак)',S.list), ...ch.map(l=>l.d*S.ind+pMeasure(l.t,S.list,l.has)), 18)+2*S.pad);
+    const chH=chunks.map((c,i)=>(i===0?hh:S.lh+S.pad*2)+c.length*S.lh+(c.length?S.pad:0));
+    const c={id, br, head, chunks, cw, chH, hh, w:cw.reduce((a,b)=>a+b,0)+S.gap*(chunks.length-1), h:Math.max(...chH)}; cols.push(c); return c; };
+  const place=(id, depth, x0, br)=>{ const p=P.get(id); const ch=children(id);
+    const lines=[{t:nm(p),b:true,s:depth===0?S.box*1.35:S.box}, ...spT(p).map(t=>({t,s:S.boxSm}))]; const bw=Math.max(...lines.map(l=>pMeasure(l.t,l.s,l.b)))+2*S.pad*1.4; const bh=lines.reduce((a,l)=>a+l.s*1.25,0)+2*S.pad;
+    // деца: кућице (ако имају потомке и нису дубље од B) или колоне-спискови, а мале колоне се слажу једна испод друге
+    const items=[]; ch.forEach((c,i)=>{ const b2=depth===0?i:br; if(depth+1<B && children(c.id).length) items.push({kind:'node', id:c.id, br:b2}); else items.push({kind:'col', col:mkCol(c.id, b2), br:b2}); });
+    const groups=[]; for(const it of items){ const g=groups[groups.length-1];
+      if(it.kind==='col'){ if(g&&g.kind==='stack'&&it.col.chunks.length===1&&g.cols.every(c=>c.chunks.length===1)&&g.h+S.gap+it.col.h<=Ht) { g.cols.push(it.col); g.h+=S.gap+it.col.h; } else groups.push({kind:'stack', cols:[it.col], h:it.col.h, br:it.br}); }
+      else groups.push(it); }
+    const mark=[nodes.length, edges.length, stacks.length];
+    const run=(start)=>{ let x=start; const kids=[];
+      for(const g of groups){ if(g.kind==='node'){ const r=place(g.id, depth+1, x, g.br); kids.push(r); x+=r.w+S.hgap; }
+        else { const st={x:x+S.spine, cols:g.cols, depth:depth+1, br:g.br}; st.w=Math.max(...g.cols.map(c=>c.w))+S.spine; let yy=0; for(const c of g.cols){ c.x=st.x; c.dy=yy; c.depth=depth+1; yy+=c.h+S.gap; } st.h=yy-S.gap; stacks.push(st); kids.push({w:st.w, cx:st.x-S.spine*0.6, top:st, kind:'stack'}); x+=st.w+S.hgap; } }
+      return {kids, span:x-S.hgap-start}; };
     let {kids, span}=run(x0);
-    if(span<bw){ nodes.length=mark[0]; cols.length=mark[1]; edges.length=mark[2]; ({kids}=run(x0+(bw-span)/2)); span=bw; }
-    const cx=(kids[0].cx+kids[kids.length-1].cx)/2;
-    const n={id, p, lines, w:bw, h:bh, cx, depth, kids}; nodes.push(n); for(const k of kids) edges.push([n,k]); return {w:span, cx, top:n, kind:'node'}; };
-  const R=place(rootId,0,0);
-  // висине редова
-  const rowH=[]; for(const n of nodes) rowH[n.depth]=Math.max(rowH[n.depth]||0, n.h); const rowY=[]; let y=14; // место за наслов
+    if(span<bw){ nodes.length=mark[0]; edges.length=mark[1]; stacks.length=mark[2]; ({kids}=run(x0+(bw-span)/2)); span=bw; }
+    const cx=kids.length===1&&kids[0].kind==='stack' ? kids[0].top.x+Math.min(bw/2, kids[0].top.w/2) : (kids[0].cx+kids[kids.length-1].cx)/2;
+    const n={id, p, lines, w:bw, h:bh, cx, depth, br}; nodes.push(n); for(const k of kids) edges.push([n,k]); return {w:span, cx, top:n, kind:'node'}; };
+  const R=place(rootId,0,0,-1);
+  const rowH=[]; for(const n of nodes) rowH[n.depth]=Math.max(rowH[n.depth]||0, n.h); const rowY=[]; let y=19;
   for(let d=0; d<=B; d++){ rowY[d]=y; y+=(rowH[d]||0)+S.vgap; }
   for(const n of nodes){ n.x=n.cx-n.w/2; n.y=rowY[n.depth]; }
-  let H=0; for(const c of cols){ c.y=rowY[Math.min(c.depth,B)]; H=Math.max(H, c.y+Math.max(...c.ch)); }
-  const W=R.w; H+=4;
-  return {S, nodes, cols, edges, W, H, title:printTitle()}; }
-function posterSvg(L, scale, paperW, paperH, margin){ const {S}=L; const bw=post().stampa.crnobelo; const C={ln:bw?'#000':'#8c7a5c', box:bw?'#fff':'#fbf7ef', col:bw?'#fff':'#fffdf8', tx:'#1e1a12', mu:bw?'#000':'#5b5140'};
-  const e=s=>esc(s); const o=[];
+  let H=0; for(const st of stacks){ st.y=rowY[st.depth]; for(const c of st.cols){ c.y=st.y+c.dy; } H=Math.max(H, st.y+st.h); }
+  for(const n of nodes) H=Math.max(H,n.y+n.h);
+  return {S, nodes, cols, stacks, edges, W:R.w, H:H+4, title:printTitle(), B, Ht}; }
+function posterSvg(L, scale, paperW, paperH, margin){ const {S}=L; const bw=post().stampa.crnobelo; const e=s=>esc(s); const o=[];
+  const tint=b=>bw||b<0?'#ffffff':PL_TINT[b%PL_TINT.length], lc=b=>bw||b<0?'#555':PL_LINE[b%PL_LINE.length];
   const ox=(paperW-L.W*scale)/2, oy=margin;
-  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${paperW}mm" height="${paperH}mm" viewBox="0 0 ${paperW} ${paperH}"><rect width="${paperW}" height="${paperH}" fill="#fff"/><g transform="translate(${ox.toFixed(2)},${oy.toFixed(2)}) scale(${scale.toFixed(4)})" font-family="Segoe UI,Arial,sans-serif" fill="${C.tx}">`);
-  o.push(`<text x="${L.W/2}" y="7" font-size="6" font-weight="700" text-anchor="middle">${e(L.title)}</text><text x="${L.W/2}" y="11.2" font-size="2.6" text-anchor="middle" fill="${C.mu}">${e([D.autor?'Саставио '+D.autor:'', new Date().toLocaleDateString('sr-RS')].filter(Boolean).join(' · '))}</text>`);
-  const anchor=k=>k.kind==='node'?{x:k.top.cx,y:k.top.y}:{x:k.top.x+k.top.cw[0]/2,y:k.top.y};
-  for(const [n,k] of L.edges){ const a={x:n.cx,y:n.y+n.h}, b=anchor(k); const my=a.y+(b.y-a.y)/2; o.push(`<path d="M${a.x.toFixed(2)},${a.y.toFixed(2)}V${my.toFixed(2)}H${b.x.toFixed(2)}V${b.y.toFixed(2)}" fill="none" stroke="${C.ln}" stroke-width=".3"/>`); }
-  for(const n of L.nodes){ o.push(`<rect x="${n.x.toFixed(2)}" y="${n.y.toFixed(2)}" width="${n.w.toFixed(2)}" height="${n.h.toFixed(2)}" rx="1.2" fill="${C.box}" stroke="${C.ln}" stroke-width=".35"/>`); let ty=n.y+S.pad; for(const l of n.lines){ ty+=l.s*1.05; o.push(`<text x="${n.cx.toFixed(2)}" y="${ty.toFixed(2)}" font-size="${l.s}" text-anchor="middle"${l.b?' font-weight="700"':` fill="${C.mu}"`}>${e(l.t)}</text>`); ty+=l.s*0.2; } }
-  for(const c of L.cols){ let x=c.x; c.chunks.forEach((ch,i)=>{ const w=c.cw[i], h=c.ch[i]; o.push(`<rect x="${x.toFixed(2)}" y="${c.y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" rx="1" fill="${C.col}" stroke="${C.ln}" stroke-width=".3"/>`); let ty=c.y+S.pad;
-      if(i===0){ for(const hl of c.head){ ty+=hl.s*1.05; o.push(`<text x="${(x+S.pad).toFixed(2)}" y="${ty.toFixed(2)}" font-size="${hl.s}"${hl.b?' font-weight="700"':` fill="${C.mu}"`}>${e(hl.t)}</text>`); ty+=hl.s*0.12; } ty=c.y+c.hh; o.push(`<line x1="${x+S.pad}" x2="${x+w-S.pad}" y1="${(ty-S.pad/2).toFixed(2)}" y2="${(ty-S.pad/2).toFixed(2)}" stroke="${C.ln}" stroke-width=".2"/>`); }
-      else { ty+=S.lh; o.push(`<text x="${(x+S.pad).toFixed(2)}" y="${ty.toFixed(2)}" font-size="${S.list}" font-style="italic" fill="${C.mu}">(наставак)</text>`); ty+=S.pad; }
-      for(const l of ch){ ty+=S.lh; const lx=x+S.pad+l.d*S.ind; for(let k=0;k<l.d;k++){ const gx=x+S.pad+k*S.ind+S.ind*0.35; o.push(`<line x1="${gx.toFixed(2)}" x2="${gx.toFixed(2)}" y1="${(ty-S.lh*0.85).toFixed(2)}" y2="${(ty+S.lh*0.15).toFixed(2)}" stroke="${bw?'#888':'#d6ccb8'}" stroke-width=".18"/>`); }
+  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${paperW}mm" height="${paperH}mm" viewBox="0 0 ${paperW} ${paperH}"><rect width="${paperW}" height="${paperH}" fill="#fff"/><g transform="translate(${ox.toFixed(2)},${oy.toFixed(2)}) scale(${scale.toFixed(4)})" font-family="Segoe UI,Arial,sans-serif" fill="#1e1a12">`);
+  o.push(`<text x="${L.W/2}" y="8.5" font-size="7.5" font-weight="700" text-anchor="middle">${e(L.title)}</text><text x="${L.W/2}" y="13.5" font-size="2.8" text-anchor="middle" fill="#5b5140">${e([D.autor?'Саставио '+D.autor:'', new Date().toLocaleDateString('sr-RS')].filter(Boolean).join(' · '))}</text>`);
+  // везе
+  for(const [n,k] of L.edges){ const a={x:n.cx,y:n.y+n.h}; const col=lc(k.top.br);
+    if(k.kind==='node'){ const b={x:k.top.cx,y:k.top.y}; const my=a.y+(b.y-a.y)/2; o.push(`<path d="M${a.x.toFixed(2)},${a.y.toFixed(2)}V${my.toFixed(2)}H${b.x.toFixed(2)}V${b.y.toFixed(2)}" fill="none" stroke="${col}" stroke-width=".45"/>`); }
+    else { const st=k.top; const sx=st.x-S.spine*0.6; const my=a.y+(st.y-a.y)/2; const last=st.cols[st.cols.length-1];
+      o.push(`<path d="M${a.x.toFixed(2)},${a.y.toFixed(2)}V${my.toFixed(2)}H${sx.toFixed(2)}V${(last.y+S.lh*1.1).toFixed(2)}" fill="none" stroke="${col}" stroke-width=".4"/>`);
+      for(const c of st.cols) o.push(`<path d="M${sx.toFixed(2)},${(c.y+S.lh*1.1).toFixed(2)}H${c.x.toFixed(2)}" fill="none" stroke="${col}" stroke-width=".4"/>`); } }
+  // кућице
+  for(const n of L.nodes){ const f=n.depth===0?'#fff8e8':tint(n.br); o.push(`<rect x="${n.x.toFixed(2)}" y="${n.y.toFixed(2)}" width="${n.w.toFixed(2)}" height="${n.h.toFixed(2)}" rx="1.4" fill="${f}" stroke="${n.depth===0?'#7a4a1e':lc(n.br)}" stroke-width="${n.depth<=1?.7:.45}"/>`); let ty=n.y+S.pad; for(const l of n.lines){ ty+=l.s*1.05; o.push(`<text x="${n.cx.toFixed(2)}" y="${ty.toFixed(2)}" font-size="${l.s}" text-anchor="middle"${l.b?' font-weight="700"':' fill="#4a4030"'}>${e(l.t)}</text>`); ty+=l.s*0.2; } }
+  // колоне
+  for(const c of L.cols){ if(c.x==null) continue; let x=c.x; c.chunks.forEach((ch,i)=>{ const w=c.cw[i], h=c.chH[i]; o.push(`<rect x="${x.toFixed(2)}" y="${c.y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" rx="1" fill="#fffefb" stroke="${lc(c.br)}" stroke-width=".3"/>`); let ty=c.y+S.pad;
+      if(i===0){ o.push(`<rect x="${x.toFixed(2)}" y="${c.y.toFixed(2)}" width="${w.toFixed(2)}" height="${(c.hh-S.pad*0.4).toFixed(2)}" rx="1" fill="${tint(c.br)}"/>`); for(const hl of c.head){ ty+=hl.s*1.02; o.push(`<text x="${(x+S.pad).toFixed(2)}" y="${ty.toFixed(2)}" font-size="${hl.s}"${hl.b?' font-weight="700"':' fill="#4a4030"'}>${e(hl.t)}</text>`); ty+=hl.s*0.1; } ty=c.y+c.hh; }
+      else { ty+=S.lh; o.push(`<text x="${(x+S.pad).toFixed(2)}" y="${ty.toFixed(2)}" font-size="${S.list}" font-style="italic" fill="#6b604c">(наставак)</text>`); ty+=S.pad; }
+      for(const l of ch){ ty+=S.lh; const lx=x+S.pad+l.d*S.ind; for(let k=0;k<l.d;k++){ const gx=x+S.pad+k*S.ind+S.ind*0.3; o.push(`<line x1="${gx.toFixed(2)}" x2="${gx.toFixed(2)}" y1="${(ty-S.lh*0.85).toFixed(2)}" y2="${(ty+S.lh*0.15).toFixed(2)}" stroke="${bw?'#999':'#d9cfbb'}" stroke-width=".18"/>`); }
         o.push(`<text x="${lx.toFixed(2)}" y="${ty.toFixed(2)}" font-size="${S.list}"${l.has?' font-weight="700"':''}>${e(l.t)}</text>`); }
-      x+=w+S.colGap; }); }
+      x+=w+S.gap; }); }
+  o.push(`<text x="${L.W/2}" y="${(L.H+1).toFixed(2)}" font-size="2.3" text-anchor="middle" fill="#6b604c">Кућице: први нараштаји. Испод њих, у оквирима, сви потомци — увучени испод родитеља; масно = има потомке. ∞ брак. Боје означавају гране Милошевих синова.</text>`);
   o.push('</g></svg>'); return o.join(''); }
-function posterPlan(rootId, mode){ const M=10; let pick=null;
-  // прво покушај са више кућица (2 колена), па тек онда сажетије
-  for(const B of [2,3,1]){ for(const Lmax of [25,35,45,60,80,110,150,200,260,340]){ const L=posterLayout(rootId, mode, B, Lmax);
-      for(const [nm,pw,ph] of PAPERS) for(const rot of [false,true]){ const W=rot?ph:pw, H=rot?pw:ph; const s=Math.min((W-2*M)/L.W, (H-2*M)/L.H); if(s<0.92) continue; const area=pw*ph;
-        if(!pick || area<pick.area || (area===pick.area && s>pick.s)) pick={L, paper:nm, W, H, s:Math.min(s,1.6), area, B, Lmax, roll:false}; } }
-    if(pick) break; }
-  if(!pick){ for(const B of [2,1]) for(const Lmax of [25,35,45,60,80,110,150,220,340]){ const L=posterLayout(rootId, mode, B, Lmax);
-      const s=Math.min(1.1,(ROLL_W-2*M)/L.H); if(s<0.92) continue; const len=L.W*s+2*M; if(!pick||len<pick.len) pick={L, paper:'ролна', W:Math.ceil(len), H:ROLL_W, s, len, B, Lmax, roll:true}; } }
-  if(!pick){ const L=posterLayout(rootId, mode, 2, 340); const s=(ROLL_W-2*M)/L.H; pick={L,paper:'ролна',W:Math.ceil(L.W*s+2*M),H:ROLL_W,s,B:2,Lmax:340,roll:true}; }
+function posterPlan(rootId, mode){ const M=10; let pick=null; const HTS=[60,80,100,125,150,180,220,270,330,400]; const want=post().stampa.plakatPapir||'auto';
+  if(want!=='auto'&&want!=='rolna'){ const pp=PAPERS.find(x=>x[0]===want); for(const B of [2,3,4]) for(const Ht of HTS){ const L=posterLayout(rootId, mode, B, Ht); for(const rot of [false,true]){ const W=rot?pp[2]:pp[1], H=rot?pp[1]:pp[2]; const s=Math.min((W-2*M)/L.W,(H-2*M-3)/L.H); const sc=Math.min(s,1.5)+(s>=0.95?(B-2)*0.08:0); if(!pick||sc>pick.sc) pick={L,paper:want,W,H,s:Math.min(s,1.7),sc,B,Ht,roll:false}; } } }
+  if(want==='rolna'){ for(const B of [2,3]) for(const Ht of HTS){ const L=posterLayout(rootId, mode, B, Ht); const s=Math.min(1.3,(ROLL_W-2*M)/L.H); const len=L.W*s+2*M; if(s>=0.95&&(!pick||len<pick.len)) pick={L, paper:'ролна', W:Math.ceil(len), H:ROLL_W, s, len, B, Ht, roll:true}; } }
+  if(!pick)
+  for(const B of [2,3,4]){ for(const Ht of HTS){ const L=posterLayout(rootId, mode, B, Ht);
+      for(const [nm,pw,ph] of PAPERS) for(const rot of [false,true]){ const W=rot?ph:pw, H=rot?pw:ph; const s=Math.min((W-2*M)/L.W, (H-2*M-3)/L.H); if(s<0.95) continue; const area=pw*ph;
+        if(!pick || area<pick.area || (area===pick.area && s>pick.s+0.02) || (area===pick.area && Math.abs(s-pick.s)<=0.02 && B>pick.B)) pick={L, paper:nm, W, H, s:Math.min(s,1.7), area, B, Ht, roll:false}; } } }
+  if(!pick){ for(const B of [2,3]) for(const Ht of HTS){ const L=posterLayout(rootId, mode, B, Ht);
+      const s=Math.min(1.2,(ROLL_W-2*M)/L.H); if(s<0.95) continue; const len=L.W*s+2*M; if(!pick||len<pick.len) pick={L, paper:'ролна', W:Math.ceil(len), H:ROLL_W, s, len, B, Ht, roll:true}; } }
+  if(!pick){ const L=posterLayout(rootId, mode, 2, 400); const s=(ROLL_W-2*M)/L.H; pick={L,paper:'ролна',W:Math.ceil(L.W*s+2*M),H:ROLL_W,s,B:2,Ht:400,roll:true}; }
   pick.listPt=+(pick.L.S.list*pick.s*72/25.4).toFixed(1); pick.boxPt=+(pick.L.S.box*pick.s*72/25.4).toFixed(1);
   pick.opis = pick.roll ? `ролна плотера ширине 91,4 cm, дужина ${(pick.W/10).toFixed(0)} cm` : `${pick.paper} (${(Math.max(pick.W,pick.H)/10).toFixed(1).replace('.',',')} × ${(Math.min(pick.W,pick.H)/10).toFixed(1).replace('.',',')} cm, ${pick.W>=pick.H?'положено':'усправно'})`;
   return pick; }
@@ -1019,7 +1036,7 @@ function posterPages(rootId, mode){ const k=96/25.4; const pl=posterPlan(rootId,
   const names=[...pl.L.nodes.map(n=>shortName(n.p)), ...pl.L.cols.map(c=>shortName(P.get(c.id)))];
   return {pp:{w:pl.W*k, h:pl.H*k, m:0, wmm:pl.W, hmm:pl.H, mmm:0}, celo:true, plakat:pl, root:rootId, mode,
     pages:[{hdrText:'', noteText:'', svgW:pl.W*k, svgH:pl.H*k, svg, ids:[...pl.L.nodes.map(n=>n.id), ...pl.L.cols.map(c=>c.id)], names}]}; }
-function posterSummary(pl){ return `Цело стабло на једном великом листу. Потребан папир: ${pl.opis}. Слова у списковима ${pl.listPt} тачака, у кућицама ${pl.boxPt} тачака. Кућице: ${pl.L.nodes.length} главних особа (прва ${pl.B} колена), а њихови потомци су исписани у ${pl.L.cols.length} колона-спискова испод. Штампа се у копирници која има плотер (велики штампач): однесите PDF на USB-у и реците формат.`; }
+function posterSummary(pl){ return `ПЛАКАТ — цело стабло на једном великом листу. Папир: ${pl.opis}.${pl.listPt<6?' ПАЖЊА: слова су ситна, боље је већи папир.':''} Слова: у кућицама ${pl.boxPt.toString().replace('.',',')} тачака, у списковима ${pl.listPt.toString().replace('.',',')} тачака. ${pl.L.nodes.length} особа у кућицама (прва ${pl.B} нараштаја), остали потомци у ${pl.L.cols.length} оквира-спискова. Штампа се у копирници са плотером (велики штампач): PDF на USB-у.`; }
 
 /* ------------------------------------------------ преглед штампе */
 const PV={on:false, page:0, B:null, mode:'s', root:null, kind:'tree'};
@@ -1035,7 +1052,7 @@ function renderPreview(rebuild=true){ if(!PV.on) return; if(rebuild||!PV.B){ if(
 function bindPreview(){ $('#prevPrev').onclick=()=>{ if(PV.page>0){ PV.page--; renderPreview(false); } }; $('#prevNext').onclick=()=>{ if(PV.B&&PV.page<PV.B.pages.length-1){ PV.page++; renderPreview(false); } };
   $('#prevClose').onclick=closePreview; $('#prevPrint').onclick=()=>PV.kind==='book'?printBook(PV.root, PV.mode):printTree(PV.mode, PV.root);
   $('#textPreviewBtn').onclick=()=>openPreview(1, textMode, textRoot||D.koren, 'book');
-  $('#pr_raspored').addEventListener('change',()=>{ const v=$('#pr_raspored').value; if(v==='plakat'){ $('#pr_info').textContent='Рачунам потребну величину папира…'; setTimeout(()=>{ const pl=posterPlan(treeRoot||D.koren, $('#printMode .on').dataset.v); $('#pr_info').textContent='Потребан папир: '+pl.opis+'. Штампа се у копирници (плотер).'; },30); } else $('#pr_info').textContent=''; });
+  $('#pr_raspored').addEventListener('change',()=>{ const v=$('#pr_raspored').value; $('#pr_plakatBox').style.display=v==='plakat'?'block':'none'; if(v==='plakat'){ $('#pr_info').textContent='Рачунам потребну величину папира…'; setTimeout(()=>{ const pl=posterPlan(treeRoot||D.koren, $('#printMode .on').dataset.v); $('#pr_info').textContent='Потребан папир: '+pl.opis+'. Слова у списковима '+String(pl.listPt).replace('.',',')+' тачака'+(pl.listPt<6?' — СИТНО, изаберите већи папир':'')+'. Штампа се у копирници (плотер).'; },30); } else $('#pr_info').textContent=''; }); $('#pr_plakatPapir').addEventListener('change',()=>setTimeout(()=>$('#pr_raspored').dispatchEvent(new Event('change')),0));
   $$('#prevMode button').forEach(b=>b.onclick=()=>{ PV.mode=b.dataset.v; renderPreview(); });
   $('#previewBtn').onclick=()=>openPreview(1, treeMode, treeRoot, 'tree');
   $('#printPreview').onclick=()=>{ $('#printDlg').close(); const mode=$('#printMode .on').dataset.v; setPost('stampa.raspored',$('#pr_raspored').value); setPost('stampa.papir',$('#pr_papir').value); setPost('stampa.velicina',$('#pr_velicina').value); setPost('stampa.crnobelo',$('#pr_crnobelo').value); commit(); openPreview(1, mode, treeRoot, 'tree'); };
@@ -1276,7 +1293,7 @@ const UPUTSTVO=`КАКО СЕ КОРИСТИ ПРОГРАМ (за твоја о�
 • Чување: дугме „Сачувај“ горе десно. Ако горе црвеним пише „Измене нису сачуване у фајл“, треба кликнути „Сачувај“. Ако Chrome пита „Дозволити да сајт мења фајл?“, кликне се „Дозволи“. Кад разговарате, ти чуваш сам после сваке измене.
 • Стабло: кружић са бројем испод особе (нпр. +5) отвара скривене потомке, кружић „−“ их затвара. Точкић миша увећава и умањује, превлачење мишем помера. „Уклопи“ смешта цело стабло на екран. Двоклик на особу отвара њен образац. „Корен“ је особа на врху стабла.
 • ШТАМПАНИ РОДОСЛОВ — ГЛАВНИ НАЧИН ЈЕ ТЕКСТУАЛНИ РОДОСЛОВ КАО КЊИГА (део „Текст“ → „Штампај / PDF“): насловна страна, садржај са бројевима страна, текст по гранама (прво цео Маринков род, па Марков, Јовов, Мијаилов и Ружичин; деца увучена испод родитеља), на крају регистар имена (азбучно, са бројем стране). Формат: knjiga.format „A5“ (мала књига; у копирници се одштампа као брошура/књижица), „knjizica“ (програм сам распореди стране на листове A4: штампа се обострано, окретање по краћој ивици, листови се савију на пола и хефтају — права књижица и код куће), „A4“. Корисник жели баш такав родослов: кад говори о штампи, подразумевај текстуални родослов, осим ако изричито тражи цртеж/стабло.
-• ЦРТЕЖ СТАБЛА (дијаграм са кућицама) је за ВЕЛИКИ ПАПИР: stampa.raspored „plakat“ — цело стабло на једном листу: прва колена у кућицама, а остали потомци као увучени спискови ситнијим словима. Програм сам израчуна потребан папир (A1, A0 или ролна плотера 91,4 cm) — то пише у прегледу. Штампа се у копирници са плотером, PDF на USB-у. На A4 цртеж целог стабла није читљив — тада предложи текстуални родослов.
+• ЦРТЕЖ СТАБЛА (дијаграм са кућицама) је за ВЕЛИКИ ПАПИР — зове се ПЛАКАТ: stampa.raspored „plakat“ — цело стабло на једном листу: прва колена у кућицама, а остали потомци као увучени спискови ситнијим словима. Програм сам израчуна потребан папир (A1, A0 или ролна плотера 91,4 cm) — то пише у прегледу. Штампа се у копирници са плотером, PDF на USB-у. На A4 цртеж целог стабла није читљив — тада предложи текстуални родослов.
 • PDF и штампа: у делу „Стабло“ (или „Текст“) кликне се „Штампај / PDF“ горе десно, у прозору „Штампање стабла“ кликне се „Настави“. Отвори се Chrome прозор за штампање: десно, код „Одредиште“, треба да пише „Сачувај као PDF“ (ако пише име штампача, кликне се на то и изабере „Сачувај као PDF“), па се кликне плаво дугме „Сачувај“ доле десно; затим се изабере „Радна површина“, упише име фајла и кликне „Сачувај“. За штампу на папиру, код „Одредиште“ се изабере штампач и кликне „Штампај“.
 • Преглед штампе: у делу „Стабло“ дугме „👁 Преглед“ (или у прозору „Штампање стабла“) отвара преко целог екрана стране онакве какве ће бити одштампане; горе су „◀ Претходна“, „Следећа ▶“, „Сажето/Пуно“, „Штампај / PDF“ и „✕ Затвори“. Ти га отвараш операцијом „преглед“.
 • Зашто неке особе нема у PDF-у: (а) особа није повезана са родословом — нема уписаног оца/мајку из родослова (види списак „НЕПОВЕЗАНЕ ОСОБЕ“); (б) штампа се само једна грана (корен није Милош); (в) ограничен је број нараштаја (stampa.generacije); (г) супруге и мужеви нису посебне кућице — пишу се у кућици супружника, па их нема ако је искључено „supruznici“; (д) особа је на некој другој страни (грана се наставља на страни N). Увек прво провери операцијом „провери“.
@@ -1331,7 +1348,8 @@ function aiSystem(){ const DB=dataBlocks(); return [
   stampa.generacije: "2"…"8" или "99" (колико нараштаја испод корена се штампа);  stampa.naslovVelicina: "mali"|"srednji"|"veliki"
   stampa.zaglavlje: true/false (ред „Грана: …“ и објашњење на свакој страни);  stampa.brojStrana: true/false;  stampa.okviri: true/false (оквири око кућица)
   stampa.velicina: "mala"|"srednja"|"velika" — колико кућица стаје на једну страну (ситније = више на страни, мање страна)
-  stampa.raspored: "grane" | "celo" | "plakat" (сажето цело стабло за велики папир)
+  stampa.raspored: "grane" | "celo" | "plakat" (ПЛАКАТ: цело стабло на великом папиру)
+  stampa.plakatPapir: "auto" (најмањи довољан) | "A2" | "A1" | "A0" | "rolna" — већи папир = крупнија слова и више кућица
 КЊИГА (текстуални родослов) — кључеви за „подешавање“:
   knjiga.format: "A5"|"knjizica"|"A4";  knjiga.slova: "mala"|"srednja"|"velika";  knjiga.sadrzaj: true/false;  knjiga.dubinaSadrzaja: "1"|"2"|"3" (до ког колена иде садржај)
   knjiga.registar: true/false (регистар имена на крају);  knjiga.novaStrana: true/false (свака грана Милошевог сина почиње на новој страни);  knjiga.naslovna: true/false;  knjiga.uvod: текст уводне речи (празно = без ње)
@@ -1523,7 +1541,7 @@ const BYE=/(довиђења|збогом|то је све|крај разгов
 async function startConversation(){
   if(conv.on){ stopConversation(); return; }
   conv.on=true; $('#talkBtn').classList.add('on'); $('#talkBtn').textContent='■ Заврши разговор'; conv.t0=performance.now(); conv.n=0; conv.razlog='дугме';
-  keepAwake(); logEv('старт',{v:APP_VERSION, budan:!!wakeLock, stt:useChromeStt()?'chrome':settings.stt, tts:settings.ttsEngine, ttsModel:settings.ttsModel, glas:settings.ttsEngine==='azure'?settings.azureVoice:settings.voice, model:settings.claudeModel, pauza:post().razgovor.pauza, kljuc:!!settings.claude});
+  keepAwake(); logEv('старт',{v:APP_VERSION, budan:!!wakeLock, azServis:azWorkerOk, tts2:ttsEng(), azGlas:settings.azureVoice, stt:useChromeStt()?'chrome':settings.stt, tts:settings.ttsEngine, ttsModel:settings.ttsModel, glas:settings.ttsEngine==='azure'?settings.azureVoice:settings.voice, model:settings.claudeModel, pauza:post().razgovor.pauza, kljuc:!!settings.claude});
   ensureWritePermission(); ensureWordPermission();
   try{ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); await audioCtx.resume(); }catch(e){}
   if(!useChromeStt()){ try{ await getMic(); }catch(e){ addMsg('ai','Микрофон није доступан. Проверите да је укључен.'); stopConversation(); return; } }
@@ -1577,7 +1595,15 @@ function azureSsml(text){ const rules=(settings.azPron||'').split(/\n/).map(l=>l
   let x=xmlEsc(t).replace(/\u0001(\d+)\u0001/g,(m,i)=>{ const [w,r]=toks[+i]; return /^ipa:/i.test(r) ? `<phoneme alphabet="ipa" ph="${xmlEsc(r.slice(4).trim())}">${xmlEsc(w)}</phoneme>` : xmlEsc(r); });
   const lang=(settings.azureVoice||'sr-RS-SophieNeural').split('-').slice(0,2).join('-');
   return `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${lang}"><voice name="${settings.azureVoice||'sr-RS-SophieNeural'}"><prosody rate="${(+settings.azSpeed||1).toFixed(2)}">${x}</prosody></voice></speak>`; }
-async function azureBlob(text){ const region=(settings.azureRegion||'').trim().toLowerCase(); if(!region) throw new Error('Упишите Azure регион.');
+let azWorkerOk=false;
+function izvBase(){ return (settings.izvUrl||IZV_URL||'').replace(/\/$/,''); }
+async function checkAzWorker(){ const u=izvBase(); if(!u||!/^https:/.test(u)) return false; try{ const r=await fetch(u+'/glas/proba?kljuc='+encodeURIComponent(settings.izvKljuc||IZV_KLJUC)); if(!r.ok) return false; const j=await r.json(); azWorkerOk=!!j.ok; }catch(e){ azWorkerOk=false; }
+  if(azWorkerOk && !settings.azWorkerMigr){ settings.ttsEngine='azure'; settings.azureVoice='sr-RS-NicholasNeural'; if(!settings.azSpeed) settings.azSpeed=0.95; settings.azWorkerMigr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); logEv('глас-азур',{preko:'сервис'}); }
+  const k=$('#s_azureKey'); if(k&&azWorkerOk&&!settings.azureKey) k.placeholder='(није потребан — глас иде преко Борисовог сервиса)';
+  return azWorkerOk; }
+function ttsEng(){ if(settings.ttsEngine==='azure' && !settings.azureKey && !azWorkerOk) return 'eleven'; return settings.ttsEngine; }
+async function azureBlob(text){ if(!settings.azureKey && azWorkerOk){ const r=await fetch(izvBase()+'/glas',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8','X-Kljuc':settings.izvKljuc||IZV_KLJUC},body:azureSsml(text)}); if(!r.ok){ let m=''; try{ m=(await r.text()).slice(0,160); }catch(e){} throw new Error('Azure (сервис) '+r.status+' '+m); } return await r.blob(); }
+  const region=(settings.azureRegion||'').trim().toLowerCase(); if(!region) throw new Error('Упишите Azure регион.');
   const r=await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`,{method:'POST',headers:{'Ocp-Apim-Subscription-Key':settings.azureKey,'Content-Type':'application/ssml+xml','X-Microsoft-OutputFormat':'audio-24khz-48kbitrate-mono-mp3'},body:azureSsml(text)});
   if(!r.ok){ let m=''; try{ m=(await r.text()).slice(0,160); }catch(e){} throw new Error('Azure '+r.status+(r.status===401?' — погрешан кључ или регион':'')+' '+m); }
   return await r.blob(); }
@@ -1592,9 +1618,9 @@ async function elevenBlob(text){
   return await r.blob(); }
 function playBlob(b){ return new Promise(res=>{ if(curAudio){ try{curAudio.pause();}catch(e){} } const a=new Audio(URL.createObjectURL(b)); curAudio=a; let done=false; const fin=()=>{ if(!done){ done=true; res(); } }; a.onended=fin; a.onerror=fin; a.onpause=fin; const p=a.play(); if(p&&p.catch) p.catch(fin); }); }
 const ttsCache=new Map();
-function ttsReady(){ return settings.ttsEngine==='azure' ? !!settings.azureKey : !!(settings.eleven&&settings.voice); }
-async function ttsBlob(text){ const az=settings.ttsEngine==='azure'; const key=(az?'az|'+settings.azureVoice+'|'+settings.azSpeed:'el|'+settings.voice+'|'+settings.ttsModel+'|'+settings.speed)+'|'+text; if(ttsCache.has(key)) return ttsCache.get(key);
-  const b= az ? await azureBlob(text) : await elevenBlob(text); if(text.length<80) ttsCache.set(key,b); return b; }
+function ttsReady(){ return ttsEng()==='azure' ? (!!settings.azureKey||azWorkerOk) : !!(settings.eleven&&settings.voice); }
+async function ttsBlob(text){ const az=ttsEng()==='azure'; const key=(az?'az|'+settings.azureVoice+'|'+settings.azSpeed:'el|'+settings.voice+'|'+settings.ttsModel+'|'+settings.speed)+'|'+text; if(ttsCache.has(key)) return ttsCache.get(key);
+  let b; if(az){ try{ b=await azureBlob(text); }catch(e){ if(settings.eleven&&settings.voice){ logEv('грешка',{gde:'azure',x:String(e.message||e)}); b=await elevenBlob(text); } else throw e; } } else b=await elevenBlob(text); if(text.length<80) ttsCache.set(key,b); return b; }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let sayGen=0;
 function splitSentences(t){ const raw=String(t).split(/(?<=[.!?…])\s+/).filter(Boolean); const out=[]; for(const r of raw){ if(out.length && (out[out.length-1].length<30)) out[out.length-1]+=' '+r; else out.push(r); } return out.slice(0,8); }
@@ -1633,6 +1659,7 @@ function bindSettings(){
     if(await confirmDlg(`Учитати податке из фајла <b>${esc(f.name)}</b> (${j.persons.length} особа, измењено ${esc(j.izmenjeno||'?')})? Садашњи подаци (${D.persons.length} особа) биће замењени.`)){ pushHistory(); D=j; commit('Подаци учитани'); selId=null; renderList(); renderForm(); d.close(); } e.target.value=''; };
 }
 function init(){
+  checkAzWorker();
   if(!settings.azMigr){ if(settings.azureKey){ settings.ttsEngine='azure'; settings.azureVoice='sr-RS-NicholasNeural'; settings.azSpeed=settings.azSpeed||0.95; } settings.azMigr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   keepAwake(); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') keepAwake(); if(conv.on) logEv(document.visibilityState==='visible'?'видљиво':'сакривено',{}); });
   document.addEventListener('click',()=>{ if(!wakeLock) keepAwake(); });
