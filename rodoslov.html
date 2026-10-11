@@ -274,6 +274,8 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
       <span>Од:</span><button id="textRootBtn">Милош Лакетић</button>
       <span class="seg" id="textMode"><button data-v="s" class="on">Сажето</button><button data-v="p">Пуно</button></span>
       <span class="sp"></span>
+      <select data-pk="knjiga.format" style="width:auto" title="Формат књиге"><option value="A5">Књижица A5</option><option value="knjizica">A5 за савијање (листови A4)</option><option value="A4">A4</option></select>
+      <button id="textPreviewBtn">👁 Преглед</button>
       <button id="printTextBtn" class="primary">🖨 Штампај / PDF</button>
     </div>
     <div id="report"></div>
@@ -327,11 +329,13 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
   <div class="db">
     <p>Приказ: <span class="seg" id="printMode"><button data-v="s" class="on">Сажето</button><button data-v="p">Пуно</button></span></p>
     <div class="grid" style="grid-template-columns:1fr 1fr">
-      <div><label class="f">Распоред</label><select id="pr_raspored"><option value="grane">По гранама, на више страна</option><option value="celo">Цело стабло на једној великој страни (само PDF)</option></select></div>
+      <div><label class="f">Распоред</label><select id="pr_raspored"><option value="grane">По гранама, на више страна</option><option value="celo">Цело стабло на једној великој страни (само PDF)</option><option value="plakat">Сажето цело стабло за велики папир (копирница)</option></select></div>
       <div><label class="f">Папир</label><select id="pr_papir"><option value="A4">А4 (водоравно)</option><option value="A3">А3 (водоравно)</option></select></div>
       <div><label class="f">Величина цртежа</label><select id="pr_velicina"><option value="mala">Ситније — више на једној страни</option><option value="srednja">Средње</option><option value="velika">Крупније — мање на једној страни</option></select></div>
       <div><label class="f">Боја</label><select id="pr_crnobelo"><option value="false">У боји</option><option value="true">Црно-бело</option></select></div>
     </div>
+    <p class="help" id="pr_info" style="font-weight:600;color:#7a4a1e"></p>
+    <p class="help">За штампу код куће најбољи је <b>текстуални родослов</b> (део „Текст“): књижица са садржајем и регистром имена. Цртеж стабла је за велики папир.</p>
     <p class="help">Шта тачно пише у „Сажето“ и „Пуно“ подешава се у ⚙ Подешавања, или само реците помоћнику.</p>
     <p class="help">У прозору за штампање који се отвори изаберите штампач, или „Сачувај као PDF“ (Save as PDF) да добијете PDF фајл.</p>
   </div>
@@ -381,6 +385,14 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
         <div><label class="f">Наслов на PDF-у (празно = подразумевани)</label><input data-pk="stampa.naslov"></div>
         <div><label><input type="checkbox" data-pk="stampa.datum" style="width:auto;transform:scale(1.3);margin-right:8px">Датум на PDF-у</label><br><label><input type="checkbox" data-pk="stampa.oznake" style="width:auto;transform:scale(1.3);margin-right:8px">Ознаке ⚠ на PDF-у</label></div>
       </div></div>
+    <div class="setting"><label class="f">Текстуални родослов — књига (део „Текст“ → Штампај)</label>
+      <div class="grid">
+        <div><label class="f">Формат</label><select data-pk="knjiga.format"><option value="A5">Књижица A5 (за копирницу)</option><option value="knjizica">A5 за савијање — листови A4, обострано</option><option value="A4">A4</option></select></div>
+        <div><label class="f">Слова</label><select data-pk="knjiga.slova"><option value="mala">Ситнија (мање страна)</option><option value="srednja">Обична</option><option value="velika">Крупнија</option></select></div>
+        <div><label class="f">Садржај до</label><select data-pk="knjiga.dubinaSadrzaja"><option value="1">синова Милошевих</option><option value="2">унука (препоручено)</option><option value="3">праунука</option></select></div>
+        <div><label><input type="checkbox" data-pk="knjiga.naslovna" style="width:auto;transform:scale(1.3);margin-right:8px">Насловна страна</label><br><label><input type="checkbox" data-pk="knjiga.sadrzaj" style="width:auto;transform:scale(1.3);margin-right:8px">Садржај</label><br><label><input type="checkbox" data-pk="knjiga.registar" style="width:auto;transform:scale(1.3);margin-right:8px">Регистар имена на крају</label><br><label><input type="checkbox" data-pk="knjiga.novaStrana" style="width:auto;transform:scale(1.3);margin-right:8px">Свака грана од нове стране</label></div>
+      </div>
+      <label class="f" style="margin-top:8px">Уводна реч (празно = без ње)</label><textarea data-pk="knjiga.uvod" style="min-height:70px"></textarea></div>
     <div class="setting"><label class="f">Ворд фајл са дописима (одатле помоћник чита допуне родослова)</label><div class="row"><span id="wordName" class="help">није изабран</span> <button class="small" id="wordPick">Изабери фајл</button> <button class="small" id="wordForget">Заборави</button></div><div class="help">Текст који није о родослову помоћник прескаче. Памти се докле је прочитано, па се сваки пут обрађују само нови редови.</div></div>
     <div class="setting"><label class="f">Извештај за Бориса (разговори, трајања, грешке — без кључева)</label><div class="row"><button class="small" id="reportBtn">📤 Сачувај извештај</button> <button class="small" id="reportSend">Пошаљи сада</button></div><div class="help" id="izvStatus"></div><div class="help">Извештаји се после сваког разговора сами шаљу Борису (ако је уписана адреса сервиса). Адреса: <input id="s_izvUrl" style="width:320px;display:inline-block" placeholder="(уграђена)"> лозинка: <input id="s_izvKljuc" type="password" style="width:160px;display:inline-block"></div></div>
     <div class="setting"><label class="f">Жеље за нове могућности (записује их помоћник, за Бориса)</label><div id="zeljeList"></div></div>
@@ -440,6 +452,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
     <button id="prevPrint" class="primary">🖨 Штампај / PDF</button><button id="prevClose">✕ Затвори</button>
   </div>
   <div id="prevStage"></div>
+  <div id="prevInfo" style="color:#fff;background:#3d3d3d;padding:6px 16px;font-size:.85em;line-height:1.3;min-height:1.3em"></div>
 </div>
 <div id="printArea"></div>
 <div id="toast"></div>
@@ -450,7 +463,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.11.7';
+const APP_VERSION='2026.10.11.8';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -502,11 +515,12 @@ function setStatus(){ const s=$('#status'); if(dirty){ s.textContent='Измен
 const POST_DEF={ stampa:{papir:'A4', raspored:'grane', velicina:'srednja', crnobelo:false, naslov:'', datum:true, oznake:true, orijentacija:'polozeno', poravnanje:'centar', slova:'srednja', razmak:'normalno', generacije:'99', naslovVelicina:'srednji', zaglavlje:true, brojStrana:true, okviri:true},
   sazeto:{nadimci:true, godine:true, supruznici:true, mesta:false, napomene:false},
   puno:{nadimci:true, godine:true, supruznici:true, mesta:true, napomene:true},
-  stablo:{generacije:'2'}, razgovor:{pauza:'2.5'} };
-const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99'],'stampa.orijentacija':['polozeno','uspravno'],'stampa.poravnanje':['centar','levo'],'stampa.slova':['mala','srednja','velika'],'stampa.razmak':['zbijeno','normalno','siroko'],'stampa.generacije':['2','3','4','5','6','7','8','99'],'stampa.naslovVelicina':['mali','srednji','veliki'],'stampa.zaglavlje':'bool','stampa.brojStrana':'bool','stampa.okviri':'bool','razgovor.pauza':['1.5','2','2.5','3','3.5','4','5']};
+  stablo:{generacije:'2'}, razgovor:{pauza:'2.5'},
+  knjiga:{format:'A5', slova:'srednja', sadrzaj:true, dubinaSadrzaja:'2', registar:true, novaStrana:true, naslovna:true, uvod:''} };
+const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo','plakat'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99'],'stampa.orijentacija':['polozeno','uspravno'],'stampa.poravnanje':['centar','levo'],'stampa.slova':['mala','srednja','velika'],'stampa.razmak':['zbijeno','normalno','siroko'],'stampa.generacije':['2','3','4','5','6','7','8','99'],'stampa.naslovVelicina':['mali','srednji','veliki'],'stampa.zaglavlje':'bool','stampa.brojStrana':'bool','stampa.okviri':'bool','razgovor.pauza':['1.5','2','2.5','3','3.5','4','5'],'knjiga.format':['A5','knjizica','A4'],'knjiga.slova':['mala','srednja','velika'],'knjiga.sadrzaj':'bool','knjiga.dubinaSadrzaja':['1','2','3'],'knjiga.registar':'bool','knjiga.novaStrana':'bool','knjiga.naslovna':'bool','knjiga.uvod':'text'};
 for(const m of ['sazeto','puno']) for(const f of ['nadimci','godine','supruznici','mesta','napomene']) POST_SCHEMA[m+'.'+f]='bool';
 function post(){ if(!D.postavke) D.postavke={}; for(const k in POST_DEF) D.postavke[k]=Object.assign({},POST_DEF[k],D.postavke[k]||{}); return D.postavke; }
-function setPost(path,val){ const t=POST_SCHEMA[path]; if(!t) return false; if(t==='bool') val=(val===true||val==='true'||val==='да'||val===1); else if(t==='text') val=String(val??'').slice(0,200); else { val=String(val); if(!t.includes(val)) return false; } const [a,b]=path.split('.'); post()[a][b]=val; return true; }
+function setPost(path,val){ const t=POST_SCHEMA[path]; if(!t) return false; if(t==='bool') val=(val===true||val==='true'||val==='да'||val===1); else if(t==='text') val=String(val??'').slice(0, path==='knjiga.uvod'?3000:200); else { val=String(val); if(!t.includes(val)) return false; } const [a,b]=path.split('.'); post()[a][b]=val; return true; }
 function getPost(path){ const [a,b]=path.split('.'); return post()[a][b]; }
 function fieldsFor(mode){ return post()[mode==='p'?'puno':'sazeto']; }
 function nmF(p,f){ const s=[p.ime, (f.nadimci&&p.nadimak)?`„${p.nadimak}“`:'', p.prezime].filter(Boolean).join(' '); return s||'(без имена)'; }
@@ -796,6 +810,7 @@ function buildTreePages(mode, rootId){ mode=mode||treeMode; rootId=(rootId&&P.ha
   return withLook(()=>{ const s=post().stampa; setCut(rootId, s.generacije); try{
     const title=printTitle(); const dateStr=s.datum?new Date().toLocaleDateString('sr-RS'):''; const pp=paperPx(); const st=svgStyle(); const out={pp, pages:[], celo:false, root:rootId, mode};
     const names=L=>L.nodes.map(n=>shortName(n.p)+(f=>f.supruznici?spouses(n.id).map(x=>' ∞ '+shortName(x.s)).join(''):'')(fieldsFor(mode)));
+    if(s.raspored==='plakat') return posterPages(rootId, mode);
     if(s.raspored==='celo'){ const L=layout(rootId, mode, 99, new Set()); const sc=Math.min(1, 1800/Math.max(L.w,1)*3); const svgW=L.w, svgH=L.h+20;
       out.celo=true; out.pp={w:L.w+80, h:L.h+140, m:30, wmm:(L.w+80)*25.4/96, hmm:(L.h+140)*25.4/96};
       out.pages.push({hdrText:title+(dateStr?' · '+dateStr:''), noteText:'', svgW, svgH, svg:`<svg xmlns="http://www.w3.org/2000/svg" class="pt" width="${svgW}" height="${svgH}" viewBox="0 0 ${L.w} ${L.h+20}"><style>${st}</style><g>${svgTree(L,{mode,noToggle:true,sel:'-'})}</g></svg>`, ids:L.nodes.map(n=>n.id), names:names(L)}); return out; }
@@ -813,24 +828,218 @@ function buildTreePages(mode, rootId){ mode=mode||treeMode; rootId=(rootId&&P.ha
 function pageHtml(pg){ const s=post().stampa; const al=s.poravnanje==='levo'?'left':'center';
   return `<div class="ppage" style="text-align:${al}">${pg.hdrText?`<h2 style="font-size:${hdrPt()}pt;text-align:${al}">${esc(pg.hdrText)}</h2>`:''}${pg.noteText?`<p class="pnote" style="text-align:${al}">${esc(pg.noteText)}</p>`:''}<div style="display:flex;justify-content:${al==='center'?'center':'flex-start'}">${pg.svg}</div></div>`; }
 function printTree(mode, rootId){ const B=buildTreePages(mode, rootId); const style=ensurePrintStyle(); const area=$('#printArea');
-  if(B.celo) style.textContent=`@page{size:${B.pp.wmm.toFixed(1)}mm ${B.pp.hmm.toFixed(1)}mm;margin:8mm}`+printExtraCss();
+  if(B.plakat) style.textContent=`@page{size:${B.pp.wmm}mm ${B.pp.hmm}mm;margin:0}#printArea svg{display:block;width:${B.pp.wmm-0.5}mm;height:${B.pp.hmm-0.5}mm}`;
+  else if(B.celo) style.textContent=`@page{size:${B.pp.wmm.toFixed(1)}mm ${B.pp.hmm.toFixed(1)}mm;margin:8mm}`+printExtraCss();
   else style.textContent=`@page{size:${B.pp.wmm}mm ${B.pp.hmm}mm;margin:${B.pp.mmm}mm}`+printExtraCss();
-  area.innerHTML=B.pages.map(pageHtml).join(''); setTimeout(()=>window.print(), 100); }
+  area.innerHTML=B.plakat?B.pages[0].svg:B.pages.map(pageHtml).join(''); logEv('штампа',{vrsta:B.plakat?'плакат':'стабло', papir:B.plakat?B.plakat.opis:post().stampa.papir, strana:B.pages.length}); setTimeout(()=>window.print(), 100); }
+
+/* ============================================================ књига — текстуални родослов за штампу (страничење, садржај, регистар) */
+const BOOK_FMT={
+  A4:{w:210,h:297,t:16,b:18,l:18,r:18,fs:{mala:9.5,srednja:10.5,velika:12},step:6},
+  A5:{w:148,h:210,t:11,b:14,l:13,r:13,fs:{mala:8,srednja:9,velika:10.5},step:4.2} };
+function bookFmt(){ const k=post().knjiga; const base=k.format==='A4'?BOOK_FMT.A4:BOOK_FMT.A5; const F=Object.assign({},base); F.fsz=base.fs[k.slova]||base.fs.srednja; F.step=base.step*F.fsz/base.fs.srednja; F.ch=F.h-F.t-F.b-8; F.key=k.format==='A4'?'A4':'A5'; F.imposed=k.format==='knjizica'; return F; }
+function bookCss(F){ const bw=post().stampa.crnobelo;
+  return `.bpage{width:${F.w}mm;height:${F.h}mm;box-sizing:border-box;padding:${F.t}mm ${F.r}mm ${F.b}mm ${F.l}mm;background:#fff;color:#111;font-family:"Segoe UI",Arial,sans-serif;font-size:${F.fsz}pt;line-height:1.3;position:relative;overflow:hidden;text-align:left}
+.bpage .bh{height:5mm;font-size:.74em;color:#666;display:flex;justify-content:space-between;gap:4mm;border-bottom:.2mm solid #bbb;margin-bottom:3mm;white-space:nowrap;overflow:hidden}
+.bpage .bh span:last-child{overflow:hidden;text-overflow:ellipsis}
+.bpage .bc{height:${F.ch}mm;overflow:hidden}
+.bpage .bf{position:absolute;left:0;right:0;bottom:${Math.max(4,F.b-8)}mm;text-align:center;font-size:.85em;color:#444}
+.bpage .bb{padding:0 0 .8mm 0;margin:0}
+.bpage .bb.h2{font-size:1.28em;font-weight:700;padding-top:2.2mm;padding-bottom:1mm}
+.bpage .bb.h2 .hu{border-bottom:.3mm solid #999;display:block;padding-bottom:.6mm}
+.bpage .bb.h3{font-size:1.1em;font-weight:700;padding-top:1.8mm}
+.bpage .bb.h4{font-size:1.0em;font-weight:700;padding-top:1.3mm}
+.bpage .yrs{color:${bw?'#000':'#444'}}.bpage .warn{color:${bw?'#000':'#a33'}}
+.bpage.tp .bc{display:flex;flex-direction:column;align-items:center;text-align:center;height:${F.h-F.t-F.b}mm}
+.bpage .t1{margin-top:28%;font-size:2.2em;font-weight:700;line-height:1.2}.bpage .t2{font-size:1.45em;margin-top:2mm}
+.bpage .t3{margin-top:10mm;font-size:1.1em}.bpage .t4{margin-top:4mm;color:#555}.bpage .orn{margin:8mm 0 0;font-size:1.4em;color:#8c7a5c;letter-spacing:3mm}
+.bpage .tleg{margin-top:auto;font-size:.82em;color:#555;max-width:85%}
+.bpage .ttl{font-size:1.5em;font-weight:700;margin:0 0 4mm}
+.bpage .toc{display:flex;align-items:baseline;gap:1.5mm;padding:.5mm 0}.bpage .toc .tn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:88%}.bpage .toc .dots{flex:1;border-bottom:.3mm dotted #888;transform:translateY(-1mm)}
+.bpage .toc.tc1{font-weight:700;margin-top:1.8mm}.bpage .toc.tc2{padding-left:${F.step}mm}.bpage .toc.tc3{padding-left:${2*F.step}mm;font-size:.95em}
+.bpage .ix{display:flex;gap:6mm}.bpage .ixc{flex:1;min-width:0;height:${F.ch-9}mm;overflow:hidden}.bpage .ixl{font-size:.82em;line-height:1.22;padding:.15mm 0;display:flex;gap:1mm}.bpage .ixl.in{padding-left:3mm}.bpage .ixl .n{flex:1;min-width:0}.bpage .ixl .pg{white-space:nowrap}
+.bpage .ixh{font-weight:700;font-size:.9em;margin-top:1.2mm}.bpage .ixh.let{font-size:1.15em;margin-top:2.2mm;color:#7a4a1e}
+.bpage .uv p{margin:0 0 2.5mm;text-align:justify}
+.bsheet{width:297mm;height:210mm;display:flex;background:#fff}.bsheet .bpage{width:148.5mm}`; }
+function bookStyle(F){ let s=$('#bookStyle'); if(!s){ s=document.createElement('style'); s.id='bookStyle'; document.head.appendChild(s); } s.textContent=bookCss(F); }
+function bookHost(){ let h=$('#bookHost'); if(!h){ h=document.createElement('div'); h.id='bookHost'; h.style.cssText='position:fixed;left:-20000px;top:0;visibility:hidden;pointer-events:none'; document.body.appendChild(h); } return h; }
+function bookGuides(d, step){ if(d<1) return ''; const g=[]; for(let k=0;k<d;k++) g.push(`linear-gradient(#cfc6b4,#cfc6b4) ${(k*step+step*0.25).toFixed(2)}mm 0/.25mm 100% no-repeat`); return `background:${g.join(',')};`; }
+function bookPara(p, f){ const Y=q=>{ const y=yrs(q); return (f.godine&&y)?` <span class="yrs">(${esc(y)})</span>`:''; };
+  let t=`<b>${esc(nmF(p,f))}</b>`+Y(p); const sp=spouses(p.id);
+  if(f.supruznici&&sp.length){ t+=' — '+sp.map(({m,s:q})=>{ let u=(sp.length>1?roman(m.red||1)+' брак: ':(p.pol==='ж'?'муж ':'супруга ')); u+=esc(nmF(q,f)); const qy=yrs(q); if(f.godine&&qy) u+=` (${esc(qy)})`; if(f.mesta&&q.mesto) u+=', '+esc(q.mesto); if(f.napomene&&m.nap) u+=', '+esc(m.nap); return u; }).join('; '); }
+  if(f.mesta&&p.mesto) t+=`. ${esc(p.mesto)}`;
+  if(f.napomene&&p.nap){ const n=p.nap.replace(/\.\s*$/,''); t+=`. <span class="${p.prov?'warn':''}">${esc(n.charAt(0).toUpperCase()+n.slice(1))}</span>`; } else if(f.napomene&&p.prov&&post().stampa.oznake) t+=' <span class="warn">⚠ проверити</span>';
+  const ch=children(p.id); if(ch.length) t+=`. Деца: ${ch.map(c=>esc(c.ime||'(без имена)')).join(', ')}.`; else if(!/\.$/.test(t)) t+='.';
+  return t; }
+function bookBlocks(rootId, mode){ const f=fieldsFor(mode); const K=post().knjiga; const out=[]; let branch=null;
+  const walk=(id, depth)=>{ const p=P.get(id); if(!p) return; const ch=children(id); if(depth===1) branch=id;
+    const ids=[id, ...spouses(id).map(x=>x.s.id)];
+    if(depth>=1 && depth<=3 && ch.length){ const cls=depth===1?'h2':depth===2?'h3':'h4'; const y=yrs(p);
+      out.push({cls, depth, html:(cls==='h2'?'<span class="hu">':'')+esc(nmF(p,f))+((f.godine&&y)?` <span class="yrs">(${esc(y)})</span>`:'')+(cls==='h2'?'</span>':''), toc:depth, tocText:nmF(p,f)+((f.godine&&y)?` (${y})`:''), keepNext:true, newPage:depth===1&&K.novaStrana, branch, ids:[], pid:id}); }
+    out.push({cls:'p', depth, html:bookPara(p,f), ids, branch, pid:id});
+    for(const c of ch) walk(c.id, depth+1); };
+  walk(rootId, 0); return out; }
+function bookBlockEl(b, F){ const d=document.createElement('div'); d.className='bb '+b.cls; d.style.cssText=`padding-left:${(b.depth*F.step).toFixed(2)}mm;`+bookGuides(b.depth, F.step); d.innerHTML=b.html; return d; }
+function bookPack(F, blocks){ const host=bookHost(); const pages=[]; let cur=null;
+  const start=()=>{ host.innerHTML='<div class="bpage"><div class="bh"></div><div class="bc"></div></div>'; cur={items:[], bc:host.querySelector('.bc')}; pages.push(cur); };
+  const over=()=>cur.bc.scrollHeight>cur.bc.clientHeight+1;
+  start();
+  for(const b of blocks){
+    if(b.newPage && cur.items.some(x=>x.depth>=1)) start();
+    const el=bookBlockEl(b,F); cur.bc.appendChild(el);
+    if(!over()){ cur.items.push(b); continue; }
+    cur.bc.removeChild(el); const carry=[]; while(cur.items.length && cur.items[cur.items.length-1].keepNext) carry.unshift(cur.items.pop());
+    if(!cur.items.length && !carry.length){ cur.bc.appendChild(el); cur.items.push(b); start(); continue; }
+    if(!cur.items.length){ pages.pop(); } // страна би остала празна (само наслови) — наслови иду са текстом
+    start(); for(const c of carry){ cur.bc.appendChild(bookBlockEl(c,F)); cur.items.push(c); } cur.bc.appendChild(bookBlockEl(b,F)); cur.items.push(b); }
+  if(cur && !cur.items.length) pages.pop();
+  return pages.map(pg=>pg.items); }
+function bookPackToc(F, entries){ const host=bookHost(); const pages=[]; let bc=null, items=null;
+  const start=(first)=>{ host.innerHTML=`<div class="bpage"><div class="bh"></div><div class="bc">${first?'<div class="ttl">Садржај</div>':''}</div></div>`; bc=host.querySelector('.bc'); items=[]; pages.push(items); };
+  start(true); for(const e of entries){ const d=document.createElement('div'); d.className='toc tc'+e.toc; d.innerHTML=`<span class="tn">${esc(e.tocText)}</span><span class="dots"></span><span class="pg">${e.pg||'000'}</span>`; bc.appendChild(d); if(bc.scrollHeight>bc.clientHeight+1){ bc.removeChild(d); start(false); bc.appendChild(d); } items.push(e); }
+  return pages; }
+function bookIndexEntries(blocks, pageOf){ const map=new Map();
+  for(const b of blocks){ if(b.cls!=='p') continue; const pg=pageOf.get(b); for(const id of b.ids){ const p=P.get(id); if(!p) continue; let e=map.get(id); if(!e){ e={id, p, pages:new Set(), via:id===b.pid?null:b.pid}; map.set(id,e); } e.pages.add(pg); } }
+  const L=[...map.values()]; const sk=e=>e.p.prezime?norm(e.p.prezime):'яяя'; const gk=e=>norm((e.p.ime||'')+' '+(e.p.rodj||''));
+  L.sort((a,b)=>sk(a).localeCompare(sk(b),'sr')||gk(a).localeCompare(gk(b),'sr'));
+  const groups=[]; for(const e of L){ const k=e.p.prezime||''; const g=groups[groups.length-1]; if(g&&g.k===k) g.items.push(e); else groups.push({k, items:[e]}); }
+  const out=[]; let letter=null;
+  const line=(e, withSur)=>{ const y=yrs(e.p); let n=`${withSur&&e.p.prezime?esc(e.p.prezime)+' ':''}${esc(e.p.ime||'')}${e.p.nadimak?` „${esc(e.p.nadimak)}“`:''}${y?` <span class="yrs">(${esc(y)})</span>`:''}`; if(e.via){ const v=P.get(e.via); if(v) n+=` <span class="yrs">∞ ${esc(shortName(v))}</span>`; } return `<span class="n">${n}</span><span class="pg">${[...e.pages].sort((a,b)=>a-b).join(', ')}</span>`; };
+  for(const g of groups){ const L1=g.k?g.k.charAt(0).toUpperCase():'—'; if(L1!==letter){ letter=L1; out.push({cls:'ixh let', html:g.k?esc(letter):'Без презимена', head:true}); }
+    if(g.k && g.items.length>1){ out.push({cls:'ixh', html:esc(g.k), head:true}); for(const e of g.items) out.push({cls:'ixl in', html:line(e,false)}); }
+    else for(const e of g.items) out.push({cls:'ixl', html:line(e,true)}); }
+  return out; }
+function bookPackIndex(F, entries){ const host=bookHost(); const pages=[]; let cols=null, ci=0, items=null;
+  const start=(first)=>{ host.innerHTML=`<div class="bpage"><div class="bh"></div><div class="bc">${first?'<div class="ttl">Регистар имена</div>':''}<div class="ix"><div class="ixc"></div><div class="ixc"></div></div></div></div>`; cols=[...host.querySelectorAll('.ixc')]; ci=0; items=[[],[]]; pages.push({first, items}); };
+  const next=()=>{ if(ci===0) ci=1; else start(false); };
+  start(true);
+  for(let i=0;i<entries.length;i++){ const e=entries[i]; const d=document.createElement('div'); d.className=e.cls; d.innerHTML=e.html; cols[ci].appendChild(d);
+    let ovf=cols[ci].scrollHeight>cols[ci].clientHeight+1;
+    if(!ovf && e.head && i+1<entries.length){ const d2=document.createElement('div'); d2.className=entries[i+1].cls; d2.innerHTML=entries[i+1].html; cols[ci].appendChild(d2); ovf=cols[ci].scrollHeight>cols[ci].clientHeight+1; cols[ci].removeChild(d2); }
+    if(ovf){ cols[ci].removeChild(d); next(); cols[ci].appendChild(d); }
+    items[ci].push({html:e.html, cls:e.cls}); }
+  return pages; }
+function buildBook(rootId, mode){ rootId=(rootId&&P.has(rootId))?rootId:D.koren; mode=mode||'s'; const F=bookFmt(); bookStyle(F); const K=post().knjiga; const st=post().stampa;
+  const title=printTitle(); const blocks=bookBlocks(rootId, mode);
+  const tocEntries=K.sadrzaj?blocks.filter(b=>b.toc&&b.toc<=(+K.dubinaSadrzaja||2)):[];
+  const front=[]; // насловна, уводна реч
+  if(K.naslovna) front.push({kind:'title'});
+  if(K.uvod&&K.uvod.trim()) front.push({kind:'uvod'});
+  const tocPages0=tocEntries.length?bookPackToc(F, tocEntries).length:0;
+  const bodyPages=bookPack(F, blocks); const bodyStart=front.length+tocPages0+1;
+  const pageOf=new Map(); bodyPages.forEach((items,i)=>items.forEach(b=>pageOf.set(b,bodyStart+i)));
+  tocEntries.forEach(e=>e.pg=pageOf.get(e));
+  const tocPages=tocEntries.length?bookPackToc(F, tocEntries):[];
+  const ixPages=K.registar?bookPackIndex(F, bookIndexEntries(blocks,pageOf)):[];
+  const pages=[]; const shortT=title.replace(/\s+из\s+.*/,''); const dateStr=new Date().toLocaleDateString('sr-RS',{month:'long',year:'numeric'});
+  const wrap=(inner, n, hdrR, cls, text, names)=>pages.push({html:`<div class="bpage ${cls||''}">${hdrR!=null?`<div class="bh"><span>${esc(shortT)}</span><span>${esc(hdrR)}</span></div>`:''}<div class="bc">${inner}</div>${n?`<div class="bf">${n}</div>`:''}</div>`, text:text||'', names:names||[]});
+  for(const fr of front){ const n=pages.length+1;
+    if(fr.kind==='title'){ const m=title.match(/^(.*?)\s+(из\s+.*)$/); const t1=m?m[1]:title, t2=m?m[2]:''; const gen=Math.max(...blocks.map(b=>b.depth))+1;
+      wrap(`<div class="t1">${esc(t1)}</div>${t2?`<div class="t2">${esc(t2)}</div>`:''}<div class="orn">❦</div>${D.autor?`<div class="t3">Саставио ${esc(D.autor)}</div>`:''}<div class="t4">${esc(dateStr)}</div><div class="t4">${blocks.filter(b=>b.cls==='p').length} потомака у ${gen} нараштаја${mode==='p'?'':' · сажети приказ'}</div><div class="tleg">Родослов је исписан по гранама: после сваке особе долазе њена деца, увучена удесно, а после њих њихова деца. Усправне линије са леве стране показују који нараштај је у питању. Знак ∞ значи брак.</div>`, 0, null, 'tp', 'Насловна страна: '+title);
+      pages[pages.length-1].html=pages[pages.length-1].html.replace('<div class="bh"></div>',''); }
+    else wrap(`<div class="ttl">Уводна реч</div><div class="uv">${K.uvod.trim().split(/\n+/).map(x=>`<p>${esc(x)}</p>`).join('')}</div>`, n, '', '', 'Уводна реч'); }
+  tocPages.forEach((items,i)=>{ const n=pages.length+1; wrap((i===0?'<div class="ttl">Садржај</div>':'')+items.map(e=>`<div class="toc tc${e.toc}"><span class="tn">${esc(e.tocText)}</span><span class="dots"></span><span class="pg">${e.pg}</span></div>`).join(''), n, 'Садржај', '', 'Садржај: '+items.map(e=>e.tocText+' … '+e.pg).join('; ')); });
+  bodyPages.forEach((items)=>{ const n=pages.length+1; const br=items.find(b=>b.branch)?.branch; const bp=br&&P.get(br); const hdr=bp?('Потомство: '+shortName(bp)):'';
+    wrap(items.map(b=>{ const el=bookBlockEl(b,F); return el.outerHTML; }).join(''), n, hdr, '', items.map(b=>'  '.repeat(b.depth)+(b.cls==='p'?'':'[наслов] ')+b.html.replace(/<[^>]+>/g,'')).join('\n'), items.filter(b=>b.cls==='p').map(b=>shortName(P.get(b.pid)))); });
+  ixPages.forEach((pg)=>{ const n=pages.length+1; wrap((pg.first?'<div class="ttl">Регистар имена</div>':'')+`<div class="ix">${pg.items.map(col=>`<div class="ixc">${col.map(it=>`<div class="${it.cls}">${it.html}</div>`).join('')}</div>`).join('')}</div>`, n, 'Регистар имена', '', 'Регистар имена, '+pg.items.flat().length+' редова'); });
+  bookHost().innerHTML='';
+  return {kind:'book', F, pages, root:rootId, mode, bodyStart, tocLen:tocPages.length, ixLen:ixPages.length}; }
+function bookPrintHtml(B){ const F=B.F; if(!F.imposed) return B.pages.map(p=>p.html).join('');
+  const pg=B.pages.map(p=>p.html); const blank='<div class="bpage"></div>'; while(pg.length%4) pg.push(blank); const N=pg.length; const out=[];
+  for(let s=0;s<N/4;s++){ out.push(`<div class="bsheet">${pg[N-1-2*s]}${pg[2*s]}</div>`); out.push(`<div class="bsheet">${pg[2*s+1]}${pg[N-2-2*s]}</div>`); }
+  return out.join(''); }
+function printBook(rootId, mode){ const B=buildBook(rootId, mode); const F=B.F; const style=ensurePrintStyle();
+  style.textContent=(F.imposed?`@page{size:297mm 210mm;margin:0}`:`@page{size:${F.w}mm ${F.h}mm;margin:0}`)+`#printArea .bpage,#printArea .bsheet{page-break-after:always;break-after:page}#printArea .bsheet .bpage{page-break-after:auto;break-after:auto}`;
+  $('#printArea').innerHTML=bookPrintHtml(B); logEv('штампа',{vrsta:'књига', format:post().knjiga.format, strana:B.pages.length}); setTimeout(()=>window.print(),150); return B; }
+function bookSummary(B){ const F=B.F; const k=post().knjiga; const sheets=Math.ceil(B.pages.length/4);
+  return `Текстуални родослов (књига): ${B.pages.length} страна формата ${F.key}${F.imposed?` — штампа се као књижица: ${sheets} листова A4, обострано, савијено на пола`:''}. Садржај: ${B.tocLen} стр., текст од стране ${B.bodyStart}, регистар имена: ${B.ixLen} стр.`; }
+
+/* ============================================================ сажето стабло за велики папир (плакат) */
+const PAPERS=[['A3',420,297],['A2',594,420],['A1',841,594],['A0',1189,841]];
+const ROLL_W=914; // ролна плотера у копирницама (91,4 cm), дужина по жељи
+let _pmc=null; function pMeasure(txt, size, bold){ if(!_pmc) _pmc=document.createElement('canvas').getContext('2d'); _pmc.font=`${bold?'bold ':''}${size*10}px "Segoe UI",Arial,sans-serif`; return _pmc.measureText(txt).width/10; }
+function posterLayout(rootId, mode, B, Lmax){ const f=fieldsFor(mode);
+  const S={box:3.6, boxSm:2.8, col:3.0, list:2.35, lh:2.95, ind:3.2, pad:1.6, hgap:4, vgap:9, colGap:3};
+  const nm=p=>nmF(p,f)+((f.godine&&yrs(p))?` (${yrs(p)})`:'');
+  const spT=p=>f.supruznici?spouses(p.id).map(({s:q})=>'∞ '+nmF(q,f)+((f.godine&&yrs(q))?` (${yrs(q)})`:'')):[];
+  const nodes=[], cols=[], edges=[];
+  // колона: особа на дубини B (или особа без деце изнад B) + сви њени потомци као увучен списак
+  const mkCol=(id)=>{ const p=P.get(id); const head=[{t:nm(p),b:true,s:S.col}, ...spT(p).map(t=>({t,s:S.list*0.95}))]; const lines=[];
+    const walk=(x,d)=>{ for(const c of children(x)){ const sp=spT(c); lines.push({t:nm(c)+(sp.length?'  '+sp.join('; '):''), d, has:children(c.id).length>0}); walk(c.id,d+1); } }; walk(id,0);
+    const chunks=[]; let cur=[]; for(const l of lines){ if(cur.length>=Lmax){ chunks.push(cur); cur=[]; } cur.push(l); } if(cur.length||!chunks.length) chunks.push(cur);
+    const hw=Math.max(...head.map(h=>pMeasure(h.t,h.s,h.b)));
+    const cw=chunks.map((ch,i)=>Math.max(i===0?hw:pMeasure('(наставак)',S.list), ...ch.map(l=>l.d*S.ind+pMeasure(l.t,S.list,l.has)))+2*S.pad);
+    const hh=head.length*S.lh*1.15+S.pad*2; const ch=chunks.map((c,i)=>(i===0?hh:S.lh+S.pad*2)+c.length*S.lh+S.pad);
+    return {id, head, chunks, cw, ch, hh, w:cw.reduce((a,b)=>a+b,0)+S.colGap*(chunks.length-1)}; };
+  const place=(id, depth, x0)=>{ const p=P.get(id); const ch=children(id);
+    if(depth>=B || !ch.length){ const c=mkCol(id); c.x=x0; c.depth=depth; cols.push(c); return {w:c.w, cx:x0+c.cw[0]/2, top:c, kind:'col'}; }
+    const lines=[{t:nm(p),b:true,s:depth===0?S.box*1.25:S.box}, ...spT(p).map(t=>({t,s:S.boxSm}))]; const bw=Math.max(...lines.map(l=>pMeasure(l.t,l.s,l.b)))+2*S.pad; const bh=lines.reduce((a,l)=>a+l.s*1.25,0)+2*S.pad;
+    const mark=[nodes.length, cols.length, edges.length];
+    const run=(start)=>{ let x=start; const kids=[]; for(const c of ch){ const r=place(c.id, depth+1, x); kids.push(r); x+=r.w+S.hgap; } return {kids, span:x-S.hgap-start}; };
+    let {kids, span}=run(x0);
+    if(span<bw){ nodes.length=mark[0]; cols.length=mark[1]; edges.length=mark[2]; ({kids}=run(x0+(bw-span)/2)); span=bw; }
+    const cx=(kids[0].cx+kids[kids.length-1].cx)/2;
+    const n={id, p, lines, w:bw, h:bh, cx, depth, kids}; nodes.push(n); for(const k of kids) edges.push([n,k]); return {w:span, cx, top:n, kind:'node'}; };
+  const R=place(rootId,0,0);
+  // висине редова
+  const rowH=[]; for(const n of nodes) rowH[n.depth]=Math.max(rowH[n.depth]||0, n.h); const rowY=[]; let y=14; // место за наслов
+  for(let d=0; d<=B; d++){ rowY[d]=y; y+=(rowH[d]||0)+S.vgap; }
+  for(const n of nodes){ n.x=n.cx-n.w/2; n.y=rowY[n.depth]; }
+  let H=0; for(const c of cols){ c.y=rowY[Math.min(c.depth,B)]; H=Math.max(H, c.y+Math.max(...c.ch)); }
+  const W=R.w; H+=4;
+  return {S, nodes, cols, edges, W, H, title:printTitle()}; }
+function posterSvg(L, scale, paperW, paperH, margin){ const {S}=L; const bw=post().stampa.crnobelo; const C={ln:bw?'#000':'#8c7a5c', box:bw?'#fff':'#fbf7ef', col:bw?'#fff':'#fffdf8', tx:'#1e1a12', mu:bw?'#000':'#5b5140'};
+  const e=s=>esc(s); const o=[];
+  const ox=(paperW-L.W*scale)/2, oy=margin;
+  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${paperW}mm" height="${paperH}mm" viewBox="0 0 ${paperW} ${paperH}"><rect width="${paperW}" height="${paperH}" fill="#fff"/><g transform="translate(${ox.toFixed(2)},${oy.toFixed(2)}) scale(${scale.toFixed(4)})" font-family="Segoe UI,Arial,sans-serif" fill="${C.tx}">`);
+  o.push(`<text x="${L.W/2}" y="7" font-size="6" font-weight="700" text-anchor="middle">${e(L.title)}</text><text x="${L.W/2}" y="11.2" font-size="2.6" text-anchor="middle" fill="${C.mu}">${e([D.autor?'Саставио '+D.autor:'', new Date().toLocaleDateString('sr-RS')].filter(Boolean).join(' · '))}</text>`);
+  const anchor=k=>k.kind==='node'?{x:k.top.cx,y:k.top.y}:{x:k.top.x+k.top.cw[0]/2,y:k.top.y};
+  for(const [n,k] of L.edges){ const a={x:n.cx,y:n.y+n.h}, b=anchor(k); const my=a.y+(b.y-a.y)/2; o.push(`<path d="M${a.x.toFixed(2)},${a.y.toFixed(2)}V${my.toFixed(2)}H${b.x.toFixed(2)}V${b.y.toFixed(2)}" fill="none" stroke="${C.ln}" stroke-width=".3"/>`); }
+  for(const n of L.nodes){ o.push(`<rect x="${n.x.toFixed(2)}" y="${n.y.toFixed(2)}" width="${n.w.toFixed(2)}" height="${n.h.toFixed(2)}" rx="1.2" fill="${C.box}" stroke="${C.ln}" stroke-width=".35"/>`); let ty=n.y+S.pad; for(const l of n.lines){ ty+=l.s*1.05; o.push(`<text x="${n.cx.toFixed(2)}" y="${ty.toFixed(2)}" font-size="${l.s}" text-anchor="middle"${l.b?' font-weight="700"':` fill="${C.mu}"`}>${e(l.t)}</text>`); ty+=l.s*0.2; } }
+  for(const c of L.cols){ let x=c.x; c.chunks.forEach((ch,i)=>{ const w=c.cw[i], h=c.ch[i]; o.push(`<rect x="${x.toFixed(2)}" y="${c.y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" rx="1" fill="${C.col}" stroke="${C.ln}" stroke-width=".3"/>`); let ty=c.y+S.pad;
+      if(i===0){ for(const hl of c.head){ ty+=hl.s*1.05; o.push(`<text x="${(x+S.pad).toFixed(2)}" y="${ty.toFixed(2)}" font-size="${hl.s}"${hl.b?' font-weight="700"':` fill="${C.mu}"`}>${e(hl.t)}</text>`); ty+=hl.s*0.12; } ty=c.y+c.hh; o.push(`<line x1="${x+S.pad}" x2="${x+w-S.pad}" y1="${(ty-S.pad/2).toFixed(2)}" y2="${(ty-S.pad/2).toFixed(2)}" stroke="${C.ln}" stroke-width=".2"/>`); }
+      else { ty+=S.lh; o.push(`<text x="${(x+S.pad).toFixed(2)}" y="${ty.toFixed(2)}" font-size="${S.list}" font-style="italic" fill="${C.mu}">(наставак)</text>`); ty+=S.pad; }
+      for(const l of ch){ ty+=S.lh; const lx=x+S.pad+l.d*S.ind; for(let k=0;k<l.d;k++){ const gx=x+S.pad+k*S.ind+S.ind*0.35; o.push(`<line x1="${gx.toFixed(2)}" x2="${gx.toFixed(2)}" y1="${(ty-S.lh*0.85).toFixed(2)}" y2="${(ty+S.lh*0.15).toFixed(2)}" stroke="${bw?'#888':'#d6ccb8'}" stroke-width=".18"/>`); }
+        o.push(`<text x="${lx.toFixed(2)}" y="${ty.toFixed(2)}" font-size="${S.list}"${l.has?' font-weight="700"':''}>${e(l.t)}</text>`); }
+      x+=w+S.colGap; }); }
+  o.push('</g></svg>'); return o.join(''); }
+function posterPlan(rootId, mode){ const M=10; let pick=null;
+  // прво покушај са више кућица (2 колена), па тек онда сажетије
+  for(const B of [2,3,1]){ for(const Lmax of [25,35,45,60,80,110,150,200,260,340]){ const L=posterLayout(rootId, mode, B, Lmax);
+      for(const [nm,pw,ph] of PAPERS) for(const rot of [false,true]){ const W=rot?ph:pw, H=rot?pw:ph; const s=Math.min((W-2*M)/L.W, (H-2*M)/L.H); if(s<0.92) continue; const area=pw*ph;
+        if(!pick || area<pick.area || (area===pick.area && s>pick.s)) pick={L, paper:nm, W, H, s:Math.min(s,1.6), area, B, Lmax, roll:false}; } }
+    if(pick) break; }
+  if(!pick){ for(const B of [2,1]) for(const Lmax of [25,35,45,60,80,110,150,220,340]){ const L=posterLayout(rootId, mode, B, Lmax);
+      const s=Math.min(1.1,(ROLL_W-2*M)/L.H); if(s<0.92) continue; const len=L.W*s+2*M; if(!pick||len<pick.len) pick={L, paper:'ролна', W:Math.ceil(len), H:ROLL_W, s, len, B, Lmax, roll:true}; } }
+  if(!pick){ const L=posterLayout(rootId, mode, 2, 340); const s=(ROLL_W-2*M)/L.H; pick={L,paper:'ролна',W:Math.ceil(L.W*s+2*M),H:ROLL_W,s,B:2,Lmax:340,roll:true}; }
+  pick.listPt=+(pick.L.S.list*pick.s*72/25.4).toFixed(1); pick.boxPt=+(pick.L.S.box*pick.s*72/25.4).toFixed(1);
+  pick.opis = pick.roll ? `ролна плотера ширине 91,4 cm, дужина ${(pick.W/10).toFixed(0)} cm` : `${pick.paper} (${(Math.max(pick.W,pick.H)/10).toFixed(1).replace('.',',')} × ${(Math.min(pick.W,pick.H)/10).toFixed(1).replace('.',',')} cm, ${pick.W>=pick.H?'положено':'усправно'})`;
+  return pick; }
+function posterPages(rootId, mode){ const k=96/25.4; const pl=posterPlan(rootId, mode); const svg=posterSvg(pl.L, pl.s, pl.W, pl.H, 10);
+  const names=[...pl.L.nodes.map(n=>shortName(n.p)), ...pl.L.cols.map(c=>shortName(P.get(c.id)))];
+  return {pp:{w:pl.W*k, h:pl.H*k, m:0, wmm:pl.W, hmm:pl.H, mmm:0}, celo:true, plakat:pl, root:rootId, mode,
+    pages:[{hdrText:'', noteText:'', svgW:pl.W*k, svgH:pl.H*k, svg, ids:[...pl.L.nodes.map(n=>n.id), ...pl.L.cols.map(c=>c.id)], names}]}; }
+function posterSummary(pl){ return `Цело стабло на једном великом листу. Потребан папир: ${pl.opis}. Слова у списковима ${pl.listPt} тачака, у кућицама ${pl.boxPt} тачака. Кућице: ${pl.L.nodes.length} главних особа (прва ${pl.B} колена), а њихови потомци су исписани у ${pl.L.cols.length} колона-спискова испод. Штампа се у копирници која има плотер (велики штампач): однесите PDF на USB-у и реците формат.`; }
 
 /* ------------------------------------------------ преглед штампе */
-const PV={on:false, page:0, B:null, mode:'s', root:null};
-function openPreview(page, mode, rootId){ PV.on=true; if(mode) PV.mode=mode; else if(!PV.mode) PV.mode=treeMode; if(rootId&&P.has(rootId)) { PV.root=rootId; treeRoot=rootId; } else PV.root=treeRoot||D.koren; if(page) PV.page=Math.max(0,(+page)-1); $('#prev').classList.add('on'); renderPreview(); }
+const PV={on:false, page:0, B:null, mode:'s', root:null, kind:'tree'};
+function openPreview(page, mode, rootId, kind){ PV.on=true; PV.kind=kind||(($('#textView').classList.contains('active'))?'book':'tree'); PV.B=null; if(mode) PV.mode=mode; else if(!PV.mode) PV.mode=treeMode; if(rootId&&P.has(rootId)) { PV.root=rootId; if(PV.kind==='tree') treeRoot=rootId; else textRoot=rootId; } else PV.root=(PV.kind==='book'?textRoot:treeRoot)||D.koren; if(page) PV.page=Math.max(0,(+page)-1); $('#prev').classList.add('on'); renderPreview(); }
 function closePreview(){ PV.on=false; $('#prev').classList.remove('on'); }
-function renderPreview(){ if(!PV.on) return; PV.B=buildTreePages(PV.mode, PV.root); const B=PV.B; PV.page=Math.min(PV.page, B.pages.length-1); const pg=B.pages[PV.page];
+function renderPreview(rebuild=true){ if(!PV.on) return; if(rebuild||!PV.B){ if(PV.kind==='book'){ const t0=performance.now(); PV.B=buildBook(PV.root, PV.mode); } else PV.B=buildTreePages(PV.mode, PV.root); } const B=PV.B; PV.page=Math.min(PV.page, B.pages.length-1); const pg=B.pages[PV.page];
   $('#prevPage').textContent=`Страна ${PV.page+1} од ${B.pages.length}`; $$('#prevMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===PV.mode));
-  const stage=$('#prevStage'); const r=stage.getBoundingClientRect(); const W=B.pp.w, H=B.pp.h; const k=Math.min((r.width-40)/W,(r.height-40)/H);
-  stage.innerHTML=`<div class="paper" style="width:${W}px;height:${H}px;padding:${B.pp.m}px;left:${(r.width-W*k)/2}px;top:${(r.height-H*k)/2}px;transform:scale(${k})">${pageHtml(pg)}</div>`; }
-function bindPreview(){ $('#prevPrev').onclick=()=>{ if(PV.page>0){ PV.page--; renderPreview(); } }; $('#prevNext').onclick=()=>{ if(PV.B&&PV.page<PV.B.pages.length-1){ PV.page++; renderPreview(); } };
-  $('#prevClose').onclick=closePreview; $('#prevPrint').onclick=()=>printTree(PV.mode, PV.root);
+  const stage=$('#prevStage'); const r=stage.getBoundingClientRect();
+  if(B.kind==='book'){ const W=B.F.w*96/25.4, H=B.F.h*96/25.4; const k=Math.min((r.width-40)/W,(r.height-40)/H); stage.innerHTML=`<div class="paper" style="width:${W}px;height:${H}px;padding:0;left:${(r.width-W*k)/2}px;top:${(r.height-H*k)/2}px;transform:scale(${k})">${pg.html}</div>`; $('#prevInfo').textContent=bookSummary(B); return; }
+  $('#prevInfo').textContent=B.plakat?posterSummary(B.plakat):'';
+  const W=B.pp.w, H=B.pp.h; const k=Math.min((r.width-40)/W,(r.height-40)/H);
+  stage.innerHTML=B.plakat?`<div class="paper" style="width:${W}px;height:${H}px;padding:0;left:${(r.width-W*k)/2}px;top:${(r.height-H*k)/2}px;transform:scale(${k})">${pg.svg}</div>`:`<div class="paper" style="width:${W}px;height:${H}px;padding:${B.pp.m}px;left:${(r.width-W*k)/2}px;top:${(r.height-H*k)/2}px;transform:scale(${k})">${pageHtml(pg)}</div>`; }
+function bindPreview(){ $('#prevPrev').onclick=()=>{ if(PV.page>0){ PV.page--; renderPreview(false); } }; $('#prevNext').onclick=()=>{ if(PV.B&&PV.page<PV.B.pages.length-1){ PV.page++; renderPreview(false); } };
+  $('#prevClose').onclick=closePreview; $('#prevPrint').onclick=()=>PV.kind==='book'?printBook(PV.root, PV.mode):printTree(PV.mode, PV.root);
+  $('#textPreviewBtn').onclick=()=>openPreview(1, textMode, textRoot||D.koren, 'book');
+  $('#pr_raspored').addEventListener('change',()=>{ const v=$('#pr_raspored').value; if(v==='plakat'){ $('#pr_info').textContent='Рачунам потребну величину папира…'; setTimeout(()=>{ const pl=posterPlan(treeRoot||D.koren, $('#printMode .on').dataset.v); $('#pr_info').textContent='Потребан папир: '+pl.opis+'. Штампа се у копирници (плотер).'; },30); } else $('#pr_info').textContent=''; });
   $$('#prevMode button').forEach(b=>b.onclick=()=>{ PV.mode=b.dataset.v; renderPreview(); });
-  $('#previewBtn').onclick=()=>openPreview(1, treeMode, treeRoot);
-  $('#printPreview').onclick=()=>{ $('#printDlg').close(); const mode=$('#printMode .on').dataset.v; setPost('stampa.raspored',$('#pr_raspored').value); setPost('stampa.papir',$('#pr_papir').value); setPost('stampa.velicina',$('#pr_velicina').value); setPost('stampa.crnobelo',$('#pr_crnobelo').value); commit(); openPreview(1, mode, treeRoot); };
-  window.addEventListener('resize',()=>{ if(PV.on) renderPreview(); });
+  $('#previewBtn').onclick=()=>openPreview(1, treeMode, treeRoot, 'tree');
+  $('#printPreview').onclick=()=>{ $('#printDlg').close(); const mode=$('#printMode .on').dataset.v; setPost('stampa.raspored',$('#pr_raspored').value); setPost('stampa.papir',$('#pr_papir').value); setPost('stampa.velicina',$('#pr_velicina').value); setPost('stampa.crnobelo',$('#pr_crnobelo').value); commit(); openPreview(1, mode, treeRoot, 'tree'); };
+  window.addEventListener('resize',()=>{ if(PV.on) renderPreview(false); });
   document.addEventListener('keydown',e=>{ if(!PV.on) return; if(e.key==='ArrowRight') $('#prevNext').click(); if(e.key==='ArrowLeft') $('#prevPrev').click(); if(e.key==='Escape') closePreview(); }); }
 function svgImage(svg){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error('слика')); i.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg); }); }
 async function pageToJpeg(B, idx){ const pg=B.pages[idx]; const s=post().stampa; let W=B.pp.w, H=B.pp.h; const k=Math.min(1.25, 1600/W, 1600/H); const cv=document.createElement('canvas'); cv.width=Math.round(W*k); cv.height=Math.round(H*k);
@@ -839,7 +1048,8 @@ async function pageToJpeg(B, idx){ const pg=B.pages[idx]; const s=post().stampa;
   if(pg.noteText){ c.font='12px "Segoe UI",Arial,sans-serif'; c.fillStyle='#555'; c.fillText(pg.noteText,x0,y+12); y+=22; }
   try{ const img=await svgImage(pg.svg); const dx=al==='center'?(W-pg.svgW)/2:B.pp.m; c.drawImage(img,dx,y,pg.svgW,pg.svgH); }catch(e){ console.warn(e); }
   return cv.toDataURL('image/jpeg',0.82).split(',')[1]; }
-function printText(){ const s=post().stampa; const fs={mala:'10pt',srednja:'11pt',velika:'13pt'}[s.velicina]||'11pt';
+function printText(){ return printBook(textRoot||D.koren, textMode); }
+function printTextOld(){ const s=post().stampa; const fs={mala:'10pt',srednja:'11pt',velika:'13pt'}[s.velicina]||'11pt';
   ensurePrintStyle().textContent=`@page{size:${s.papir==='A3'?'A3':'A4'};margin:18mm 16mm}#printArea .doc{font-size:${fs}!important}`+printExtraCss();
   $('#printArea').innerHTML=reportHtml(textRoot||D.koren,textMode); setTimeout(()=>window.print(),100); }
 function findPageRoot(id, pages){ // страна на којој је особа приказана
@@ -864,7 +1074,7 @@ function reportHtml(rootId, mode){ const f=fieldsFor(mode); const st=post().stam
     if(ch.length){ o.push('<div class="g">'); for(const c of ch) walk(c.id, depth+1); o.push('</div>'); } };
   walk(rootId,0); o.push('</div>'); return o.join('');
 }
-function renderReport(){ if(!textRoot||!P.has(textRoot)) textRoot=D.koren; $('#textRootBtn').textContent=shortName(P.get(textRoot)); $('#report').innerHTML=reportHtml(textRoot,textMode); }
+function renderReport(){ $$('#textView [data-pk]').forEach(el=>{ el.value=getPost(el.dataset.pk); }); if(!textRoot||!P.has(textRoot)) textRoot=D.koren; $('#textRootBtn').textContent=shortName(P.get(textRoot)); $('#report').innerHTML=reportHtml(textRoot,textMode); }
 function bindText(){
   $$('#textMode button').forEach(b=>b.onclick=()=>{ $$('#textMode button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); textMode=b.dataset.v; renderReport(); });
   $('#textRootBtn').onclick=async()=>{ const r=await pickPerson({title:'Почетак текста'}); if(r){ textRoot=r; renderReport(); } };
@@ -1007,9 +1217,9 @@ async function importWord(voice){ if(wordBusy) return; wordBusy=true; const tell
 const IZV_URL='https://rodoslov-izvestaji.blmed84.workers.dev', IZV_KLJUC='ThNQwgsR5w7GjXePk31J';
 let izvBusy=false;
 async function sendReport(){ const url=settings.izvUrl||IZV_URL, kljuc=settings.izvKljuc||IZV_KLJUC; if(!url||!/^https:/.test(url)||izvBusy) return false; if(!navigator.onLine) return false;
-  const dn=Array.isArray(D.dnevnik)?D.dnevnik:[]; const from=D.dnevnikPoslato||0; if(from>=dn.length && !D.izvPoslatiZelje) return true; izvBusy=true;
-  const r={verzija:APP_VERSION, kada:stamp(), od:from, podesavanja:Object.fromEntries(Object.entries(settings).filter(([k])=>!/claude|eleven|azureKey|gemini$|voices|izv/.test(k))), postavke:post(), izgovor:izg(), zelje:D.zelje||[], osoba:D.persons.length, izmenjeno:D.izmenjeno, dnevnik:dn.slice(from)};
-  try{ const x=await fetch(url.replace(/\/$/,'')+'/izvestaj',{method:'POST',headers:{'Content-Type':'application/json','X-Kljuc':kljuc},body:JSON.stringify(r)}); if(!x.ok) throw new Error('HTTP '+x.status); D.dnevnikPoslato=dn.length; D.izvPoslatiZelje=false; D.izvPoslednji=stamp(); try{ localStorage.setItem(LS_DATA, JSON.stringify(D)); }catch(e){} izvBusy=false; const e=$('#izvStatus'); if(e) e.textContent='Последњи извештај послат: '+D.izvPoslednji.replace('T',' '); return true; }
+  const dn=Array.isArray(D.dnevnik)?D.dnevnik:[]; const from=D.dnevnikPoslato||0; let lastT=''; try{ lastT=localStorage.getItem('rodoslov.izv.lastT')||''; }catch(e){} const novi=dn.slice(from).filter(e=>!lastT||e.t>lastT); if(!novi.length && !D.izvPoslatiZelje){ D.dnevnikPoslato=dn.length; return true; } izvBusy=true;
+  const r={verzija:APP_VERSION, kada:stamp(), od:from, podesavanja:Object.fromEntries(Object.entries(settings).filter(([k])=>!/claude|eleven|azureKey|gemini$|voices|izv/.test(k))), postavke:post(), izgovor:izg(), zelje:D.zelje||[], osoba:D.persons.length, izmenjeno:D.izmenjeno, kljucevi:{claude:!!settings.claude, eleven:!!settings.eleven, azure:!!settings.azureKey, gemini:!!settings.gemini}, dnevnik:novi};
+  try{ const x=await fetch(url.replace(/\/$/,'')+'/izvestaj',{method:'POST',headers:{'Content-Type':'application/json','X-Kljuc':kljuc},body:JSON.stringify(r)}); if(!x.ok) throw new Error('HTTP '+x.status); D.dnevnikPoslato=dn.length; D.izvPoslatiZelje=false; D.izvPoslednji=stamp(); try{ if(novi.length) localStorage.setItem('rodoslov.izv.lastT', novi[novi.length-1].t); }catch(e){} try{ localStorage.setItem(LS_DATA, JSON.stringify(D)); }catch(e){} izvBusy=false; const e=$('#izvStatus'); if(e) e.textContent='Последњи извештај послат: '+D.izvPoslednji.replace('T',' '); return true; }
   catch(e){ console.warn('извештај',e); izvBusy=false; return false; } }
 async function saveReport(){ const r={verzija:APP_VERSION, kada:stamp(), podesavanja:Object.fromEntries(Object.entries(settings).filter(([k])=>!/claude|eleven|azureKey|gemini$|voices/.test(k))), postavke:post(), izgovor:izg(), zelje:D.zelje||[], osoba:D.persons.length, dnevnik:D.dnevnik||[]};
   const blob=new Blob([JSON.stringify(r,null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Извештај родослов '+stamp().slice(0,10)+'.json'; a.click(); toast('Извештај је сачуван у „Преузимања“. Пошаљите га Борису.',6000); }
@@ -1021,6 +1231,27 @@ async function claude(system, messages, maxTokens=2000, model){
     body:JSON.stringify({model:model||settings.claudeModel, max_tokens:maxTokens, system, messages})});
   if(!r.ok){ let t=''; try{ t=(await r.json()).error?.message||''; }catch(e){} throw new Error('Claude '+r.status+' '+t); }
   const j=await r.json(); return (j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join(''); }
+async function claudeStream(system, messages, maxTokens, onText, model){
+  if(!settings.claude) throw new Error('Није уписан Claude API кључ (⚙ Подешавања).');
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':settings.claude,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:model||settings.claudeModel, max_tokens:maxTokens, system, messages, stream:true})});
+  if(!r.ok){ let t=''; try{ t=(await r.json()).error?.message||''; }catch(e){} throw new Error('Claude '+r.status+' '+t); }
+  const ct=(r.headers.get('content-type')||''); if(!/event-stream/.test(ct)||!r.body){ const j=await r.json(); const out=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join(''); try{ onText&&onText(out); }catch(e){} return out; }
+  const rd=r.body.getReader(); const dec=new TextDecoder(); let buf='', out='';
+  while(true){ const {done,value}=await rd.read(); if(done) break; buf+=dec.decode(value,{stream:true}); let i;
+    while((i=buf.indexOf('\n'))>=0){ const line=buf.slice(0,i).trim(); buf=buf.slice(i+1); if(!line.startsWith('data:')) continue; let ev; try{ ev=JSON.parse(line.slice(5)); }catch(e){ continue; }
+      if(ev.type==='content_block_delta'&&ev.delta&&ev.delta.type==='text_delta'){ out+=ev.delta.text; try{ onText&&onText(out); }catch(e){ console.warn(e); } }
+      else if(ev.type==='error') throw new Error('Claude '+((ev.error&&ev.error.message)||'')); } }
+  return out; }
+function partialMsg(out){ const m=/"порука"\s*:\s*"((?:[^"\\]|\\.)*)/.exec(out); if(!m) return null; let t=m[1]; if(/\\$/.test(t)) t=t.slice(0,-1); try{ return JSON.parse('"'+t+'"'); }catch(e){ return t.replace(/\\n/g,' ').replace(/\\"/g,'"'); } }
+const BORIS_RE=/(Борис\S*[^.!?…]*(просле|пренe|пренећ|јави|обавест|рећи ћу|записа|пошаљ|достав)|(просле|пренећ|јавићу|обавестићу|рећи ћу|записа\S*|пошаљ\S*|достав\S*)[^.!?…]*Борис)/;
+function sanitizeMsg(t){ t=String(t||''); if(!/Борис/.test(t)) return t; return t.split(/(?<=[.!?…])\s+/).map(x=>BORIS_RE.test(x)?'Схватио сам тачно шта желите — то ће бити уграђено у програм.':x).filter((x,i,a)=>a.indexOf(x)===i).join(' '); }
+function makeSpeaker(){ const gen=sayGen; let spoken=0, pushes=0, chain=Promise.resolve(), first=null; const t0=performance.now();
+  const push=(txt)=>{ txt=sanitizeMsg(txt).trim(); if(!txt) return; pushes++; const bp=ttsReady()?ttsBlob(txt).catch(e=>{ logEv('грешка',{gde:'tts',x:String(e.message||e)}); return null; }):Promise.resolve(null);
+    chain=chain.then(async()=>{ if(gen!==sayGen) return; const b=await bp; if(gen!==sayGen) return; if(first===null) first=Math.round(performance.now()-t0); talkState('speak','Говорим…'); if(b) await playBlob(b); else if(!ttsReady()) await sleep(Math.min(5000,900+45*txt.length)); }); };
+  return { feed(full){ if(!full) return; const rest=full.slice(spoken); const re=/[.!?…][»“"]?\s+/g; let m, cut=0; while((m=re.exec(rest))){ const end=m.index+m[0].length; if(rest.slice(cut,end).trim().length>=18){ push(rest.slice(cut,end)); cut=end; } } spoken+=cut; },
+    finish(full){ const rest=String(full||'').slice(spoken); spoken=String(full||'').length; push(rest); },
+    newRound(){ spoken=0; }, say(t){ push(t); }, get pushes(){ return pushes; }, drain(){ return chain; }, firstMs(){ return first; } }; }
 async function lektura(text){
   const sys=`Ти си лектор за српски језик. Добијаш кратак текст који је настао диктирањем (препознавањем говора) и који се уписује у породични родослов. Исправи правопис, интерпункцију, падеже и очигледне грешке препознавања, а смисао не мењај и ништа не додај. Пиши српском ћирилицом. Имена, презимена и места у овој породици су: ${knownNames().join(', ')}. Ако нека реч личи на неко од ових имена, исправи је у то име. Врати САМО исправљен текст, без објашњења.`;
   const out=await claude(sys,[{role:'user',content:text}],1000); return out.trim(); }
@@ -1029,7 +1260,14 @@ async function lektura(text){
 let chatHist=[]; // {role, content}
 function connectedSet(){ const set=new Set(); const st=[D.koren]; while(st.length){ const x=st.pop(); if(!x||set.has(x)) continue; set.add(x); for(const k of KIDS.get(x)||[]) st.push(k); } for(const id of [...set]) for(const {s} of spouses(id)) set.add(s.id); return set; }
 function unconnected(){ const c=connectedSet(); return D.persons.filter(p=>!c.has(p.id)); }
-function dataDump(){ const L=[]; for(const p of D.persons){ const sp=spouses(p.id).map(({m,s})=>`${s.id}(${roman(m.red||1)})`).join(','); L.push([p.id, shortName(p), p.pol, yrs(p), p.otac?'о:'+p.otac:'', p.majka?'м:'+p.majka:'', sp?'бр:'+sp:'', p.mesto||'', (p.nap||'').slice(0,80)].join('|')); } return L.join('\n'); }
+function personLine(p){ const sp=spouses(p.id).map(({m,s})=>`${s.id}(${roman(m.red||1)})`).join(','); return [p.id, shortName(p), p.pol, yrs(p), p.otac?'о:'+p.otac:'', p.majka?'м:'+p.majka:'', sp?'бр:'+sp:'', p.mesto||'', (p.nap||'').slice(0,80)].join('|'); }
+function dataDump(){ return D.persons.map(personLine).join('\n'); }
+let dumpSnap=null; // снимак података који остаје исти током разговора, да би кеш радио; измене иду у мали додатак
+function dataBlocks(){ const cur=new Map(D.persons.map(p=>[p.id, personLine(p)]));
+  if(!dumpSnap){ dumpSnap={lines:cur, text:[...cur.values()].join('\n')}; return {snap:dumpSnap.text, delta:''}; }
+  const ch=[]; for(const [id,l] of cur) if(dumpSnap.lines.get(id)!==l) ch.push(l); const gone=[...dumpSnap.lines.keys()].filter(id=>!cur.has(id));
+  if(ch.length+gone.length>80){ dumpSnap=null; return dataBlocks(); }
+  return {snap:dumpSnap.text, delta:(ch.length||gone.length)?`ИЗМЕНЕ ПОДАТАКА ПОСЛЕ ГОРЊЕГ СПИСКА (ови редови важе уместо горњих):\n${ch.join('\n')}${gone.length?'\nОБРИСАНЕ ОСОБЕ: '+gone.join(', '):''}\n`:''}; }
 const UPUTSTVO=`КАКО СЕ КОРИСТИ ПРОГРАМ (за твоја објашњења; корисник ово не види):
 • Програм има четири дела, дугмад горе у врху: „Особе“, „Стабло“, „Текст“ и „Помоћник“. Горе десно су „Поништи“ (враћа последњу измену), „Сачувај“ (уписује све у фајл), „?“ (кратко упутство) и ⚙ (подешавања — за Бориса).
 • Особе: лево је списак свих особа и поље „Претрага“ изнад њега. Упише се део имена, па се кликне на особу у списку. Десно се отвори њен образац: Име, Надимак, Презиме, Пол, Рођен/а, Умро/ла, Место, Напомена. Шта се упише, памти се одмах.
@@ -1037,13 +1275,15 @@ const UPUTSTVO=`КАКО СЕ КОРИСТИ ПРОГРАМ (за твоја о�
 • Поред сваког поља је дугме са микрофоном: клик, говори се, па клик на квадратић ■ да се заврши.
 • Чување: дугме „Сачувај“ горе десно. Ако горе црвеним пише „Измене нису сачуване у фајл“, треба кликнути „Сачувај“. Ако Chrome пита „Дозволити да сајт мења фајл?“, кликне се „Дозволи“. Кад разговарате, ти чуваш сам после сваке измене.
 • Стабло: кружић са бројем испод особе (нпр. +5) отвара скривене потомке, кружић „−“ их затвара. Точкић миша увећава и умањује, превлачење мишем помера. „Уклопи“ смешта цело стабло на екран. Двоклик на особу отвара њен образац. „Корен“ је особа на врху стабла.
+• ШТАМПАНИ РОДОСЛОВ — ГЛАВНИ НАЧИН ЈЕ ТЕКСТУАЛНИ РОДОСЛОВ КАО КЊИГА (део „Текст“ → „Штампај / PDF“): насловна страна, садржај са бројевима страна, текст по гранама (прво цео Маринков род, па Марков, Јовов, Мијаилов и Ружичин; деца увучена испод родитеља), на крају регистар имена (азбучно, са бројем стране). Формат: knjiga.format „A5“ (мала књига; у копирници се одштампа као брошура/књижица), „knjizica“ (програм сам распореди стране на листове A4: штампа се обострано, окретање по краћој ивици, листови се савију на пола и хефтају — права књижица и код куће), „A4“. Корисник жели баш такав родослов: кад говори о штампи, подразумевај текстуални родослов, осим ако изричито тражи цртеж/стабло.
+• ЦРТЕЖ СТАБЛА (дијаграм са кућицама) је за ВЕЛИКИ ПАПИР: stampa.raspored „plakat“ — цело стабло на једном листу: прва колена у кућицама, а остали потомци као увучени спискови ситнијим словима. Програм сам израчуна потребан папир (A1, A0 или ролна плотера 91,4 cm) — то пише у прегледу. Штампа се у копирници са плотером, PDF на USB-у. На A4 цртеж целог стабла није читљив — тада предложи текстуални родослов.
 • PDF и штампа: у делу „Стабло“ (или „Текст“) кликне се „Штампај / PDF“ горе десно, у прозору „Штампање стабла“ кликне се „Настави“. Отвори се Chrome прозор за штампање: десно, код „Одредиште“, треба да пише „Сачувај као PDF“ (ако пише име штампача, кликне се на то и изабере „Сачувај као PDF“), па се кликне плаво дугме „Сачувај“ доле десно; затим се изабере „Радна површина“, упише име фајла и кликне „Сачувај“. За штампу на папиру, код „Одредиште“ се изабере штампач и кликне „Штампај“.
 • Преглед штампе: у делу „Стабло“ дугме „👁 Преглед“ (или у прозору „Штампање стабла“) отвара преко целог екрана стране онакве какве ће бити одштампане; горе су „◀ Претходна“, „Следећа ▶“, „Сажето/Пуно“, „Штампај / PDF“ и „✕ Затвори“. Ти га отвараш операцијом „преглед“.
 • Зашто неке особе нема у PDF-у: (а) особа није повезана са родословом — нема уписаног оца/мајку из родослова (види списак „НЕПОВЕЗАНЕ ОСОБЕ“); (б) штампа се само једна грана (корен није Милош); (в) ограничен је број нараштаја (stampa.generacije); (г) супруге и мужеви нису посебне кућице — пишу се у кућици супружника, па их нема ако је искључено „supruznici“; (д) особа је на некој другој страни (грана се наставља на страни N). Увек прво провери операцијом „провери“.
 • Допуне из Ворда: корисник родослов и даље дописује у свом Ворд фајлу „Дописи“ (у Документима). Дугме „📄 Допуне из Ворда“ (у делу Помоћник) или реченица „Дописао сам у Ворду“ учитава нове редове. Први пут треба у прозору изабрати тај фајл и кликнути „Отвори“; после се памти. Ако Chrome пита за дозволу читања, кликне се „Прикажи фајлове“/„Дозволи“.
 • PDF се шаље рођацима као прилог у пошти или Вајберу. Борису се шаље сам фајл програма „Родослов Лакетића“ са радне површине.
 КАКО ОБЈАШЊАВАШ: корисник се слабо сналази на рачунару. Кад пита како се нешто ради, увек прво понуди да ти то урадиш уместо њега (упис, PDF, приказ особе). Ако ипак жели сам, објасни САМО ПРВИ КОРАК, једном или две кратке реченице, и додај измену „покажи_дугме“ да то дугме затрепери на екрану; на крају питај „Јавите ми кад кликнете.“ Кад каже да је готово, дај следећи корак. Никад не набрајај више корака одједном.`;
-function aiSystem(){ return [
+function aiSystem(){ const DB=dataBlocks(); return [
  {type:'text', cache_control:{type:'ephemeral'}, text:`Ти си љубазни помоћник у програму „Родослов породице Лакетић“. Говориш у мушком роду (нпр. „уписао сам“, „променио сам“). Корисник је старији господин који је родослов саставио; разговара с тобом гласом, а твоје одговоре чује изговорене. Обраћај му се са „Ви“, без имена, топло, мирно и кратко: највише две-три кратке реченице. Пиши српском ћирилицом, екавски. Никад не користи техничке изразе ни стране речи. Године пиши цифрама.
 
 Можеш:
@@ -1073,11 +1313,11 @@ function aiSystem(){ return [
   stampa.naslov: наслов на PDF-у (празно = подразумевани);  stampa.datum: true/false;  stampa.oznake: true/false (ознаке ⚠ на PDF-у)
   stablo.generacije: "2"…"5" или "99" (све) — колико нараштаја стабло приказује на екрану
   izgled.slova: "mala"|"obicna"|"velika" — величина слова у програму
-- {"оп":"pdf","врста":"стабло"|"текст","приказ":"сажето"|"пуно","корен":"id или null"} — отвара Chrome прозор за штампање (корен null = цео родослов; за једну грану корен је њен предак). У поруци кажи: „Отварам прозор за штампање. Проверите да десно пише Сачувај као PDF, па кликните плаво дугме Сачувај.“
+- {"оп":"pdf","врста":"текст"|"стабло","приказ":"сажето"|"пуно","корен":"id или null"} — отвара Chrome прозор за штампање (корен null = цео родослов; за једну грану корен је њен предак). У поруци кажи: „Отварам прозор за штампање. Проверите да десно пише Сачувај као PDF, па кликните плаво дугме Сачувај.“
 - {"оп":"прикажи","id":"...","где":"особа"|"стабло"}
 - {"оп":"покажи_дугме","дугме":"особе"|"стабло"|"текст"|"помоћник"|"сачувај"|"поништи"|"претрага"|"нова_особа"|"додај_дете"|"додај_брак"|"штампај"|"корен"|"уклопи"|"разговор"}
 - {"оп":"жеља","текст":"кратак опис жеље за Бориса"}
-- {"оп":"преглед","страна":1,"приказ":"сажето"|"пуно","корен":"id или null"} — отвара преглед штампе на екрану (корисник и ти видите исто)
+- {"оп":"преглед","врста":"текст"|"стабло","страна":1,"приказ":"сажето"|"пуно","корен":"id или null"} — отвара преглед штампе на екрану (корисник и ти видите исто). „текст“ = књига (подразумевано кад прича о штампаном родослову).
 - {"оп":"погледај","стране":[1,2]} — програм ти пошаље СЛИКЕ тих страна (највише 3) какве ће бити одштампане, са списком особа на свакој; онда одговараш у следећем кораку
 - {"оп":"провери","id":"..."} — програм ти каже да ли је особа у стаблу и PDF-у, на којој страни, а ако није — зашто; онда одговараш у следећем кораку
 - {"оп":"затвори_преглед"}
@@ -1091,16 +1331,21 @@ function aiSystem(){ return [
   stampa.generacije: "2"…"8" или "99" (колико нараштаја испод корена се штампа);  stampa.naslovVelicina: "mali"|"srednji"|"veliki"
   stampa.zaglavlje: true/false (ред „Грана: …“ и објашњење на свакој страни);  stampa.brojStrana: true/false;  stampa.okviri: true/false (оквири око кућица)
   stampa.velicina: "mala"|"srednja"|"velika" — колико кућица стаје на једну страну (ситније = више на страни, мање страна)
+  stampa.raspored: "grane" | "celo" | "plakat" (сажето цело стабло за велики папир)
+КЊИГА (текстуални родослов) — кључеви за „подешавање“:
+  knjiga.format: "A5"|"knjizica"|"A4";  knjiga.slova: "mala"|"srednja"|"velika";  knjiga.sadrzaj: true/false;  knjiga.dubinaSadrzaja: "1"|"2"|"3" (до ког колена иде садржај)
+  knjiga.registar: true/false (регистар имена на крају);  knjiga.novaStrana: true/false (свака грана Милошевог сина почиње на новој страни);  knjiga.naslovna: true/false;  knjiga.uvod: текст уводне речи (празно = без ње)
+  Наслов књиге је stampa.naslov.
 
 КАКО ВОДИШ КОРИСНИКА КРОЗ ИЗРАДУ PDF-а: 1) отвори преглед („преглед“) и реци да на екрану види прву страну; 2) питај шта би желео другачије; 3) кад говори о изгледу („ово горе лево“, „име на средини“, „превише ситно“), прво погледај страну („погледај“) да видиш тачно што и он види, па тек онда предложи и одмах изведи подешавање — преглед се сам освежи — и кратко реци шта се променило и питај да ли је сад добро; 4) кад је задовољан, понуди „pdf“. Скоро свака жеља о изгледу може се остварити подешавањима и избором корена (гране); само ако заиста не може, запиши „жељу“ за Бориса — и тада реци шта си ипак могао да урадиш.
 
 Године само као број („1952“) или празно. Кад корисник каже „умро/умрла“, упиши годину у „smrt“; „неожењен/неудата“ у „nap“. Напомене пиши лепим, кратким српским.
 
 ${UPUTSTVO}`},
- {type:'text', text:`ПОДАЦИ РОДОСЛОВА (ред: id|име „надимак“ презиме|пол|године|о:отац|м:мајка|бр:бракови(редни)|место|напомена):\n${dataDump()}`, cache_control:{type:'ephemeral'}},
- {type:'text', text:`ТРЕНУТНА ПОДЕШАВАЊА: ${JSON.stringify(post())}. ${previewInfo()} НЕПОВЕЗАНЕ ОСОБЕ (нису у стаблу): ${(u=>u.length?u.slice(0,40).map(p=>p.id+' '+shortName(p)+(yrs(p)?' ('+yrs(p)+')':'')).join('; ')+(u.length>40?' …и још '+(u.length-40):''):'нема')(unconnected())}. Величина слова у програму: ${({'17':'mala','19':'obicna','22':'velika'})[String(settings.fs)]||'obicna'}. Сада је отворен део: ${({personsView:'Особе',treeView:'Стабло',textView:'Текст',aiView:'Помоћник'})[($$('.view.active')[0]||{}).id]||''}.`} ]; }
+ {type:'text', text:`ПОДАЦИ РОДОСЛОВА (ред: id|име „надимак“ презиме|пол|године|о:отац|м:мајка|бр:бракови(редни)|место|напомена):\n${DB.snap}`, cache_control:{type:'ephemeral'}},
+ {type:'text', text:`${DB.delta}ТРЕНУТНА ПОДЕШАВАЊА: ${JSON.stringify(post())}. ${previewInfo()} НЕПОВЕЗАНЕ ОСОБЕ (нису у стаблу): ${(u=>u.length?u.slice(0,40).map(p=>p.id+' '+shortName(p)+(yrs(p)?' ('+yrs(p)+')':'')).join('; ')+(u.length>40?' …и још '+(u.length-40):''):'нема')(unconnected())}. Величина слова у програму: ${({'17':'mala','19':'obicna','22':'velika'})[String(settings.fs)]||'obicna'}. Сада је отворен део: ${({personsView:'Особе',treeView:'Стабло',textView:'Текст',aiView:'Помоћник'})[($$('.view.active')[0]||{}).id]||''}.`} ]; }
 let lastLat=0;
-function logConv(k, html){ if(!Array.isArray(D.dnevnik)) D.dnevnik=[]; const x=String(html).replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').trim(); if(!x) return; const e={t:stamp(), k, x:x.slice(0,1500)}; if(k==='п'&&lastLat){ e.ms=lastLat; lastLat=0; } if(k==='о'&&conv.on&&conv.slus){ e.slus=conv.slus; conv.slus=0; } D.dnevnik.push(e); if(D.dnevnik.length>3000) D.dnevnik=D.dnevnik.slice(-2500); dnevnikNew=true; try{ localStorage.setItem(LS_DATA, JSON.stringify(D)); }catch(err){} }
+function logConv(k, html){ if(!Array.isArray(D.dnevnik)) D.dnevnik=[]; const x=String(html).replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').trim(); if(!x) return; const e={t:stamp(), k, x:x.slice(0,1500)}; if(k==='п'&&lastLat){ e.ms=lastLat; lastLat=0; } if(k==='о'&&conv.on&&conv.slus){ e.slus=conv.slus; conv.slus=0; if(conv.stt){ e.stt=conv.stt; conv.stt=0; } } D.dnevnik.push(e); if(D.dnevnik.length>3000) D.dnevnik=D.dnevnik.slice(-2500); dnevnikNew=true; try{ localStorage.setItem(LS_DATA, JSON.stringify(D)); }catch(err){} }
 let dnevnikNew=false;
 function logEv(k, o){ if(!Array.isArray(D.dnevnik)) D.dnevnik=[]; D.dnevnik.push(Object.assign({t:stamp(), k}, o||{})); if(D.dnevnik.length>3000) D.dnevnik=D.dnevnik.slice(-2500); dnevnikNew=true; try{ localStorage.setItem(LS_DATA, JSON.stringify(D)); }catch(err){} }
 function addMsg(cls, html){ if(cls==='me') logConv('о',html); else if(cls==='ai') logConv('п',html); const d=document.createElement('div'); d.className='msg '+cls; d.innerHTML=html; $('#chat').appendChild(d); $('#chat').scrollTop=1e9; return d; }
@@ -1120,7 +1365,9 @@ function applyOps(ops){ pushHistory(); const made=[]; if(ops.length) logEv('из
     else if(op['оп']==='обриши'&&P.has(op.id)){ const id=op.id; D.persons=D.persons.filter(x=>x.id!==id); D.marriages=D.marriages.filter(m=>m.a!==id&&m.b!==id); for(const x of D.persons){ if(x.otac===id) x.otac=null; if(x.majka===id) x.majka=null; } index(); } }
   commit('Измене изведене'); renderList(); if(made.length) select(made[0]); return made; }
 const IMMEDIATE=new Set(['ворд','научи_изговор','подешавање','pdf','жеља','прикажи','покажи_дугме','преглед','затвори_преглед','погледај','провери']);
-function previewInfo(){ if(!PV.on||!PV.B) return 'Преглед штампе није отворен.'; const pg=PV.B.pages[PV.page]; const r=P.get(PV.B.root);
+function previewInfo(){ if(!PV.on||!PV.B) return 'Преглед штампе није отворен.';
+  if(PV.B.kind==='book'){ const pg=PV.B.pages[PV.page]; return `ПРЕГЛЕД ШТАМПЕ ЈЕ ОТВОРЕН — ТЕКСТУАЛНИ РОДОСЛОВ (књига): страна ${PV.page+1} од ${PV.B.pages.length}, ${PV.mode==='p'?'пуни':'сажети'} приказ. ${bookSummary(PV.B)} На тој страни: ${(pg.text||'').slice(0,700)}`; }
+  if(PV.B.plakat) return `ПРЕГЛЕД ШТАМПЕ ЈЕ ОТВОРЕН — ${posterSummary(PV.B.plakat)}`; const pg=PV.B.pages[PV.page]; const r=P.get(PV.B.root);
   return `ПРЕГЛЕД ШТАМПЕ ЈЕ ОТВОРЕН: страна ${PV.page+1} од ${PV.B.pages.length}, ${PV.mode==='p'?'пуни':'сажети'} приказ, корен: ${r?shortName(r):''}. На тој страни су: ${pg.names.slice(0,60).join('; ')}${pg.names.length>60?' …':''}.`; }
 function checkPerson(id){ const p=P.get(id); if(!p) return `Особа ${id} не постоји.`; const c=connectedSet(); const nm=fullName(p);
   if(!c.has(id)) return `${nm}: НИЈЕ повезан${p.pol==='ж'?'а':''} са родословом — нема уписаног оца ни мајке који су у стаблу${p.otac||p.majka?' (уписан родитељ ни сам није повезан)':''}. Зато те особе нема ни на екрану ни у PDF-у. Решење: упиши тој особи оца или мајку („измени“ са otac/majka).`;
@@ -1132,6 +1379,7 @@ function checkPerson(id){ const p=P.get(id); if(!p) return `Особа ${id} н�
   return t; }
 async function followupContent(ops){ const parts=[]; const txt=[];
   for(const o of ops){ if(o['оп']==='провери') txt.push(checkPerson(o.id));
+    if(o['оп']==='погледај' && PV.on && PV.B && PV.B.kind==='book'){ const B=PV.B; let want=(Array.isArray(o['стране'])?o['стране']:[PV.page+1]).map(Number).filter(n=>n>=1&&n<=B.pages.length).slice(0,4); if(!want.length) want=[1]; for(const n of want) parts.push({type:'text', text:`Страна ${n} од ${B.pages.length} (${B.F.key}${B.F.imposed?', књижица':''}). Садржај стране, ред по ред (увлачење = нараштај):\n${B.pages[n-1].text.slice(0,3000)}`}); continue; }
     if(o['оп']==='погледај'){ const B=PV.on&&PV.B?PV.B:buildTreePages(treeMode, treeRoot); let want=(Array.isArray(o['стране'])?o['стране']:[PV.on?PV.page+1:1]).map(Number).filter(n=>n>=1&&n<=B.pages.length).slice(0,3); if(!want.length) want=[1];
       for(const n of want){ parts.push({type:'text', text:`Страна ${n} од ${B.pages.length}. Особе на страни: ${B.pages[n-1].names.slice(0,60).join('; ')}`}); try{ parts.push({type:'image', source:{type:'base64', media_type:'image/jpeg', data:await pageToJpeg(B,n-1)}}); }catch(e){ console.warn(e); } } } }
   return [{type:'text', text:'[програм: резултат провере — сада одговори кориснику]'+(txt.length?'\n'+txt.join('\n'):'')}, ...parts]; }
@@ -1144,7 +1392,7 @@ function highlight(name){ let sel=BTN_SEL[name]; if(name==='штампај') sel
 function parseJson(out){ try{ return JSON.parse(out.replace(/^\s*```(?:json)?|```\s*$/g,'').trim()); }catch(e){ const m=/\{[\s\S]*\}/.exec(out); if(m) try{ return JSON.parse(m[0]); }catch(x){} } return null; }
 function trimHist(){ if(chatHist.length>24) chatHist=chatHist.slice(-16); while(chatHist.length&&chatHist[0].role!=='user') chatHist.shift(); }
 function showPerson(id, where){ if(!P.has(id)) return; if(where==='стабло'){ showView('treeView'); treeSel=id; let up=P.get(id), n=0; while(n<2){ const par=P.get(up.otac)||P.get(up.majka); if(!par) break; up=par; n++; } treeRoot=up.id; collapsed.clear(); expanded.clear(); expanded.add(id); renderTree(false,id); } else { showView('personsView'); listFilter=''; $('#search').value=''; renderList(); select(id); } }
-function makePdf(o){ const mode=(o['приказ']==='пуно')?'p':(o['приказ']==='сажето'?'s':(PV.on?PV.mode:'s')); const root=P.has(o['корен'])?o['корен']:(PV.on&&PV.B?PV.B.root:D.koren); if(o['врста']==='текст'){ textRoot=root; textMode=mode; showView('textView'); printText(); } else { treeRoot=root; treeMode=mode; if(!PV.on) showView('treeView'); printTree(mode, root); } }
+function makePdf(o){ const mode=(o['приказ']==='пуно')?'p':(o['приказ']==='сажето'?'s':(PV.on?PV.mode:'s')); const root=P.has(o['корен'])?o['корен']:(PV.on&&PV.B?PV.B.root:D.koren); if(o['врста']!=='стабло'&&!(PV.on&&PV.kind==='tree'&&!o['врста'])){ textRoot=root; textMode=mode; if(!PV.on) showView('textView'); printBook(root, mode); } else { treeRoot=root; treeMode=mode; if(!PV.on) showView('treeView'); printTree(mode, root); } }
 function runImmediate(ops){ let changed=false; const after=[];
   for(const o of ops){ const k=o['оп'];
     if(k==='подешавање'){ const key=o['кључ'], val=o['вредност'];
@@ -1154,12 +1402,12 @@ function runImmediate(ops){ let changed=false; const after=[];
     else if(k==='прикажи') showPerson(o.id, o['где']);
     else if(k==='покажи_дугме') highlight(o['дугме']);
     else if(k==='pdf') after.push(()=>makePdf(o));
-    else if(k==='преглед'){ const mode=o['приказ']==='пуно'?'p':(o['приказ']==='сажето'?'s':null); openPreview(o['страна']||1, mode, o['корен']); }
+    else if(k==='преглед'){ const mode=o['приказ']==='пуно'?'p':(o['приказ']==='сажето'?'s':null); openPreview(o['страна']||1, mode, o['корен'], o['врста']==='стабло'?'tree':'book'); }
     else if(k==='затвори_преглед') closePreview();
     else if(k==='научи_изговор') after.push(()=>learnPron(o['реч'], o['слог']));
     else if(k==='ворд') after.push(()=>importWord(true)); }
   if(ops.length) logEv('одмах',{ops:ops.map(o=>o['оп']+(o['кључ']?':'+o['кључ']+'='+o['вредност']:'')).join(', ').slice(0,300)});
-  if(changed){ commit(); saveQuiet(); if($('#treeView').classList.contains('active')) renderTree(); if($('#textView').classList.contains('active')) renderReport(); if(PV.on) renderPreview(); }
+  if(changed){ commit(); saveQuiet(); if($('#treeView').classList.contains('active')) renderTree(); if($('#textView').classList.contains('active')) renderReport(); if(PV.on){ PV.B=null; renderPreview(); } }
   return after; }
 async function confirmPending(p){ if(p.linked) applyOpsLinked(p.ops); else applyOps(p.ops); if(p.then) p.then(); logEv('уписано',{n:p.ops.length, ops:p.ops.map(o=>o['оп']).join(',')}); if(p.box) p.box.innerHTML='<b>✔ Уписано.</b>'; chatHist.push({role:'user',content:'[програм: измене су изведене]'}); const ok=await saveQuiet(); return ok?'Уписано и сачувано.':'Уписано. Кад завршите, кликните Сачувај горе десно.'; }
 const YES=/^(да|даа|да да|може|можеш|важи|упиши|уради|јесте|тако је|у реду|ок|океј|добро|наравно|потврђујем|хоћу|ајде|упиши то|уради то)(\s|$)/;
@@ -1173,22 +1421,25 @@ async function handleUtterance(text, voice){
     if(NO.test(t) && words<=3){ logEv('одбијено',{n:pend.ops.length}); chatHist.push({role:'user',content:'[програм: корисник је одбио предложене измене]'}); return 'Добро, ништа нисам мењао. Шта желите?'; } }
   if(!settings.claude){ const m='Помоћник још није укључен. У подешавањима треба уписати кључ — то ће урадити Борис.'; addMsg('ai',esc(m)); return m; }
   chatHist.push({role:'user',content:text}); trimHist(); const tStart=performance.now();
-  const filler = voice ? say('Само тренутак.') : null; if(voice) talkState('think','Размишљам…'); const wait=addMsg('sys','Размишљам…');
-  let slowT = voice ? setTimeout(()=>{ if(conv.on) say('Још само мало.'); }, 9000) : null;
-  let out, j, msg='', ops=[], rounds=0, after=[]; let talking=null;
+  const sp = voice ? makeSpeaker() : null; conv.sp=sp; if(voice) talkState('think','Размишљам…'); const wait=addMsg('sys','Размишљам…');
+  let roundPushes=0; const fillT = voice ? setTimeout(()=>{ if(conv.on&&sp.pushes===0) sp.say('Само тренутак.'); }, 1400) : null;
+  let slowT = voice ? setInterval(()=>{ if(conv.on&&sp.pushes===roundPushes){ sp.say('Још само мало.'); roundPushes=sp.pushes; } else roundPushes=sp.pushes; }, 8000) : null;
+  let out, j, msg='', rawMsg='', ops=[], rounds=0, after=[]; let tFirst=null;
   try{
     while(true){
-      out=await claude(aiSystem(), chatHist, 1500); chatHist.push({role:'assistant',content:out}); trimHist();
-      j=parseJson(out); if(!j) break; msg=String(j['порука']||''); ops=Array.isArray(j['измене'])?j['измене']:[];
+      out = voice ? await claudeStream(aiSystem(), chatHist, 1500, t=>{ if(tFirst===null) tFirst=Math.round(performance.now()-tStart); sp.feed(partialMsg(t)); }) : await claude(aiSystem(), chatHist, 1500);
+      chatHist.push({role:'assistant',content:out}); trimHist();
+      j=parseJson(out); if(!j) break; rawMsg=String(j['порука']||''); msg=sanitizeMsg(rawMsg); ops=Array.isArray(j['измене'])?j['измене']:[];
       const look=ops.filter(o=>o['оп']==='погледај'||o['оп']==='провери');
       if(look.length && rounds<2){ rounds++; after=after.concat(runImmediate(ops.filter(o=>IMMEDIATE.has(o['оп'])&&!look.includes(o))));
-        if(msg){ addMsg('ai',esc(msg)); if(voice){ if(filler) await filler; talking=say(msg); } }
-        chatHist.push({role:'user',content:await followupContent(look)}); if(talking){ await talking; talking=null; talkState('think','Гледам…'); } continue; }
+        if(msg){ addMsg('ai',esc(msg)); if(sp) sp.finish(rawMsg); }
+        if(sp){ sp.newRound(); talkState('think','Гледам…'); }
+        chatHist.push({role:'user',content:await followupContent(look)}); continue; }
       break; }
-  }catch(e){ logEv('грешка',{gde:'claude',x:String(e.message||e)}); clearTimeout(slowT); wait.remove(); stripImages(); const m='Нешто није у реду са везом. Покушајте поново за минут.'; addMsg('ai',esc(m)+'<br><small>'+esc(e.message||e)+'</small>'); if(filler) await filler; return m; }
-  clearTimeout(slowT); wait.remove(); stripImages(); lastLat=Math.round(performance.now()-tStart);
-  if(filler) await filler;
-  if(!j){ addMsg('ai',esc(out)); return out; }
+  }catch(e){ logEv('грешка',{gde:'claude',x:String(e.message||e)}); clearTimeout(fillT); clearInterval(slowT); wait.remove(); stripImages(); const m='Нешто није у реду са везом. Покушајте поново за минут.'; addMsg('ai',esc(m)+'<br><small>'+esc(e.message||e)+'</small>'); if(sp) sp.finish(m); return m; }
+  clearTimeout(fillT); clearInterval(slowT); wait.remove(); stripImages(); lastLat=Math.round(performance.now()-tStart); conv.tFirst=tFirst;
+  if(!j){ addMsg('ai',esc(out)); if(sp) sp.finish(out); return out; }
+  if(sp) sp.finish(rawMsg);
   const now=ops.filter(o=>IMMEDIATE.has(o['оп'])&&o['оп']!=='погледај'&&o['оп']!=='провери'), conf=ops.filter(o=>!IMMEDIATE.has(o['оп']));
   const d=addMsg('ai',esc(msg));
   after=after.concat(runImmediate(now));
@@ -1205,6 +1456,7 @@ async function aiSend(){
 
 /* ------------------------------------------------ разговор гласом */
 let audioCtx=null;
+let wakeLock=null; async function keepAwake(){ try{ if(document.visibilityState==='visible' && navigator.wakeLock && !wakeLock){ wakeLock=await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',()=>{ wakeLock=null; }); } }catch(e){ if(!keepAwake.warned){ keepAwake.warned=true; console.info('wakeLock', e&&e.name); } } }
 function talkState(s, txt){ const d=$('#talkDot'); d.className=s||''; if(txt!=null) $('#talkText').textContent=txt; const pd=$('#prevDot'); if(pd){ pd.style.background={listen:'#2f6b3a',speech:'#17a34a',think:'#c98a1a',speak:'#1a4fa3'}[s]||'#cfc6b4'; $('#prevTalkTxt').textContent=conv.on?(txt||''):''; } }
 async function getMic(){ if(!micStream||!micStream.active){ micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}); micStream.getTracks().forEach(t=>t.onended=()=>{ micStream=null; }); } return micStream; }
 async function transcribe(blob){ if(settings.stt==='gemini'&&settings.gemini) return sttGemini(blob); if(settings.eleven) return sttScribe(blob); if(settings.gemini) return sttGemini(blob); throw new Error('нема кључа за препознавање говора'); }
@@ -1271,7 +1523,7 @@ const BYE=/(довиђења|збогом|то је све|крај разгов
 async function startConversation(){
   if(conv.on){ stopConversation(); return; }
   conv.on=true; $('#talkBtn').classList.add('on'); $('#talkBtn').textContent='■ Заврши разговор'; conv.t0=performance.now(); conv.n=0; conv.razlog='дугме';
-  logEv('старт',{v:APP_VERSION, stt:useChromeStt()?'chrome':settings.stt, tts:settings.ttsEngine, glas:settings.ttsEngine==='azure'?settings.azureVoice:settings.voice, model:settings.claudeModel, pauza:post().razgovor.pauza, kljuc:!!settings.claude});
+  keepAwake(); logEv('старт',{v:APP_VERSION, budan:!!wakeLock, stt:useChromeStt()?'chrome':settings.stt, tts:settings.ttsEngine, ttsModel:settings.ttsModel, glas:settings.ttsEngine==='azure'?settings.azureVoice:settings.voice, model:settings.claudeModel, pauza:post().razgovor.pauza, kljuc:!!settings.claude});
   ensureWritePermission(); ensureWordPermission();
   try{ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); await audioCtx.resume(); }catch(e){}
   if(!useChromeStt()){ try{ await getMic(); }catch(e){ addMsg('ai','Микрофон није доступан. Проверите да је укључен.'); stopConversation(); return; } }
@@ -1285,13 +1537,13 @@ async function startConversation(){
     talkState('listen','Слушам вас… (говорите)');
     const tl=performance.now(); const heard=latToCyr(((await listenOnce())||'').trim()); conv.slus=Math.round(performance.now()-tl);
     if(!conv.on) break;
-    if(!heard){ quiet++; if(quiet>=2){ conv.razlog='тишина'; const t='Ако вам још нешто затреба, кликните поново на зелено дугме. Довиђења.'; addMsg('ai',esc(t)); talkState('speak','Говорим…'); await say(t); break; } continue; }
+    if(!heard){ quiet++; if(quiet>=(PV.on?5:3)){ conv.razlog='тишина'; const t='Ако вам још нешто затреба, кликните поново на зелено дугме. Довиђења.'; addMsg('ai',esc(t)); talkState('speak','Говорим…'); await say(t); break; } continue; }
     quiet=0; addMsg('me',esc(heard));
     if(BYE.test(norm(heard)) && heard.split(/\s+/).length<=6){ conv.razlog='довиђења'; const t='Довиђења, пријатно.'; addMsg('ai',esc(t)); talkState('speak','Говорим…'); await say(t); break; }
     conv.after=[];
-    const reply=await handleUtterance(heard,true);
+    conv.sp=null; const reply=await handleUtterance(heard,true);
     if(!conv.on) break;
-    conv.n++; if(reply){ talkState('speak','Говорим…'); const ts=performance.now(); await say(reply); conv.gov=Math.round(performance.now()-ts); }
+    conv.n++; if(reply){ const ts=performance.now(); if(conv.sp){ const sp=conv.sp; conv.sp=null; await sp.drain(); logEv('глас',{prviZvuk:sp.firstMs(), prviTekst:conv.tFirst, govor:Math.round(performance.now()-ts)}); } else { talkState('speak','Говорим…'); await say(reply); } }
     const after=conv.after; conv.after=[]; for(const f of after){ await f(); await sleep(400); }
   }
   stopConversation(); }
@@ -1381,6 +1633,9 @@ function bindSettings(){
     if(await confirmDlg(`Учитати податке из фајла <b>${esc(f.name)}</b> (${j.persons.length} особа, измењено ${esc(j.izmenjeno||'?')})? Садашњи подаци (${D.persons.length} особа) биће замењени.`)){ pushHistory(); D=j; commit('Подаци учитани'); selId=null; renderList(); renderForm(); d.close(); } e.target.value=''; };
 }
 function init(){
+  if(!settings.azMigr){ if(settings.azureKey){ settings.ttsEngine='azure'; settings.azureVoice='sr-RS-NicholasNeural'; settings.azSpeed=settings.azSpeed||0.95; } settings.azMigr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
+  keepAwake(); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') keepAwake(); if(conv.on) logEv(document.visibilityState==='visible'?'видљиво':'сакривено',{}); });
+  document.addEventListener('click',()=>{ if(!wakeLock) keepAwake(); });
   setTimeout(sendReport, 4000);
   if(!settings.speedMigr){ if(settings.claudeModel==='claude-sonnet-5-5') settings.claudeModel='claude-haiku-5-5'; settings.speedMigr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(!settings.nikolaMigr){ settings.voice='LmECtQKlHFHPX4psgBT1'; settings.ttsEngine='eleven'; settings.nikolaMigr=true; if(Array.isArray(settings.voices)&&!settings.voices.some(v=>v[1]==='LmECtQKlHFHPX4psgBT1')) settings.voices.unshift(['Никола (српски, мушки)','LmECtQKlHFHPX4psgBT1']); localStorage.setItem(LS_SET,JSON.stringify(settings)); }
