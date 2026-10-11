@@ -274,7 +274,9 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
       <span>Од:</span><button id="textRootBtn">Милош Лакетић</button>
       <span class="seg" id="textMode"><button data-v="s" class="on">Сажето</button><button data-v="p">Пуно</button></span>
       <span class="sp"></span>
-      <select data-pk="knjiga.format" style="width:auto" title="Формат књиге"><option value="A5">Књижица A5</option><option value="knjizica">A5 за савијање (листови A4)</option><option value="A4">A4</option></select>
+      <select data-pk="knjiga.font" style="width:auto;flex:none" title="Писмо (фонт)"><option value="segoe">Segoe UI</option><option value="georgia">Georgia</option><option value="times">Times New Roman</option><option value="palatino">Palatino</option><option value="cambria">Cambria</option><option value="calibri">Calibri</option></select>
+      <select data-pk="knjiga.slova" style="width:auto;flex:none" title="Величина слова"><option value="najmanja">Слова: најситнија</option><option value="mala">Слова: ситнија</option><option value="srednja">Слова: обична</option><option value="velika">Слова: крупнија</option><option value="najveca">Слова: најкрупнија</option></select>
+      <select data-pk="knjiga.format" style="width:auto;flex:none" title="Формат књиге"><option value="A5">A5 књижица</option><option value="knjizica">A5 за савијање</option><option value="A4">A4</option></select>
       <button id="textPreviewBtn">👁 Преглед</button>
       <button id="printTextBtn" class="primary">🖨 Штампај / PDF</button>
     </div>
@@ -389,7 +391,8 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
     <div class="setting"><label class="f">Текстуални родослов — књига (део „Текст“ → Штампај)</label>
       <div class="grid">
         <div><label class="f">Формат</label><select data-pk="knjiga.format"><option value="A5">Књижица A5 (за копирницу)</option><option value="knjizica">A5 за савијање — листови A4, обострано</option><option value="A4">A4</option></select></div>
-        <div><label class="f">Слова</label><select data-pk="knjiga.slova"><option value="mala">Ситнија (мање страна)</option><option value="srednja">Обична</option><option value="velika">Крупнија</option></select></div>
+        <div><label class="f">Величина слова</label><select data-pk="knjiga.slova"><option value="najmanja">Најситнија (најмање страна)</option><option value="mala">Ситнија</option><option value="srednja">Обична</option><option value="velika">Крупнија</option><option value="najveca">Најкрупнија</option></select></div>
+        <div><label class="f">Писмо (фонт)</label><select data-pk="knjiga.font"><option value="segoe" style="font-family:Segoe UI">Segoe UI — савремен</option><option value="georgia" style="font-family:Georgia">Georgia — класичан, читак</option><option value="times" style="font-family:Times New Roman">Times New Roman — књижни</option><option value="palatino" style="font-family:Palatino Linotype">Palatino — свечан, књижни</option><option value="cambria" style="font-family:Cambria">Cambria — јасан, књижни</option><option value="calibri" style="font-family:Calibri">Calibri — мек, савремен</option></select></div>
         <div><label class="f">Садржај до</label><select data-pk="knjiga.dubinaSadrzaja"><option value="1">синова Милошевих</option><option value="2">унука (препоручено)</option><option value="3">праунука</option></select></div>
         <div><label><input type="checkbox" data-pk="knjiga.naslovna" style="width:auto;transform:scale(1.3);margin-right:8px">Насловна страна</label><br><label><input type="checkbox" data-pk="knjiga.sadrzaj" style="width:auto;transform:scale(1.3);margin-right:8px">Садржај</label><br><label><input type="checkbox" data-pk="knjiga.registar" style="width:auto;transform:scale(1.3);margin-right:8px">Регистар имена на крају</label><br><label><input type="checkbox" data-pk="knjiga.novaStrana" style="width:auto;transform:scale(1.3);margin-right:8px">Свака грана од нове стране</label></div>
       </div>
@@ -464,7 +467,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.11.11';
+const APP_VERSION='2026.10.11.12';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -517,8 +520,8 @@ const POST_DEF={ stampa:{papir:'A4', raspored:'grane', velicina:'srednja', crnob
   sazeto:{nadimci:true, godine:true, supruznici:true, mesta:false, napomene:false},
   puno:{nadimci:true, godine:true, supruznici:true, mesta:true, napomene:true},
   stablo:{generacije:'2'}, razgovor:{pauza:'2.5'},
-  knjiga:{format:'A5', slova:'srednja', sadrzaj:true, dubinaSadrzaja:'2', registar:true, novaStrana:true, naslovna:true, uvod:''} };
-const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo','plakat'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99'],'stampa.orijentacija':['polozeno','uspravno'],'stampa.poravnanje':['centar','levo'],'stampa.slova':['mala','srednja','velika'],'stampa.razmak':['zbijeno','normalno','siroko'],'stampa.generacije':['2','3','4','5','6','7','8','99'],'stampa.naslovVelicina':['mali','srednji','veliki'],'stampa.zaglavlje':'bool','stampa.brojStrana':'bool','stampa.okviri':'bool','stampa.plakatPapir':['auto','A2','A1','A0','rolna'],'razgovor.pauza':['1.5','2','2.5','3','3.5','4','5'],'knjiga.format':['A5','knjizica','A4'],'knjiga.slova':['mala','srednja','velika'],'knjiga.sadrzaj':'bool','knjiga.dubinaSadrzaja':['1','2','3'],'knjiga.registar':'bool','knjiga.novaStrana':'bool','knjiga.naslovna':'bool','knjiga.uvod':'text'};
+  knjiga:{format:'A5', slova:'srednja', font:'segoe', sadrzaj:true, dubinaSadrzaja:'2', registar:true, novaStrana:true, naslovna:true, uvod:''} };
+const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo','plakat'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99'],'stampa.orijentacija':['polozeno','uspravno'],'stampa.poravnanje':['centar','levo'],'stampa.slova':['mala','srednja','velika'],'stampa.razmak':['zbijeno','normalno','siroko'],'stampa.generacije':['2','3','4','5','6','7','8','99'],'stampa.naslovVelicina':['mali','srednji','veliki'],'stampa.zaglavlje':'bool','stampa.brojStrana':'bool','stampa.okviri':'bool','stampa.plakatPapir':['auto','A2','A1','A0','rolna'],'razgovor.pauza':['1.5','2','2.5','3','3.5','4','5'],'knjiga.format':['A5','knjizica','A4'],'knjiga.slova':['najmanja','mala','srednja','velika','najveca'],'knjiga.font':['segoe','georgia','times','palatino','cambria','calibri'],'knjiga.sadrzaj':'bool','knjiga.dubinaSadrzaja':['1','2','3'],'knjiga.registar':'bool','knjiga.novaStrana':'bool','knjiga.naslovna':'bool','knjiga.uvod':'text'};
 for(const m of ['sazeto','puno']) for(const f of ['nadimci','godine','supruznici','mesta','napomene']) POST_SCHEMA[m+'.'+f]='bool';
 function post(){ if(!D.postavke) D.postavke={}; for(const k in POST_DEF) D.postavke[k]=Object.assign({},POST_DEF[k],D.postavke[k]||{}); return D.postavke; }
 function setPost(path,val){ const t=POST_SCHEMA[path]; if(!t) return false; if(t==='bool') val=(val===true||val==='true'||val==='да'||val===1); else if(t==='text') val=String(val??'').slice(0, path==='knjiga.uvod'?3000:200); else { val=String(val); if(!t.includes(val)) return false; } const [a,b]=path.split('.'); post()[a][b]=val; return true; }
@@ -835,12 +838,15 @@ function printTree(mode, rootId){ const B=buildTreePages(mode, rootId); const st
   area.innerHTML=B.plakat?B.pages[0].svg:B.pages.map(pageHtml).join(''); logEv('штампа',{vrsta:B.plakat?'плакат':'стабло', papir:B.plakat?B.plakat.opis:post().stampa.papir, strana:B.pages.length}); setTimeout(()=>window.print(), 100); }
 
 /* ============================================================ књига — текстуални родослов за штампу (страничење, садржај, регистар) */
+const BOOK_FONTS={segoe:['Segoe UI (савремен)','"Segoe UI",Arial,sans-serif'], georgia:['Georgia (класичан, читак)','Georgia,"Times New Roman",serif'], times:['Times New Roman (књижни)','"Times New Roman",Times,serif'], palatino:['Palatino (свечан, књижни)','"Palatino Linotype","Book Antiqua",Palatino,serif'], cambria:['Cambria (јасан, књижни)','Cambria,Georgia,serif'], calibri:['Calibri (мек, савремен)','Calibri,"Segoe UI",Arial,sans-serif']};
+const BOOK_SIZE={najmanja:0.84, mala:0.92, srednja:1, velika:1.12, najveca:1.26};
+function bookFontStack(){ const f=BOOK_FONTS[post().knjiga.font]||BOOK_FONTS.segoe; return f[1]; }
 const BOOK_FMT={
   A4:{w:210,h:297,t:16,b:18,l:18,r:18,fs:{mala:9.5,srednja:10.5,velika:12},step:6},
   A5:{w:148,h:210,t:11,b:14,l:13,r:13,fs:{mala:8,srednja:9,velika:10.5},step:4.2} };
-function bookFmt(){ const k=post().knjiga; const base=k.format==='A4'?BOOK_FMT.A4:BOOK_FMT.A5; const F=Object.assign({},base); F.fsz=base.fs[k.slova]||base.fs.srednja; F.step=base.step*F.fsz/base.fs.srednja; F.ch=F.h-F.t-F.b-8; F.key=k.format==='A4'?'A4':'A5'; F.imposed=k.format==='knjizica'; return F; }
+function bookFmt(){ const k=post().knjiga; const base=k.format==='A4'?BOOK_FMT.A4:BOOK_FMT.A5; const F=Object.assign({},base); F.fsz=+(base.fs.srednja*(BOOK_SIZE[k.slova]||1)).toFixed(2); F.step=base.step*F.fsz/base.fs.srednja; F.ch=F.h-F.t-F.b-8; F.key=k.format==='A4'?'A4':'A5'; F.imposed=k.format==='knjizica'; return F; }
 function bookCss(F){ const bw=post().stampa.crnobelo;
-  return `.bpage{width:${F.w}mm;height:${F.h}mm;box-sizing:border-box;padding:${F.t}mm ${F.r}mm ${F.b}mm ${F.l}mm;background:#fff;color:#111;font-family:"Segoe UI",Arial,sans-serif;font-size:${F.fsz}pt;line-height:1.3;position:relative;overflow:hidden;text-align:left}
+  return `.bpage{width:${F.w}mm;height:${F.h}mm;box-sizing:border-box;padding:${F.t}mm ${F.r}mm ${F.b}mm ${F.l}mm;background:#fff;color:#111;font-family:${bookFontStack()};font-size:${F.fsz}pt;line-height:1.3;position:relative;overflow:hidden;text-align:left}
 .bpage .bh{height:5mm;font-size:.74em;color:#666;display:flex;justify-content:space-between;gap:4mm;border-bottom:.2mm solid #bbb;margin-bottom:3mm;white-space:nowrap;overflow:hidden}
 .bpage .bh span:last-child{overflow:hidden;text-overflow:ellipsis}
 .bpage .bc{height:${F.ch}mm;overflow:hidden}
@@ -960,7 +966,7 @@ const PAPERS=[['A3',420,297],['A2',594,420],['A1',841,594],['A0',1189,841]];
 const ROLL_W=914; // ролна плотера у копирницама (91,4 cm), дужина по жељи
 const PL_TINT=['#e6eefa','#e5f2e1','#fbeadb','#f1e4f6','#fbf2cf','#e0f1f1','#f6e1e1'];
 const PL_LINE=['#3f6aa8','#4f8a43','#b26a2b','#86509c','#a88a14','#2d8585','#a54848'];
-let _pmc=null; function pMeasure(txt, size, bold){ if(!_pmc) _pmc=document.createElement('canvas').getContext('2d'); _pmc.font=`${bold?'bold ':''}${size*10}px "Segoe UI",Arial,sans-serif`; return _pmc.measureText(txt).width/10; }
+let _pmc=null; function pMeasure(txt, size, bold){ if(!_pmc) _pmc=document.createElement('canvas').getContext('2d'); _pmc.font=`${bold?'bold ':''}${size*10}px ${bookFontStack()}`; return _pmc.measureText(txt).width/10; }
 function posterLayout(rootId, mode, B, Ht){ const f=fieldsFor(mode);
   const S={box:3.7, boxSm:2.7, col:3.0, list:2.35, lh:2.95, ind:3.0, pad:1.5, hgap:4, vgap:10, gap:2.4, spine:2.2};
   const nm=p=>nmF(p,f)+((f.godine&&yrs(p))?` (${yrs(p)})`:'');
@@ -1000,7 +1006,7 @@ function posterLayout(rootId, mode, B, Ht){ const f=fieldsFor(mode);
 function posterSvg(L, scale, paperW, paperH, margin){ const {S}=L; const bw=post().stampa.crnobelo; const e=s=>esc(s); const o=[];
   const tint=b=>bw||b<0?'#ffffff':PL_TINT[b%PL_TINT.length], lc=b=>bw||b<0?'#555':PL_LINE[b%PL_LINE.length];
   const ox=(paperW-L.W*scale)/2, oy=margin;
-  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${paperW}mm" height="${paperH}mm" viewBox="0 0 ${paperW} ${paperH}"><rect width="${paperW}" height="${paperH}" fill="#fff"/><g transform="translate(${ox.toFixed(2)},${oy.toFixed(2)}) scale(${scale.toFixed(4)})" font-family="Segoe UI,Arial,sans-serif" fill="#1e1a12">`);
+  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${paperW}mm" height="${paperH}mm" viewBox="0 0 ${paperW} ${paperH}"><rect width="${paperW}" height="${paperH}" fill="#fff"/><g transform="translate(${ox.toFixed(2)},${oy.toFixed(2)}) scale(${scale.toFixed(4)})" font-family="${bookFontStack().replace(/"/g,'')}" fill="#1e1a12">`);
   o.push(`<text x="${L.W/2}" y="8.5" font-size="7.5" font-weight="700" text-anchor="middle">${e(L.title)}</text><text x="${L.W/2}" y="13.5" font-size="2.8" text-anchor="middle" fill="#5b5140">${e([D.autor?'Саставио '+D.autor:'', new Date().toLocaleDateString('sr-RS')].filter(Boolean).join(' · '))}</text>`);
   // везе
   for(const [n,k] of L.edges){ const a={x:n.cx,y:n.y+n.h}; const col=lc(k.top.br);
@@ -1091,7 +1097,7 @@ function reportHtml(rootId, mode){ const f=fieldsFor(mode); const st=post().stam
     if(ch.length){ o.push('<div class="g">'); for(const c of ch) walk(c.id, depth+1); o.push('</div>'); } };
   walk(rootId,0); o.push('</div>'); return o.join('');
 }
-function renderReport(){ $$('#textView [data-pk]').forEach(el=>{ el.value=getPost(el.dataset.pk); }); if(!textRoot||!P.has(textRoot)) textRoot=D.koren; $('#textRootBtn').textContent=shortName(P.get(textRoot)); $('#report').innerHTML=reportHtml(textRoot,textMode); }
+function renderReport(){ $$('#textView [data-pk]').forEach(el=>{ el.value=getPost(el.dataset.pk); }); $('#report').style.fontFamily=bookFontStack(); if(!textRoot||!P.has(textRoot)) textRoot=D.koren; $('#textRootBtn').textContent=shortName(P.get(textRoot)); $('#report').innerHTML=reportHtml(textRoot,textMode); }
 function bindText(){
   $$('#textMode button').forEach(b=>b.onclick=()=>{ $$('#textMode button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); textMode=b.dataset.v; renderReport(); });
   $('#textRootBtn').onclick=async()=>{ const r=await pickPerson({title:'Почетак текста'}); if(r){ textRoot=r; renderReport(); } };
@@ -1353,7 +1359,7 @@ function aiSystem(){ const DB=dataBlocks(); return [
   stampa.raspored: "grane" | "celo" | "plakat" (ПЛАКАТ: цело стабло на великом папиру)
   stampa.plakatPapir: "auto" (најмањи довољан) | "A2" | "A1" | "A0" | "rolna" — већи папир = крупнија слова и више кућица
 КЊИГА (текстуални родослов) — кључеви за „подешавање“:
-  knjiga.format: "A5"|"knjizica"|"A4";  knjiga.slova: "mala"|"srednja"|"velika";  knjiga.sadrzaj: true/false;  knjiga.dubinaSadrzaja: "1"|"2"|"3" (до ког колена иде садржај)
+  knjiga.format: "A5"|"knjizica"|"A4";  knjiga.slova: "najmanja"|"mala"|"srednja"|"velika"|"najveca" (величина слова у књизи и на плакату);  knjiga.font: "segoe" (Segoe UI, савремен — подразумевано) | "georgia" (Georgia, класичан) | "times" (Times New Roman, књижни) | "palatino" (Palatino, свечан књижни) | "cambria" (Cambria, јасан књижни) | "calibri" (Calibri, мек савремен) — писмо у књизи и на плакату; кад корисник пита за фонтове, набројај ове и понуди да промениш и одмах покажеш у прегледу;  knjiga.sadrzaj: true/false;  knjiga.dubinaSadrzaja: "1"|"2"|"3" (до ког колена иде садржај)
   knjiga.registar: true/false (регистар имена на крају);  knjiga.novaStrana: true/false (свака грана Милошевог сина почиње на новој страни);  knjiga.naslovna: true/false;  knjiga.uvod: текст уводне речи (празно = без ње)
   Наслов књиге је stampa.naslov.
 
@@ -1661,7 +1667,7 @@ function bindSettings(){
   $('#s_ttsEngine').onchange=showTtsBlocks;
   $('#testAzure').onclick=async()=>{ readSet(); if(!settings.azureKey){ toast('Прво упишите Azure кључ.'); return; } $('#testAzure').disabled=true; try{ await speakAzure('Добар дан. Ја сам ваш помоћник за родослов. Данас можемо да допунимо податке о унуцима. Како могу да помогнем?'); }catch(e){ toast('Глас: '+(e.message||e),7000); } $('#testAzure').disabled=false; };
   $('#loadVoices').onclick=async()=>{ const key=$('#s_eleven').value.trim(); if(!key){ toast('Прво упишите ElevenLabs кључ.'); return; } $('#loadVoices').disabled=true; try{ const v=await loadVoices(key); settings.voices=v; localStorage.setItem(LS_SET,JSON.stringify(settings)); fillVoiceSel(); toast(`Учитано гласова: ${v.length}`); }catch(e){ toast(e.message||String(e),7000); } $('#loadVoices').disabled=false; };
-  $$('[data-pk]').forEach(el=>el.addEventListener('change',()=>{ setPost(el.dataset.pk, el.type==='checkbox'?el.checked:el.value); commit(); }));
+  $$('[data-pk]').forEach(el=>el.addEventListener('change',()=>{ setPost(el.dataset.pk, el.type==='checkbox'?el.checked:el.value); commit(); if(/^knjiga\./.test(el.dataset.pk)){ if($('#textView').classList.contains('active')) renderReport(); if(PV.on){ PV.B=null; renderPreview(); } } }));
   $('#checkUpd').onclick=()=>checkUpdate(true);
   $('#downloadBtn').onclick=()=>downloadFile();
   $('#importBtn').onclick=()=>$('#importFile').click();
