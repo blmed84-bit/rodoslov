@@ -318,7 +318,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
       <div><label class="f">Величина цртежа</label><select id="pr_velicina"><option value="mala">Ситније — више на једној страни</option><option value="srednja">Средње</option><option value="velika">Крупније — мање на једној страни</option></select></div>
       <div><label class="f">Боја</label><select id="pr_crnobelo"><option value="false">У боји</option><option value="true">Црно-бело</option></select></div>
     </div>
-    <p class="help">Шта тачно пише у „Сажето“ и „Пуно“ подешава се у ⚙ Подешавања, или само реците помоћници.</p>
+    <p class="help">Шта тачно пише у „Сажето“ и „Пуно“ подешава се у ⚙ Подешавања, или само реците помоћнику.</p>
     <p class="help">У прозору за штампање који се отвори изаберите штампач, или „Сачувај као PDF“ (Save as PDF) да добијете PDF фајл.</p>
   </div>
   <div class="df"><button id="printCancel">Одустани</button><button id="printOk" class="primary">Настави</button></div>
@@ -335,7 +335,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
     <p><b>Поништи.</b> Дугме ↶ враћа последњу измену.</p>
     <p><b>Стабло.</b> Кликните ＋ испод особе да отворите њену грану, − да је затворите. Точкићем миша увећавате, превлачењем померате. Двоструки клик на особу отвара њен образац.</p>
     <p><b>Штампање и PDF.</b> У „Стаблу“ и „Тексту“ дугме 🖨 отвара прозор за штампање. Ту изаберите штампач или „Сачувај као PDF“ (Save as PDF). „Сажето“ даје само имена и године, „Пуно“ и супружнике, места и напомене.</p>
-    <p><b>Помоћница.</b> Најлакше је овако: кликните горе <b>Помоћник</b>, па зелено дугме <b>🎙 Започни разговор</b>, и реците шта желите — да нешто упишете, да направите PDF, или да вам објасни како се нешто ради. Она вам одговара гласом. Кад предложи измену, реците „да“ или „не“. Разговор завршите речју „довиђења“.</p>
+    <p><b>Помоћник.</b> Најлакше је овако: кликните горе <b>Помоћник</b>, па зелено дугме <b>🎙 Започни разговор</b>, и реците шта желите — да нешто упишете, да направите PDF, или да вам објасни како се нешто ради. Он вам одговара гласом. Кад предложи измену, реците „да“ или „не“. Разговор завршите речју „довиђења“.</p>
   </div>
   <div class="df"><button id="helpClose" class="primary">Затвори</button></div>
 </dialog>
@@ -358,7 +358,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
         <div><label class="f">Наслов на PDF-у (празно = подразумевани)</label><input data-pk="stampa.naslov"></div>
         <div><label><input type="checkbox" data-pk="stampa.datum" style="width:auto;transform:scale(1.3);margin-right:8px">Датум на PDF-у</label><br><label><input type="checkbox" data-pk="stampa.oznake" style="width:auto;transform:scale(1.3);margin-right:8px">Ознаке ⚠ на PDF-у</label></div>
       </div></div>
-    <div class="setting"><label class="f">Жеље за нове могућности (записује их помоћница, за Бориса)</label><div id="zeljeList"></div></div>
+    <div class="setting"><label class="f">Жеље за нове могућности (записује их помоћник, за Бориса)</label><div id="zeljeList"></div></div>
     <div class="setting help">Верзија програма: <b id="verLbl"></b> &nbsp; <button class="small" id="checkUpd">Провери да ли постоји нова верзија</button></div>
     <hr>
     <div class="setting"><label class="f">Диктирање (мотор за препознавање говора)</label>
@@ -412,7 +412,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.11.1';
+const APP_VERSION='2026.10.11.2';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -422,7 +422,7 @@ let P = new Map();     // id -> особа
 let KIDS = new Map();  // id -> [деца]
 let MAR = new Map();   // id -> [бракови]
 let selId = null, dirty = false, history = [];
-let settings = Object.assign({stt:'chrome', claude:'', claudeModel:'claude-sonnet-5-5', eleven:'', voice:'EXAVITQu4vr4xnSDxMaL', ttsModel:'eleven_v3', speed:0.9, stab:0.5, voices:null, pron:'', ttsEngine:'eleven', azureKey:'', azureRegion:'westeurope', azureVoice:'sr-RS-SophieNeural', azSpeed:0.95, azPron:'', gemini:'', geminiModel:'gemini-2.5-flash', tts:true, autolekt:true, fs:'19'},
+let settings = Object.assign({stt:'chrome', claude:'', claudeModel:'claude-sonnet-5-5', eleven:'', voice:'LmECtQKlHFHPX4psgBT1', ttsModel:'eleven_v3', speed:0.9, stab:0.5, voices:null, pron:'', ttsEngine:'eleven', azureKey:'', azureRegion:'westeurope', azureVoice:'sr-RS-SophieNeural', azSpeed:0.95, azPron:'', gemini:'', geminiModel:'gemini-2.5-flash', tts:true, autolekt:true, fs:'19'},
   JSON.parse(localStorage.getItem(LS_SET) || '{}'));
 
 function toast(t, ms=2600){ const e=$('#toast'); e.textContent=t; e.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>e.classList.remove('show'), ms); }
@@ -852,11 +852,11 @@ const UPUTSTVO=`КАКО СЕ КОРИСТИ ПРОГРАМ (за твоја о�
 • PDF се шаље рођацима као прилог у пошти или Вајберу. Борису се шаље сам фајл програма „Родослов Лакетића“ са радне површине.
 КАКО ОБЈАШЊАВАШ: корисник се слабо сналази на рачунару. Кад пита како се нешто ради, увек прво понуди да ти то урадиш уместо њега (упис, PDF, приказ особе). Ако ипак жели сам, објасни САМО ПРВИ КОРАК, једном или две кратке реченице, и додај измену „покажи_дугме“ да то дугме затрепери на екрану; на крају питај „Јавите ми кад кликнете.“ Кад каже да је готово, дај следећи корак. Никад не набрајај више корака одједном.`;
 function aiSystem(){ return [
- {type:'text', text:`Ти си љубазна помоћница у програму „Родослов породице Лакетић“. Корисник је старији господин који је родослов саставио; разговара с тобом гласом, а твоје одговоре чује изговорене. Обраћај му се са „Ви“, без имена, топло, мирно и кратко: највише две-три кратке реченице. Пиши српском ћирилицом, екавски. Никад не користи техничке изразе ни стране речи. Године пиши цифрама.
+ {type:'text', text:`Ти си љубазни помоћник у програму „Родослов породице Лакетић“. Говориш у мушком роду (нпр. „уписао сам“, „променио сам“). Корисник је старији господин који је родослов саставио; разговара с тобом гласом, а твоје одговоре чује изговорене. Обраћај му се са „Ви“, без имена, топло, мирно и кратко: највише две-три кратке реченице. Пиши српском ћирилицом, екавски. Никад не користи техничке изразе ни стране речи. Године пиши цифрама.
 
 Можеш:
 1. Да мењаш родослов (додаш особу, измениш податак, упишеш брак, обришеш). То се изводи тек кад корисник потврди, зато у „порука“ кратко кажи шта ћеш уписати и заврши питањем „Да ли да упишем?“
-2. Да мењаш подешавања приказа и штампе — одмах, без питања, и кажеш шта си променила.
+2. Да мењаш подешавања приказа и штампе — одмах, без питања, и кажеш шта си променио.
 3. Да отвориш прозор за штампање и PDF, да покажеш особу у стаблу или образцу, да покажеш дугме на екрану — одмах.
 4. Да објасниш како се програм користи (види упутство испод).
 Ако корисник жели нешто што програм не уме (нову могућност, нешто што није међу подешавањима), љубазно реци да то још не умеш, да ћеш жељу записати и проследити Борису, и додај измену „жеља“.
@@ -937,8 +937,8 @@ async function handleUtterance(text, voice){
   if(conv.pending){ const pend=conv.pending; conv.pending=null;
     if(YES.test(t) && words<=5){ const r=await confirmPending(pend); addMsg('ai',esc(r)); return r; }
     if(pend.box) pend.box.innerHTML='<i>Одбачено.</i>';
-    if(NO.test(t) && words<=3){ chatHist.push({role:'user',content:'[програм: корисник је одбио предложене измене]'}); return 'Добро, ништа нисам мењала. Шта желите?'; } }
-  if(!settings.claude){ const m='Помоћница још није укључена. У подешавањима треба уписати кључ — то ће урадити Борис.'; addMsg('ai',esc(m)); return m; }
+    if(NO.test(t) && words<=3){ chatHist.push({role:'user',content:'[програм: корисник је одбио предложене измене]'}); return 'Добро, ништа нисам мењао. Шта желите?'; } }
+  if(!settings.claude){ const m='Помоћник још није укључен. У подешавањима треба уписати кључ — то ће урадити Борис.'; addMsg('ai',esc(m)); return m; }
   chatHist.push({role:'user',content:text}); trimHist();
   const filler = voice ? say('Само тренутак.') : null; if(voice) talkState('think','Размишљам…'); const wait=addMsg('sys','Размишљам…');
   let out; try{ out=await claude(aiSystem(), chatHist, 3000); }catch(e){ wait.remove(); chatHist.pop(); const m='Нешто није у реду са везом. Покушајте поново за минут.'; addMsg('ai',esc(m)+'<br><small>'+esc(e.message||e)+'</small>'); if(filler) await filler; return m; }
@@ -1002,7 +1002,7 @@ async function startConversation(){
   if(!useChromeStt()){ try{ await getMic(); }catch(e){ addMsg('ai','Микрофон није доступан. Проверите да је укључен.'); stopConversation(); return; } }
   let greet='Како могу да вам помогнем?';
   if(updInfo) greet='Стигла је нова верзија програма. Кад будете хтели, кликните зелено дугме Инсталирај, горе. '+greet;
-  if(!settings.claude) greet='Помоћница још није укључена. У подешавањима треба уписати кључ — то ће урадити Борис.';
+  if(!settings.claude) greet='Помоћник још није укључен. У подешавањима треба уписати кључ — то ће урадити Борис.';
   addMsg('ai',esc(greet)); talkState('speak','Говорим…'); await say(greet);
   if(!settings.claude){ stopConversation(); return; }
   let quiet=0;
@@ -1022,7 +1022,7 @@ async function startConversation(){
   stopConversation(); }
 function stopConversation(){ conv.on=false; if(conv.stopListen) conv.stopListen(); if(curAudio){ try{ curAudio.pause(); }catch(e){} } $('#talkBtn').classList.remove('on'); $('#talkBtn').textContent='🎙 Започни разговор'; talkState('','Кликните на зелено дугме и реците шта желите.'); }
 
-const PREMADE=[['Sarah','EXAVITQu4vr4xnSDxMaL'],['Laura','FGY2WhTYpPnrIDTdsKH5'],['Charlotte','XB0fDUnXU5powFXDhCwa'],['Alice','Xb7hH8MSUJpSbSDYk0k2'],['Matilda','XrExE9yKIg1WjnnlVkGX'],['Jessica','cgSgspJ2msm6clMCkdW9'],['Lily','pFZP5JQG7iQjIQuC4Bku'],['Aria','9BWtsMINqrJLrRacOk9x'],['Rachel','21m00Tcm4TlvDq8ikWAM'],['Domi','AZnzlk1XvdvUeBnXmlld']];
+const PREMADE=[['Никола (српски, мушки)','LmECtQKlHFHPX4psgBT1'],['Sarah','EXAVITQu4vr4xnSDxMaL'],['Laura','FGY2WhTYpPnrIDTdsKH5'],['Charlotte','XB0fDUnXU5powFXDhCwa'],['Alice','Xb7hH8MSUJpSbSDYk0k2'],['Matilda','XrExE9yKIg1WjnnlVkGX'],['Jessica','cgSgspJ2msm6clMCkdW9'],['Lily','pFZP5JQG7iQjIQuC4Bku'],['Aria','9BWtsMINqrJLrRacOk9x'],['Rachel','21m00Tcm4TlvDq8ikWAM'],['Domi','AZnzlk1XvdvUeBnXmlld']];
 function applyPron(text){ const rules=(settings.pron||'').split(/\n/).map(l=>l.split('=')).filter(a=>a.length>=2).map(a=>[a[0].trim(), a.slice(1).join('=').trim()]).filter(a=>a[0]);
   for(const [w,r] of rules){ const re=new RegExp('(^|[^\\p{L}])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=[^\\p{L}]|$)','gu'); text=text.replace(re,(m,pre)=>pre+r); } return text; }
 let curAudio=null;
@@ -1070,13 +1070,13 @@ function bindSettings(){
   const readSet=()=>{ for(const [el,k] of Object.entries(f)) settings[k]=String($('#'+el).value).trim(); if($('#s_voiceSel').value) settings.voice=$('#s_voiceSel').value; };
   $('#settingsClose').onclick=()=>{ readSet(); settings.tts=$('#s_tts').checked; settings.autolekt=$('#s_autolekt').checked; localStorage.setItem(LS_SET,JSON.stringify(settings)); d.close(); toast('Подешавања сачувана'); };
   $$('#fsSeg button').forEach(b=>b.onclick=()=>{ $$('#fsSeg button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); settings.fs=b.dataset.v; document.documentElement.style.setProperty('--fs',settings.fs+'px'); });
-  $('#testVoice').onclick=async()=>{ readSet(); if(!settings.eleven){ toast('Прво упишите ElevenLabs кључ.'); return; } if(!settings.voice){ toast('Изаберите глас.'); return; } $('#testVoice').disabled=true; try{ await speakNow('Добар дан. Ја сам ваша помоћница за родослов. Данас можемо да допунимо податке о унуцима. Како могу да помогнем?'); }catch(e){ toast('Глас: '+(e.message||e),6000); } $('#testVoice').disabled=false; };
+  $('#testVoice').onclick=async()=>{ readSet(); if(!settings.eleven){ toast('Прво упишите ElevenLabs кључ.'); return; } if(!settings.voice){ toast('Изаберите глас.'); return; } $('#testVoice').disabled=true; try{ await speakNow('Добар дан. Ја сам ваш помоћник за родослов. Данас можемо да допунимо податке о унуцима. Како могу да помогнем?'); }catch(e){ toast('Глас: '+(e.message||e),6000); } $('#testVoice').disabled=false; };
   $('#s_voiceSel').onchange=()=>{ if($('#s_voiceSel').value) $('#s_voice').value=$('#s_voiceSel').value; };
   $('#s_voice').oninput=()=>{ const v=$('#s_voice').value.trim(); const sel=$('#s_voiceSel'); sel.value=[...sel.options].some(o=>o.value===v)?v:''; };
   $('#s_speed').oninput=()=>{ $('#s_speedVal').textContent='×'+(+$('#s_speed').value).toFixed(2); };
   $('#s_azSpeed').oninput=()=>{ $('#s_azSpeedVal').textContent='×'+(+$('#s_azSpeed').value).toFixed(2); };
   $('#s_ttsEngine').onchange=showTtsBlocks;
-  $('#testAzure').onclick=async()=>{ readSet(); if(!settings.azureKey){ toast('Прво упишите Azure кључ.'); return; } $('#testAzure').disabled=true; try{ await speakAzure('Добар дан. Ја сам ваша помоћница за родослов. Данас можемо да допунимо податке о унуцима. Како могу да помогнем?'); }catch(e){ toast('Глас: '+(e.message||e),7000); } $('#testAzure').disabled=false; };
+  $('#testAzure').onclick=async()=>{ readSet(); if(!settings.azureKey){ toast('Прво упишите Azure кључ.'); return; } $('#testAzure').disabled=true; try{ await speakAzure('Добар дан. Ја сам ваш помоћник за родослов. Данас можемо да допунимо податке о унуцима. Како могу да помогнем?'); }catch(e){ toast('Глас: '+(e.message||e),7000); } $('#testAzure').disabled=false; };
   $('#loadVoices').onclick=async()=>{ const key=$('#s_eleven').value.trim(); if(!key){ toast('Прво упишите ElevenLabs кључ.'); return; } $('#loadVoices').disabled=true; try{ const v=await loadVoices(key); settings.voices=v; localStorage.setItem(LS_SET,JSON.stringify(settings)); fillVoiceSel(); toast(`Учитано гласова: ${v.length}`); }catch(e){ toast(e.message||String(e),7000); } $('#loadVoices').disabled=false; };
   $$('[data-pk]').forEach(el=>el.addEventListener('change',()=>{ setPost(el.dataset.pk, el.type==='checkbox'?el.checked:el.value); commit(); }));
   $('#checkUpd').onclick=()=>checkUpdate(true);
@@ -1087,6 +1087,7 @@ function bindSettings(){
     if(await confirmDlg(`Учитати податке из фајла <b>${esc(f.name)}</b> (${j.persons.length} особа, измењено ${esc(j.izmenjeno||'?')})? Садашњи подаци (${D.persons.length} особа) биће замењени.`)){ pushHistory(); D=j; commit('Подаци учитани'); selId=null; renderList(); renderForm(); d.close(); } e.target.value=''; };
 }
 function init(){
+  if(!settings.nikolaMigr){ settings.voice='LmECtQKlHFHPX4psgBT1'; settings.ttsEngine='eleven'; settings.nikolaMigr=true; if(Array.isArray(settings.voices)&&!settings.voices.some(v=>v[1]==='LmECtQKlHFHPX4psgBT1')) settings.voices.unshift(['Никола (српски, мушки)','LmECtQKlHFHPX4psgBT1']); localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(settings.ttsModel==='eleven_multilingual_v2' && !settings.ttsMigrated){ settings.ttsModel='eleven_v3'; settings.ttsMigrated=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   loadData(); document.documentElement.style.setProperty('--fs',(settings.fs||19)+'px');
   $('#title').textContent=(D.naslov||'Родослов').split(' из ')[0]; document.title=D.naslov||'Родослов';
