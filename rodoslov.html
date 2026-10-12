@@ -525,7 +525,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.12.12';
+const APP_VERSION='2026.10.12.13';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -956,15 +956,16 @@ function linText(p, anc){ if(!anc||!anc.length) return ''; const par=P.get(anc[a
 function ancChain(anc){ return (anc||[]).map(id=>{ const q=P.get(id); return q?(q.ime||'')+(q.nadimak?` „${q.nadimak}“`:''):''; }).filter(Boolean).join(' → '); }
 function childGroups(p){ const ch=children(p.id); const sp=spouses(p.id); if(sp.length<2||!ch.length) return null;
   const g=new Map(); for(const c of ch){ const other=c.otac===p.id?c.majka:c.otac; let idx=sp.findIndex(x=>x.s.id===other); if(!g.has(idx)) g.set(idx,[]); g.get(idx).push(c); }
-  if(g.size<2) return null; const keys=[...g.keys()].sort((a,b)=>(a<0)-(b<0)||((sp[a]?.m.red||a+1)-(sp[b]?.m.red||b+1)));
+  const keys=[...g.keys()].sort((a,b)=>(a<0)-(b<0)||((sp[a]?.m.red||a+1)-(sp[b]?.m.red||b+1)));
   return keys.map(k=>({sp:k>=0?sp[k]:null, red:k>=0?(sp[k].m.red||k+1):0, kids:g.get(k)})); }
+function childlessMarriages(p){ const ch=children(p.id); const sp=spouses(p.id); if(sp.length<2) return []; return sp.filter(x=>!ch.some(c=>(c.otac===p.id?c.majka:c.otac)===x.s.id)).map((x)=>({sp:x, red:x.m.red||(sp.indexOf(x)+1)})); }
 function bookPara(p, f, anc){ const Y=q=>{ const y=yrs(q); return (f.godine&&y)?` <span class="yrs">(${esc(y)})</span>`:''; };
   let t=`<b>${esc(nmF(p,f))}</b>`+Y(p); const lt=linText(p, anc); if(lt) t+=`, <span class="lin">${esc(lt)}</span>`; const sp=spouses(p.id);
   if(f.supruznici&&sp.length){ t+=' — '+sp.map(({m,s:q})=>{ let u=(sp.length>1?roman(m.red||1)+' брак: ':(p.pol==='ж'?'муж ':'супруга ')); u+=esc(nmF(q,f)); const qy=yrs(q); if(f.godine&&qy) u+=` (${esc(qy)})`; if(f.mesta&&q.mesto) u+=', '+esc(q.mesto); if(f.napomene&&m.nap) u+=', '+esc(m.nap); return u; }).join('; '); }
   if(f.mesta&&p.mesto) t+=`. ${esc(p.mesto)}`;
   if(f.napomene&&p.nap){ const n=p.nap.replace(/\.\s*$/,''); t+=`. <span class="${p.prov?'warn':''}">${esc(n.charAt(0).toUpperCase()+n.slice(1))}</span>`; } else if(f.napomene&&p.prov&&post().stampa.oznake) t+=' <span class="warn">⚠ проверити</span>';
   const ch=children(p.id); const G=childGroups(p);
-  if(G) t+='. Деца '+G.map(g=>(g.sp?'из '+roman(g.red)+' брака':'остала')+': '+g.kids.map(c=>esc(c.ime||'(без имена)')).join(', ')).join('; ')+'.';
+  if(G){ const CM=childlessMarriages(p); t+='. Деца '+G.map(g=>(g.sp?'из '+roman(g.red)+' брака':'остала')+': '+g.kids.map(c=>esc(c.ime||'(без имена)')).join(', ')).join('; ')+(CM.length?'; '+CM.map(x=>roman(x.red)+' брак: нема деце').join('; '):'')+'.'; }
   else if(ch.length) t+=`. Деца: ${ch.map(c=>esc(c.ime||'(без имена)')).join(', ')}.`; else if(!/\.$/.test(t)) t+='.';
   return t; }
 function bookBlocks(rootId, mode){ const f=fieldsFor(mode); const K=post().knjiga; const out=[]; let branch=null;
