@@ -525,7 +525,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.12.4';
+const APP_VERSION='2026.10.12.5';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -635,6 +635,7 @@ async function installUpdate(){ if(!updInfo) return; logEv('ажурирање',
     if(!h){ downloadFile(html); throw new Error('нова верзија је преузета у „Преузимања“ — њоме замените стари фајл'); }
     const w=await h.createWritable(); await w.write(html); await w.close(); dirty=false;
     if(h.name!==fileName()){ toast(`Нова верзија је уписана у фајл „${h.name}“. Затворите овај прозор и отворите тај фајл.`,12000); btn.textContent='Готово'; return; }
+    try{ localStorage.setItem('rodoslov.novaVer', JSON.stringify({v:updInfo.verzija, novo:updInfo.novo||'', govor:updInfo.govor||''})); }catch(e){}
     toast('Нова верзија је инсталирана. Програм се поново покреће…',3000); setTimeout(()=>location.reload(),1500);
   }catch(e){ if(e&&e.name==='AbortError'){ toast('Ажурирање отказано'); } else toast('Ажурирање: '+(e.message||e),9000); btn.disabled=false; btn.textContent='Инсталирај'; } }
 
@@ -1307,26 +1308,26 @@ async function importWord(voice){ if(wordBusy) return; wordBusy=true; const tell
     if(!h){ if(voice){ await tellV('Прво треба једном да покажете где је фајл Дописи. Кликните на дугме Преузми из дописа, које сада трепери. Отвориће се прозор: двапут кликните на фасциклу DOKUMENTA, па кликните на DOPISI и на Отвори. То треба само први пут.'); highlight('ворд'); return; } speak('Отвориће се прозор. Двапут кликните на фасциклу DOKUMENTA, па кликните на DOPISI и на Отвори.'); h=await pickWordFile(); if(!h) return; }
     if(h.queryPermission && (await h.queryPermission({mode:'read'}))!=='granted'){ if(voice){ await tellV('Треба дозвола за читање фајла Дописи. Кликните на дугме Преузми из дописа, које сада трепери, па у малом прозору кликните Дозволи.'); highlight('ворд'); return; } if((await h.requestPermission({mode:'read'}))!=='granted') return; }
     const wait=addMsg('sys','Читам Ворд…'); talkState('think','Читам Ворд…'); logEv('ворд',{faza:'читање',fajl:h.name});
-    let text; try{ const f=await h.getFile(); text=await wordText(await f.arrayBuffer()); }catch(e){ wait.remove(); logEv('грешка',{gde:'ворд',x:String(e.message||e)}); await tellV('Нисам успео да прочитам Ворд фајл. Ако је отворен у Ворду, затворите га па покушајте поново.'); return; }
+    let text; try{ const f=await h.getFile(); text=await wordText(await f.arrayBuffer()); }catch(e){ wait.remove(); logEv('грешка',{gde:'ворд',x:String(e.message||e)}); await tellV('Нисам успео да прочитам фајл Дописи. Ако је отворен у Ворду, затворите га, па реците „преузми из дописа“.'); uvodPosleDopisa(); return; }
     const {blocks,nNew,nRel}=wordNew(text); wait.remove();
-    if(!nRel){ D.wordPrethodno=text; commit(); saveQuiet(); logEv('ворд',{faza:'ништа',novih:nNew}); await tellV(nNew?'Прочитао сам Ворд. Има нових редова, али ништа што личи на родослов.':'Прочитао сам Ворд. Нема ничег новог од прошлог пута.'); return; }
+    if(!nRel){ D.wordPrethodno=text; commit(); saveQuiet(); logEv('ворд',{faza:'ништа',novih:nNew}); await tellV(nNew?'Прочитао сам Дописе. Има нових редова, али ништа што личи на родослов.':'Прочитао сам Дописе. Нема ничег новог од прошлог пута.'); uvodPosleDopisa(); return; }
     const w2=addMsg('sys',`Нашао сам ${nRel} нових редова о родослову. Упоређујем са програмом…`); if(voice) say('Нашао сам нове редове у Ворду. Упоређујем са родословом, то може потрајати минут.');
     const chunks=[]; let cur=[]; let len=0; for(const b of blocks){ if(len+b.length>7000&&cur.length){ chunks.push(cur.join('\n')); cur=[]; len=0; } cur.push(b); len+=b.length; } if(cur.length) chunks.push(cur.join('\n'));
     const sys=[{type:'text',text:WORD_SYS},{type:'text',text:`ПОДАЦИ ВЕЋ У ПРОГРАМУ (id|име „надимак“ презиме|пол|године|о:отац|м:мајка|бр:бракови|место|напомена):\n${dataDump()}`,cache_control:{type:'ephemeral'}}];
     let ops=[]; let note=''; const t0=performance.now();
     for(const [i,ch] of chunks.slice(0,6).entries()){ w2.textContent=`Упоређујем део ${i+1} од ${Math.min(6,chunks.length)}…`; const out=await claude(sys,[{role:'user',content:'ОДЛОМЦИ ИЗ ВОРДА:\n'+ch}],8000,'claude-sonnet-5-5'); const j=parseJson(out)||{}; ops=ops.concat(Array.isArray(j['измене'])?j['измене']:[]); if(j['напомена']) note+=' '+j['напомена']; }
     w2.remove(); ops=linkNew(ops).filter(o=>['додај','измени','брак'].includes(o['оп'])).slice(0,80); logEv('ворд',{faza:'предлог',novih:nNew,rel:nRel,ops:ops.length,ms:Math.round(performance.now()-t0),delova:chunks.length});
-    if(!ops.length){ D.wordPrethodno=text; commit(); saveQuiet(); await tellV('Упоредио сам: све што пише у Ворду већ је у родослову.'+(note?' '+note.trim():'')); return; }
+    if(!ops.length){ D.wordPrethodno=text; commit(); saveQuiet(); await tellV('Упоредио сам: све што пише у Дописима већ је у родослову.'+(note?' '+note.trim():'')); uvodPosleDopisa(); return; }
     const box=document.createElement('div'); box.className='ops'; describeOpW.cur=ops; box.innerHTML=`<div><b>Ново из дописа (${ops.length}):</b> <small>— проверите; ако нешто не треба уписати, скините квачицу</small></div><ul style="list-style:none;padding-left:4px">${ops.map((o,i)=>`<li style="margin:4px 0"><label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer"><input type="checkbox" data-oi="${i}" checked style="width:auto;transform:scale(1.5);margin-top:6px"><span>${describeOpW(o)}</span></label></li>`).join('')}</ul><div class="btns"><button class="primary">Да, упиши означено</button><button>Не</button></div>`;
-    const pend={ops, box, linked:true, then:()=>{ D.wordPrethodno=text; }}; const [y,n]=box.querySelectorAll('button');
+    const pend={ops, box, linked:true, then:()=>{ D.wordPrethodno=text; setTimeout(uvodPosleDopisa,0); }}; const [y,n]=box.querySelectorAll('button');
     y.onclick=async()=>{ if(conv.pending===pend) conv.pending=null; const r=await confirmPending(pend); addMsg('ai',esc(r)); if(!conv.on) speak(r); };
-    n.onclick=()=>{ if(conv.pending===pend) conv.pending=null; box.innerHTML='<i>Одбачено.</i>'; };
+    n.onclick=()=>{ if(conv.pending===pend) conv.pending=null; box.innerHTML='<i>Одбачено.</i>'; uvodPosleDopisa(); };
     const nAdd=ops.filter(o=>o['оп']==='додај').length, nMod=ops.length-nAdd;
     const names=ops.filter(o=>o['оп']==='додај').slice(0,4).map(o=>[o.ime,o.prezime].filter(Boolean).join(' ')).join(', ');
     const pl=(n,a,b,c)=>{ const d=n%10, h=n%100; return n+' '+(d===1&&h!==11?a:(d>=2&&d<=4&&(h<12||h>14)?b:c)); };
     const msg=`У Ворду сам нашао ${nAdd?pl(nAdd,'нову особу','нове особе','нових особа'):''}${nAdd&&nMod?' и ':''}${nMod?pl(nMod,'допуну','допуне','допуна'):''}${names?': '+names+(nAdd>4?' и други':''):''}. ${chunks.length>6?'Има још, па ћемо после поново. ':''}Списак је на екрану.${note?' '+note.trim():''} Да ли да упишем све?`;
     addMsg('ai',esc(msg)).appendChild(box); conv.pending=pend; if(voice){ talkState('speak','Говорим…'); await say(msg); } else speak(msg);
-  }catch(e){ console.warn(e); logEv('грешка',{gde:'ворд',x:String(e.message||e)}); await tellV('Нешто није у реду при читању Ворда: '+(e.message||e)); }
+  }catch(e){ console.warn(e); logEv('грешка',{gde:'ворд',x:String(e.message||e)}); await tellV('Нешто није у реду при читању Дописа: '+(e.message||e)); uvodPosleDopisa(); }
   finally{ wordBusy=false; } }
 const IZV_URL='https://rodoslov-izvestaji.blmed84.workers.dev', IZV_KLJUC='ThNQwgsR5w7GjXePk31J';
 let izvBusy=false;
@@ -1410,7 +1411,7 @@ function aiSystem(){ const DB=dataBlocks(); return [
 2. Да мењаш подешавања приказа и штампе — одмах, без питања, и кажеш шта си променио.
 3. Да отвориш прозор за штампање и PDF, да покажеш особу у стаблу или образцу, да покажеш дугме на екрану — одмах.
 4. Да објасниш како се програм користи (види упутство испод).
-Ако корисник жели нешто што програм не уме (нову могућност, нешто што није међу подешавањима), љубазно реци да то још не умеш, да ћеш жељу записати и проследити Борису, и додај измену „жеља“.
+ЖЕЉЕ И ПРИМЕДБЕ: Ако корисник каже шта му се не допада (у књизи, плакату, раду програма) или жели нешто што програм не уме — прво, ако се то може одмах урадити подешавањима, уради одмах. Ако не може: охрабри га да слободно, својим речима, објасни шта не ваља — не мора да тражи стручне речи. Ако није сасвим јасно шта мисли, постави једно кратко питање. Кад разумеш, додај измену „жеља“ са тачним и потпуним описом, и реци: „Разумео сам шта желите. Дајте ми мало времена да то подесим — отприлике пола сата, можда и мало дуже.“ и објасни: Док ја радим, можемо да наставимо са уношењем, или да направите паузу. Програм сам проверава да ли сам завршио: кад горе на екрану видите зелено дугме „Инсталирај“, кликните га — то значи да сам завршио; програм ће се поново покренути, а ви поново кликните „Започни разговор“. Ако тог дугмета још нема, значи да још радим — дајте ми још мало времена. Не помињи посредника и не говори „проследићу“ — ти то подешаваш.
 
 Одговараш ИСКЉУЧИВО JSON објектом (без текста пре или после):
 {"порука": "шта изговараш кориснику", "измене": [ ... ]}
@@ -1435,7 +1436,8 @@ function aiSystem(){ const DB=dataBlocks(); return [
 - {"оп":"pdf","врста":"текст"|"стабло","приказ":"сажето"|"пуно","корен":"id или null"} — отвара Chrome прозор за штампање (корен null = цео родослов; за једну грану корен је њен предак). У поруци кажи: „Отварам прозор за штампање. Проверите да десно пише Сачувај као PDF, па кликните плаво дугме Сачувај.“
 - {"оп":"прикажи","id":"...","где":"особа"|"стабло"}
 - {"оп":"покажи_дугме","дугме":"особе"|"стабло"|"текст"|"помоћник"|"сачувај"|"поништи"|"претрага"|"нова_особа"|"додај_дете"|"додај_брак"|"штампај"|"корен"|"уклопи"|"разговор"}
-- {"оп":"жеља","текст":"кратак опис жеље за Бориса"}
+- {"оп":"жеља","текст":"тачан и потпун опис жеље: шта не ваља, где (страна, особа, део програма) и како би корисник желео"}
+- {"оп":"увод","корак":"обилазак"|"даље"|"крај"|"штампа"} — само током једнократног увода (види „ЈЕДНОКРАТНИ УВОД“ у контексту)
 - {"оп":"преглед","врста":"текст"|"стабло","страна":1,"приказ":"сажето"|"пуно","корен":"id или null"} — отвара преглед штампе на екрану (корисник и ти видите исто). „текст“ = књига (подразумевано кад прича о штампаном родослову).
 - {"оп":"погледај","стране":[1,2]} — програм ти пошаље СЛИКЕ тих страна (највише 3) какве ће бити одштампане, са списком особа на свакој; онда одговараш у следећем кораку
 - {"оп":"провери","id":"..."} — програм ти каже да ли је особа у стаблу и PDF-у, на којој страни, а ако није — зашто; онда одговараш у следећем кораку
@@ -1464,7 +1466,7 @@ function aiSystem(){ const DB=dataBlocks(); return [
 
 ${UPUTSTVO}`},
  {type:'text', text:`ПОДАЦИ РОДОСЛОВА (ред: id|име „надимак“ презиме|пол|године|о:отац|м:мајка|бр:бракови(редни)|место|напомена):\n${DB.snap}`, cache_control:{type:'ephemeral'}},
- {type:'text', text:`${DB.delta}${conv.fokus&&P.has(conv.fokus)?'ИЗАБРАНА ОСОБА (о њој корисник говори кад не каже друго име; „стави годину рођења“ итд. односи се на њу): '+personLine(P.get(conv.fokus))+'. Деца: '+children(conv.fokus).map(c=>c.id+' '+c.ime).join(', ')+'. ':''}${conv.nova&&conv.nova.faza==='roditelj'?'КОРИСНИК ДОДАЈЕ НОВУ ОСОБУ „'+conv.nova.ime+'“ (нема је у родослову). Из онога што сада каже (чији је син/кћи, или чија супруга) предложи измену „додај“ са тачним родитељима или браком и питај „Да ли да упишем?“. Ако није јасно ко је родитељ (више особа истог имена), питај. ':''}${wzContext()} ТРЕНУТНА ПОДЕШАВАЊА: ${JSON.stringify(post())}. ${previewInfo()} НЕПОВЕЗАНЕ ОСОБЕ (нису у стаблу): ${(u=>u.length?u.slice(0,40).map(p=>p.id+' '+shortName(p)+(yrs(p)?' ('+yrs(p)+')':'')).join('; ')+(u.length>40?' …и још '+(u.length-40):''):'нема')(unconnected())}. Величина слова у програму: ${({'17':'mala','19':'obicna','22':'velika'})[String(settings.fs)]||'obicna'}. Сада је отворен део: ${({personsView:'Особе',treeView:'Стабло',textView:'Текст',aiView:'Помоћник'})[($$('.view.active')[0]||{}).id]||''}.`} ]; }
+ {type:'text', text:`${DB.delta}${conv.fokus&&P.has(conv.fokus)?'ИЗАБРАНА ОСОБА (о њој корисник говори кад не каже друго име; „стави годину рођења“ итд. односи се на њу): '+personLine(P.get(conv.fokus))+'. Деца: '+children(conv.fokus).map(c=>c.id+' '+c.ime).join(', ')+'. ':''}${conv.nova&&conv.nova.faza==='roditelj'?'КОРИСНИК ДОДАЈЕ НОВУ ОСОБУ „'+conv.nova.ime+'“ (нема је у родослову). Из онога што сада каже (чији је син/кћи, или чија супруга) предложи измену „додај“ са тачним родитељима или браком и питај „Да ли да упишем?“. Ако није јасно ко је родитељ (више особа истог имена), питај. ':''}${uvodContext()}${wzContext()} ТРЕНУТНА ПОДЕШАВАЊА: ${JSON.stringify(post())}. ${previewInfo()} НЕПОВЕЗАНЕ ОСОБЕ (нису у стаблу): ${(u=>u.length?u.slice(0,40).map(p=>p.id+' '+shortName(p)+(yrs(p)?' ('+yrs(p)+')':'')).join('; ')+(u.length>40?' …и још '+(u.length-40):''):'нема')(unconnected())}. Величина слова у програму: ${({'17':'mala','19':'obicna','22':'velika'})[String(settings.fs)]||'obicna'}. Сада је отворен део: ${({personsView:'Особе',treeView:'Стабло',textView:'Текст',aiView:'Помоћник'})[($$('.view.active')[0]||{}).id]||''}.`} ]; }
 let lastLat=0;
 function logConv(k, html){ if(!Array.isArray(D.dnevnik)) D.dnevnik=[]; const x=String(html).replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').trim(); if(!x) return; const e={t:stamp(), k, x:x.slice(0,1500)}; if(k==='п'&&lastLat){ e.ms=lastLat; lastLat=0; } if(k==='п') sendReportSoon(); if(k==='о'&&conv.on&&conv.slus){ e.slus=conv.slus; conv.slus=0; if(conv.stt){ e.stt=conv.stt; conv.stt=0; } } D.dnevnik.push(e); if(D.dnevnik.length>3000) D.dnevnik=D.dnevnik.slice(-2500); dnevnikNew=true; try{ localStorage.setItem(LS_DATA, JSON.stringify(D)); }catch(err){} }
 let dnevnikNew=false;
@@ -1485,7 +1487,7 @@ function applyOps(ops){ pushHistory(); const made=[]; if(ops.length) logEv('из
     else if(op['оп']==='брак'&&P.has(op.a)&&P.has(op.b)){ D.marriages.push({id:newId('b'), a:op.a, b:op.b, red:+op.red||1, nap:op.nap||''}); index(); }
     else if(op['оп']==='обриши'&&P.has(op.id)){ const id=op.id; D.persons=D.persons.filter(x=>x.id!==id); D.marriages=D.marriages.filter(m=>m.a!==id&&m.b!==id); for(const x of D.persons){ if(x.otac===id) x.otac=null; if(x.majka===id) x.majka=null; } index(); } }
   commit('Измене изведене'); renderList(); if(made.length) select(made[0]); return made; }
-const IMMEDIATE=new Set(['водич','ворд','научи_изговор','подешавање','pdf','жеља','прикажи','покажи_дугме','преглед','затвори_преглед','погледај','провери']);
+const IMMEDIATE=new Set(['увод','водич','ворд','научи_изговор','подешавање','pdf','жеља','прикажи','покажи_дугме','преглед','затвори_преглед','погледај','провери']);
 function previewInfo(){ if(!PV.on||!PV.B) return 'Преглед штампе није отворен.';
   if(PV.B.kind==='book'){ const pg=PV.B.pages[PV.page]; return `ПРЕГЛЕД ШТАМПЕ ЈЕ ОТВОРЕН — ТЕКСТУАЛНИ РОДОСЛОВ (књига): страна ${PV.page+1} од ${PV.B.pages.length}, ${PV.mode==='p'?'пуни':'сажети'} приказ. ${bookSummary(PV.B)} На тој страни: ${(pg.text||'').slice(0,700)}`; }
   if(PV.B.plakat) return `ПРЕГЛЕД ШТАМПЕ ЈЕ ОТВОРЕН — ${posterSummary(PV.B.plakat)}`; const pg=PV.B.pages[PV.page]; const r=P.get(PV.B.root);
@@ -1519,7 +1521,8 @@ function runImmediate(ops){ let changed=false; const after=[];
     if(k==='подешавање'){ const key=o['кључ'], val=o['вредност'];
       if(key==='izgled.slova'){ const m={mala:'17',obicna:'19',velika:'22'}; if(m[val]){ settings.fs=m[val]; document.documentElement.style.setProperty('--fs',settings.fs+'px'); localStorage.setItem(LS_SET,JSON.stringify(settings)); } }
       else if(setPost(key,val)){ changed=true; if(key==='stablo.generacije'){ $('#treeDepth').value=String(val); collapsed.clear(); expanded.clear(); } } }
-    else if(k==='жеља'){ if(!Array.isArray(D.zelje)) D.zelje=[]; D.zelje.push({datum:stamp(), tekst:String(o['текст']||'')}); D.izvPoslatiZelje=true; changed=true; }
+    else if(k==='жеља'){ if(!Array.isArray(D.zelje)) D.zelje=[]; D.zelje.push({datum:stamp(), tekst:String(o['текст']||'')}); D.izvPoslatiZelje=true; changed=true; logEv('жеља',{tekst:String(o['текст']||'')}); setTimeout(()=>{ saveQuiet(); sendReport(); },4000); }
+    else if(k==='увод'){ const kk=String(o['корак']||''); after.push(async()=>{ const um=uvodKorak(kk); if(um){ addMsg('ai',esc(um)); if(conv.on){ talkState('speak','Говорим…'); await say(um); } else speak(um); } }); }
     else if(k==='прикажи') showPerson(o.id, o['где']);
     else if(k==='покажи_дугме') highlight(o['дугме']);
     else if(k==='pdf') after.push(()=>makePdf(o));
@@ -1541,6 +1544,7 @@ const conv={on:false, stopListen:null, pending:null, after:[]};
 async function handleUtterance(text, voice){
   const t=norm(text).replace(/[.,!?…;:"„“]/g,' ').replace(/\s+/g,' ').trim(); const words=t?t.split(' ').length:0;
   if(WZ.on){ const wr=wzHear(text); if(wr!==null){ if(wr) addMsg('ai',esc(wr)); return wr; } }
+  { const uv=uvodHear(text); if(uv!==null) return uv; }
   if(!conv.pending && !conv.najavaPitanje && !PV.on){ const nm=nameMode(text); if(nm!==null) return nm; }
   if(conv.najavaPitanje){ conv.najavaPitanje=false;
     if(YES.test(t) && words<=6 || /^(покажи|покажите|важи|може|изволите|хајде|ајде)/.test(t)){ showView('textView'); openPreview(1, 's', D.koren, 'book'); logEv('најава-да',{}); chatHist.push({role:'user',content:'[програм: на почетку разговора помоћник је понудио да покаже како изгледа књига родослова; корисник је пристао и сада је отворен преглед књиге на првој страни]'},{role:'assistant',content:JSON.stringify({"порука":"Ево, на екрану је насловна страна.","измене":[]})});
@@ -1549,7 +1553,7 @@ async function handleUtterance(text, voice){
   if(conv.pending){ const pend=conv.pending; conv.pending=null;
     if(YES.test(t) && words<=5){ const r=await confirmPending(pend); addMsg('ai',esc(r)); return r; }
     if(pend.box) pend.box.innerHTML='<i>Одбачено.</i>';
-    if(NO.test(t) && words<=3){ logEv('одбијено',{n:pend.ops.length}); chatHist.push({role:'user',content:'[програм: корисник је одбио предложене измене]'}); return 'Добро, ништа нисам мењао. Шта желите?'; } }
+    if(NO.test(t) && words<=3){ logEv('одбијено',{n:pend.ops.length}); chatHist.push({role:'user',content:'[програм: корисник је одбио предложене измене]'}); if(pend.linked&&conv.uvod&&conv.uvod.korak==='dopisi'){ setTimeout(uvodPosleDopisa,0); const r='Добро, ништа нисам уписао.'; addMsg('ai',esc(r)); return r; } return 'Добро, ништа нисам мењао. Шта желите?'; } }
   if(!settings.claude){ const m='Помоћник још није укључен. У подешавањима треба уписати кључ — то ће урадити Борис.'; addMsg('ai',esc(m)); return m; }
   chatHist.push({role:'user',content:text}); trimHist(); const tStart=performance.now();
   const sp = voice ? makeSpeaker() : null; conv.sp=sp; if(voice) talkState('think','Размишљам…'); const wait=addMsg('sys','Размишљам…');
@@ -1647,11 +1651,67 @@ async function learnPron(word, slogGiven){
     if(!/^(не|није|погрешно|никако|опет не)/.test(a) && a){ const k=ordinal(a); if(k){ slog=k===-1?n:k; } } }
   D.izgovor=izg().concat(old); ttsCache.clear();
   if(!Array.isArray(D.zelje)) D.zelje=[]; D.zelje.push({datum:stamp(), tekst:`Глас не уме да изговори „${word}“ са нагласком на ${slog}. слогу.`}); commit(); saveQuiet();
-  await tell(`Овим гласом нисам успео да изговорим ${word} како треба. Записао сам то Борису, он ће то поправити.`); }
+  await tell(`Овим гласом нисам успео да изговорим ${word} како треба. Записао сам то и поправићу.`); }
 function fillIzgUI(){ const z=$('#izgList'); if(!z) return; const L=izg(); z.innerHTML=L.length?'':'<div class="help">Још нема научених нагласака.</div>';
   L.forEach((e,i)=>{ const r=document.createElement('div'); r.className='zelja'; r.innerHTML=`<span><b>${esc(e.rec)}</b> — нагласак на ${e.slog}. слогу (${esc(sylls(e.rec).map((x,j)=>j===e.slog-1?x.toUpperCase():x).join('-'))}), начин: ${esc(e.nacin)}</span><button class="small">✕</button>`; r.querySelector('button').onclick=()=>{ D.izgovor.splice(i,1); ttsCache.clear(); commit(); fillIzgUI(); }; z.appendChild(r); }); }
-const NAJAVA_ID='2026-10-11-knjiga';
-function NAJAVA_TEXT(){ return 'Добар дан. Пре него што почнемо, да вам кратко кажем шта је ново. Борис и ја смо пажљиво прегледали наш прошли разговор и његова објашњења. Сада разумем шта желите: одштампан родослов као текст, као ону страну коју сте већ одштампали, само уређен као мала књига — са насловном страном, садржајем и списком имена на крају, а редом: прво цео Маринков род, па Марков, Јовов и Мијаилов. То сада умем да направим. Цртеж стабла остаје за велики папир, као плакат за копирницу. Сада вам и брже одговарам, а екран се више неће гасити док радимо.'+(azWorkerOk?' Можда ћете приметити и да ми је глас другачији — сада говорим српским гласом.':'')+' Узгред, знам да нисам савршен и да још не звучим сасвим природно, али сам спреман да поправим свој изговор. Ако желите, слободно ме исправите и реците ми како се нешто правилно изговара. Ако не желите, не морате — ако вам мој глас не смета много, радо ћемо се посветити самом родослову.'+' Надамо се да ћемо од сада много боље испуњавати ваше жеље. Знам да вам је пре свега стало да што брже уносимо измене и ваше нове податке. Ипак, молим вас, дозволите ми да вам прво покажем како би изгледао ваш жељени родослов кад се одштампа. Мислим да ћете бити задовољни, а онда ћемо се радо вратити уношењу нових података. Да ли смем да вам покажем?'; }
+const NAJAVA_ID='2026-10-12-dopisi', NAJAVA2_ID='2026-10-12-stampa', NAJAVA_STARA='2026-10-11-knjiga';
+function NAJAVA_TEXT(){ const glas=azWorkerOk && !D.najave.includes(NAJAVA_STARA);
+  return 'Добар дан. Ово ћу вам рећи само овај пут, на почетку. Борис и ја смо пажљиво прегледали ваше примедбе и доста тога смо поправили — о томе ћу вам рећи мало касније.'
+   +(glas?' Можда ћете приметити да ми је глас другачији — сада говорим српским гласом. Знам да још не звучим сасвим природно; ако нешто погрешно изговорим, слободно ме исправите.':'')
+   +' Прво нешто важно. Знам да сте нове податке сами уписивали у Ворду, у фајлу Дописи. То је одлично. Могу сада да их преузмем у родослов, тако да не морате ништа поново да говорите. Сваку допуну ћу вам показати на екрану, па ви одлучите шта да упишем. Да ли желите да сада преузмемо податке које сте укуцали у Дописима?'; }
+const UVOD_JOS='Од сада је рад једноставнији: кад хоћете нешто да измените или допуните, само ми кажите име особе. Ја ћу је наћи и на екрану показати њену породицу — родитеље, супружника и децу — а ви ми онда кажете шта да изменимо или допунимо. Да ли је остало још нешто што нисте унели у Дописе, а што бисмо сада могли да допунимо или изменимо?';
+function UVOD_STAMPA(){ return 'Још нешто сам хтео да вам кажем. Према вашим примедбама усавршили смо штампање. Сада постоји помоћник за штампање. У рачунарима се такав помоћник зове „чаробњак“ — немојте да вас та реч збуни, нема ту никакве мађије. Тако се само зове део програма који вас кроз једноставна питања, корак по корак, проведе кроз неки посао. Он вас пита каква да буде књига, покаже величине папира на сликама, и покаже вам књигу страну по страну пре него што се ишта одштампа. И сама књига је сада много прегледнија. Деца из различитих бракова су одвојена, па се одмах види ко је из ког брака. Деца су спојена линијама са родитељима, као гране на стаблу. На врху сваке стране пише лоза — од ког претка потиче та грана. А уз свако име пише чији је син и чији унук, на пример: Бошко, син Марка, унук Милоша. Тако пише и у списку имена на крају књиге. Предлажем да заједно направимо један огледни примерак и да погледамо баш она места која вам раније нису била јасна. Да ли желите?'; }
+const UVOD_MISLJENJE='То су била места која вам раније нису била јасна. Да ли вам се овако допада? Ако нешто не ваља, слободно ми кажите својим речима шта не ваља. Не морате да тражите стручне речи — реците једноставно, као што бисте рекли Борису. Ја ћу разумети, а ако нешто не разумем, питаћу вас.';
+const UPD_OBJ='Док ја радим, можемо да наставимо са уношењем, или можете да направите паузу. Програм сам проверава да ли сам завршио. Кад горе на екрану видите зелено дугме „Инсталирај“, кликните га — то значи да сам завршио. Програм ће се сам поново покренути, а ви онда поново кликните „Започни разговор“. Ако тог дугмета још нема, значи да још радим — дајте ми још мало времена. Ако у међувремену затворите програм, само га после поново отворите.';
+const UVOD_DONE=/(то је све|то је то|нема више|ништа више|готово|завршили смо|завршио сам|завршила сам|доста за данас|толико за данас|толико од мене)/;
+const UVOD_NEXT=/^(даље|да|добро|може|видим|следећ|важи|ок|океј|у реду|јесте|хајде|ајде|идемо|разумем|јасно|видео сам|погледао сам|пређи|настави)/;
+function uvodSay(m){ if(conv.on){ conv.inject=m; conv.injectMsg=true; } else { addMsg('ai',esc(m)); speak(m); } }
+function uvodStampaKorak(pre){ conv.uvod={korak:'stampa'}; if(!D.najave.includes(NAJAVA2_ID)){ D.najave.push(NAJAVA2_ID); commit(); saveQuiet(); } logEv('увод',{korak:'штампа'}); return (pre||'')+UVOD_STAMPA(); }
+function uvodPosleDopisa(){ if(!conv.uvod||conv.uvod.korak!=='dopisi') return; conv.uvod.korak='jos'; conv.uvod.n=0; logEv('увод',{korak:'још'}); uvodSay(UVOD_JOS); }
+function uvodStanice(){ const B=buildBook(D.koren,'s'); const st=[]; const s0=1+(B.tocLen||0); const pgOf=(nm,re)=>{ const f=c=>{ const j=B.pages.slice(s0).findIndex(c); return j<0?-1:j+s0; }; let i=-1; if(re) i=f(x=>x.text.includes(nm)&&(typeof re==='string'?x.text.includes(re):re.test(x.text))); if(i<0) i=f(x=>x.text.includes(nm)); return i; };
+  const body=B.pages.length-(B.ixLen||0);
+  // 1) деца из више бракова
+  let mp=D.persons.find(p=>p.ime==='Душка'&&childGroups(p)); if(!mp) mp=D.persons.find(p=>childGroups(p)&&pgOf(shortName(p))>=0);
+  if(mp){ const nm=shortName(mp), i=pgOf(nm,/брака/); if(i>=0&&i<body) st.push({str:i+1, t:`Ево стране на којој је ${nm}. Погледајте: испод ње пише „деца из првог брака“, па „деца из другог брака“ — тако се одмах види ко је из ког брака. Деца су мало увучена и спојена линијом са родитељем, као гране стабла. Кад погледате, реците „даље“.`}); }
+  // 2) лоза уз име и на врху стране
+  const bo=D.persons.find(p=>p.ime==='Бошко'&&p.otac&&P.get(p.otac)&&P.get(p.otac).ime==='Марко') || D.persons.find(p=>{ const f=p.otac&&P.get(p.otac); return f&&f.otac&&P.get(f.otac); });
+  if(bo){ const f=P.get(bo.otac), g=f&&f.otac?P.get(f.otac):null; const nm=shortName(bo); const i=pgOf(nm, nm+' (');  if(i>=0&&i<body) st.push({str:i+1, t:`Ево стране на којој је ${nm}. Уз његово име пише: ${bo.pol==='ж'?'кћи':'син'} ${genIme(f.ime)}${g?(bo.pol==='ж'?', унука ':', унук ')+genIme(g.ime):''}. Тако уз свако име пише чији је син или кћи, и чији унук, па се особе са истим именом не мешају. А горе, испод наслова стране, пише лоза — од ког претка потиче грана на тој страни. Реците „даље“.`}); }
+  // 3) регистар: име које се најчешће понавља
+  if(B.ixLen){ const cnt=new Map(); D.persons.forEach(p=>{ if(p.otac&&p.ime) cnt.set(p.ime,(cnt.get(p.ime)||0)+1); }); const top=[...cnt.entries()].sort((a,b)=>b[1]-a[1])[0];
+    let i=body; if(top){ const j=B.pages.slice(body).findIndex(x=>x.text.includes(top[0]+' ')); if(j>=0) i=body+j; }
+    st.push({str:i+1, t:'А ово је списак имена на крају књиге.'+(top?` Погледајте, на пример, име ${top[0]}: има ${top[1]} особа са тим именом, а уз сваку пише чији је син или кћи, па се лако разликују.`:' Уз свако име пише чији је син или кћи.')+' Реците „даље“.'}); }
+  return st; }
+function uvodObilazak(){ const st=uvodStanice(); if(!st.length){ conv.uvod={korak:'misljenje'}; return UVOD_MISLJENJE; } conv.uvod={korak:'obilazak', st, i:0}; logEv('увод',{korak:'обилазак',strane:st.map(x=>x.str)}); showView('textView'); openPreview(st[0].str,'s',D.koren,'book');
+  chatHist.push({role:'user',content:'[програм: корисник је пристао да заједно погледају огледни примерак књиге; програм води обилазак спорних места: '+st.map(x=>'страна '+x.str).join(', ')+']'},{role:'assistant',content:JSON.stringify({"порука":"Добро, ево огледног примерка.","измене":[]})});
+  return 'Добро, ево огледног примерка, онакав какав ће бити одштампан. '+st[0].t; }
+function uvodDalje(){ const u=conv.uvod; if(!u||u.korak!=='obilazak') return null; u.i++; if(u.i<u.st.length){ openPreview(u.st[u.i].str,'s',D.koren,'book'); return u.st[u.i].t; } conv.uvod={korak:'misljenje'}; logEv('увод',{korak:'мишљење'}); return UVOD_MISLJENJE; }
+function uvodKraj(){ conv.uvod=null; logEv('увод',{korak:'крај'}); if(PV.on) closePreview(); return 'Драго ми је. Кад год пожелите да одштампате, само реците: „Хоћу да одштампам родослов“ — помоћник за штампање ће вас провести корак по корак. Сада можемо да наставимо: реците име особе.'; }
+function uvodHear(text){ const u=conv.uvod; if(!u||!u.korak||conv.pending) return null; const t=norm(text).replace(/[.,!?…;:"„“]/g,' ').replace(/\s+/g,' ').trim(); const words=t?t.split(' ').length:0;
+  let yes=(YES.test(t)&&words<=6)||/^(може|хајде|ајде|важи|изволите|хоћу|желим|преузми|покажи|покажите|направи|направите|наравно|свакако)/.test(t);
+  let no=(NO.test(t)&&words<=5)||/^(нећу|не треба|не морам|касније|други пут|не сада|не знам)/.test(t);
+  let m=null;
+  if(u.korak==='dopisi'){ if(wordBusy) return null; if(u.n) yes=no=false;
+    if(yes){ u.korak='dopisi'; logEv('увод',{korak:'дописи-да'}); if(conv.on&&conv.after) conv.after.push(()=>importWord(true)); else setTimeout(()=>importWord(false),0); m='Добро.'; }
+    else if(no){ m='Добро, то можемо и касније — кад год кажете „преузми из дописа“. '+UVOD_JOS; u.korak='jos'; logEv('увод',{korak:'дописи-не'}); } }
+  else if(u.korak==='jos'){ if(/^(има|остало|јесте|да|хоћу|желим|имам)/.test(t)&&words<=6){ u.korak='rad'; m='Добро. Реците име особе.'; }
+    else if(no||/^(нема|није|ништа|све сам|све је)/.test(t)&&words<=8) m=uvodStampaKorak('Добро. ');
+    else { u.korak='rad'; return null; } }
+  else if(u.korak==='rad'){ if(UVOD_DONE.test(t)&&words<=7) m=uvodStampaKorak('Добро. '); }
+  else if(u.korak==='stampa'){ if(u.n) yes=no=false; if(yes) m=uvodObilazak(); else if(no){ conv.uvod=null; logEv('увод',{korak:'штампа-не'}); m='Добро, то можемо кад год пожелите. Само реците: „Хоћу да одштампам родослов.“ А сада, реците име особе.'; } }
+  else if(u.korak==='obilazak'){ if(UVOD_NEXT.test(t)&&words<=4) m=uvodDalje(); }
+  else if(u.korak==='misljenje'){ if(/^(да|свиђа|допада|добро|одлично|лепо|валја|може|супер|јесте|баш|красно|дивно)/.test(t)&&words<=6&&!/(али|само|не |ипак|међутим)/.test(t)) m=uvodKraj(); }
+  if(m){ addMsg('ai',esc(m)); return m; }
+  if(conv.uvod===u && ['dopisi','stampa'].includes(u.korak)){ u.n=(u.n||0)+1; if(u.n>=3){ logEv('увод',{korak:'прекинут-'+u.korak}); conv.uvod=null; } }
+  return null; }
+function uvodKorak(k){ if(!conv.uvod&&k!=='обилазак') return null; if(k==='обилазак') return uvodObilazak(); if(k==='даље') return uvodDalje(); if(k==='крај') return uvodKraj(); if(k==='штампа') return uvodStampaKorak(''); return null; }
+function uvodContext(){ const u=conv.uvod; if(!u||!u.korak) return ''; const k=u.korak;
+  const opis={dopisi:'помоћник је питао да ли да преузме податке из Дописа (Ворд). Ако корисник пристаје, додај измену „ворд“. Дугме „Преузми из дописа“ је у делу Помоћник, поред зеленог дугмета за разговор.',
+   jos:'помоћник је објаснио да се од сада ради по имену и питао да ли је остало још нешто да се допуни. Ако корисник каже име, ради по имену.',
+   rad:'корисник уноси допуне по имену. Кад каже да је завршио, додај измену {"оп":"увод","корак":"штампа"} и не причај сам о штампи — програм ће рећи.',
+   stampa:'помоћник је описао новине у штампи (помоћник за штампање — „чаробњак“, деца по браковима, линије, лоза на врху стране и уз име, регистар са лозом) и питао да ли да заједно направе огледни примерак. Ако корисник пристаје, додај измену {"оп":"увод","корак":"обилазак"} и само кратко реци „Добро.“ — програм ће водити обилазак.',
+   obilazak:'програм са корисником обилази огледни примерак књиге (стране '+(u.st||[]).map(x=>x.str).join(', ')+'; сада страна '+((u.st||[])[u.i]||{}).str+'). Кад корисник каже да може даље, додај {"оп":"увод","корак":"даље"} и не описуј страну сам — програм ће рећи. Ако корисник има примедбу, поступи као код жеље (охрабри, разјасни, запиши „жељу“, реци колико ће трајати и објасни дугме Инсталирај), па питај да ли да наставимо обилазак.',
+   misljenje:'помоћник је питао да ли му се огледни примерак допада. Ово је најважнији тренутак: ако корисник каже шта не ваља, охрабри га да слободно објасни својим речима, ако треба постави једно кратко питање, па кад разумеш запиши „жељу“ са тачним описом и реци оно о времену и дугмету Инсталирај. Ако му се допада, додај {"оп":"увод","корак":"крај"}.'}[k]||'';
+  return 'ЈЕДНОКРАТНИ УВОД У ТОКУ: '+opis+' '; }
 /* ---- особа по имену: брза претрага без чекања помоћника */
 const NAME_VERB=/(стави|упиши|додај|измени|обриши|исправи|промени|рођен|умро|умрла|дете|сина|кћерк|ћерк|брак|штамп|покажи књиг|плакат|pdf|пдф|ворд|допис|година|годину)/;
 const NAME_STOP=/^(да|не|добро|хвала|молим|може|важи|ок|океј|довиђења|здраво|ево|па|а|и|још|то|нема|није|јесте|тако|нова|нови|ново|син|сина|кћи|ћерка|кћерка|супруга|жена|муж|брат|сестра|отац|мајка|дете|унук|унука|снаха|зет|деца|мој|моја|његов|њен|он|она|ја|ми|који|која|шта|где|када|колико|прва|први|друга|други|трећа|трећи)$/;
@@ -1713,22 +1773,28 @@ async function startConversation(firstSay){
   if(!useChromeStt()){ try{ await getMic(); }catch(e){ addMsg('ai','Микрофон није доступан. Проверите да је укључен.'); stopConversation(); return; } }
   let greet='Реците име особе.'; let najava=null; conv.fokus=null; conv.izbor=null; conv.nova=null;
   if(!Array.isArray(D.najave)) D.najave=[];
-  if(firstSay) greet=firstSay; else if(settings.claude && !D.najave.includes(NAJAVA_ID)){ najava=NAJAVA_TEXT(); greet=najava; }
-  if(updInfo) greet='Стигла је нова верзија програма. Кад будете хтели, кликните зелено дугме Инсталирај, горе. '+greet;
+  conv.uvod=null; let posle=null; try{ posle=JSON.parse(localStorage.getItem('rodoslov.novaVer')||'null'); }catch(e){}
+  if(posle && posle.v!==APP_VERSION) posle=null; if(posle){ try{ localStorage.removeItem('rodoslov.novaVer'); }catch(e){} }
+  if(firstSay) greet=firstSay;
+  else if(settings.claude && !D.najave.includes(NAJAVA_ID)){ najava=NAJAVA_TEXT(); greet=najava; conv.uvod={korak:'dopisi'}; }
+  else if(settings.claude && !D.najave.includes(NAJAVA2_ID)){ greet='Добар дан. '+uvodStampaKorak(''); }
+  else if(posle && settings.claude){ greet=(posle.govor||('Инсталирана је нова верзија програма. '+(posle.novo||'')))+' Реците име особе.'; logEv('после-ажурирања',{v:APP_VERSION}); }
+  if(updInfo){ updInfo.rekao=true; greet='Стигла је нова верзија програма. Кад будете хтели, кликните зелено дугме Инсталирај, горе. '+greet; }
   if(!settings.claude) greet='Помоћник још није укључен. У подешавањима треба уписати кључ — то ће урадити Борис.';
   addMsg('ai',esc(greet)); talkState('speak','Говорим…'); await say(greet);
-  if(najava && conv.on){ D.najave.push(NAJAVA_ID); conv.najavaPitanje=true; logEv('најава',{id:NAJAVA_ID}); commit(); saveQuiet(); }
+  if(najava && conv.on){ D.najave.push(NAJAVA_ID); if(!D.najave.includes(NAJAVA_STARA)) D.najave.push(NAJAVA_STARA); logEv('најава',{id:NAJAVA_ID}); commit(); saveQuiet(); }
   if(!settings.claude){ stopConversation(); return; }
   let quiet=0;
   while(conv.on){
     talkState('listen','Слушам вас… (говорите)');
-    if(conv.inject){ const ij=conv.inject; conv.inject=null; talkState('speak','Говорим…'); await say(ij); continue; }
+    if(updInfo && !updInfo.rekao && !WZ.on && !conv.pending && !conv.inject){ updInfo.rekao=true; const um='Завршио сам измене. Кад будете спремни, кликните горе на зелено дугме „Инсталирај“. Програм ће се поново покренути, а ви онда поново кликните „Започни разговор“.'; addMsg('ai',esc(um)); conv.inject=um; logEv('нова-верзија-најављена',{v:updInfo.verzija}); }
+    if(conv.inject){ const ij=conv.inject; conv.inject=null; if(conv.injectMsg){ conv.injectMsg=false; addMsg('ai',esc(ij)); } talkState('speak','Говорим…'); await say(ij); continue; }
     const tl=performance.now(); const heard=latToCyr(((await listenOnce())||'').trim()); conv.slus=Math.round(performance.now()-tl);
     if(!conv.on) break;
     if(conv.inject && !heard){ continue; }
     if(!heard){ quiet++; if(quiet>=(WZ.on?8:PV.on?5:3)){ conv.razlog='тишина'; const t='Ако вам још нешто затреба, кликните поново на зелено дугме. Довиђења.'; addMsg('ai',esc(t)); talkState('speak','Говорим…'); await say(t); break; } continue; }
     quiet=0; addMsg('me',esc(heard));
-    if(BYE.test(norm(heard)) && heard.split(/\s+/).length<=6){ conv.razlog='довиђења'; const t='Довиђења, пријатно.'; addMsg('ai',esc(t)); talkState('speak','Говорим…'); await say(t); break; }
+    if(BYE.test(norm(heard)) && heard.split(/\s+/).length<=6 && !(conv.uvod&&['rad','jos'].includes(conv.uvod.korak))){ conv.razlog='довиђења'; const t='Довиђења, пријатно.'; addMsg('ai',esc(t)); talkState('speak','Говорим…'); await say(t); break; }
     conv.after=[];
     conv.sp=null; const reply=await handleUtterance(heard,true);
     if(!conv.on) break;
@@ -1981,6 +2047,7 @@ function init(){
   bindForm(); bindTree(); bindText(); bindMics(); bindSettings(); setTimeout(bindWizard,0); $('#aiSend').onclick=aiSend; $('#wordBtn').onclick=()=>importWord(false); $('#wordPick').onclick=()=>pickWordFile().catch(()=>{}); $('#wordForget').onclick=async()=>{ try{ await idb.set('word',null); }catch(e){} fillWordUI(); }; $('#reportBtn').onclick=saveReport; $('#reportSend').onclick=async()=>{ D.izvPoslatiZelje=true; toast((await sendReport())?'Извештај је послат.':'Слање није успело (нема адресе или мреже).',4000); }; fillWordUI(); $('#talkBtn').onclick=()=>startConversation(); bindPreview();
   $('#updInstall').onclick=installUpdate; $('#updLater').onclick=()=>{ $('#updBanner').style.display='none'; };
   setTimeout(()=>{ if(navigator.onLine!==false) checkUpdate(false); },1500);
+  setInterval(()=>{ if(!updInfo && navigator.onLine!==false) checkUpdate(false); },180000);
   $('#aiInput').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); aiSend(); } });
   renderList(); setStatus();
   if(dirty){ $('#banner').style.display='block'; $('#banner').innerHTML='Постоје измене које су запамћене на овом рачунару, али још нису уписане у фајл. Кликните <b>💾 Сачувај</b>.'; }
