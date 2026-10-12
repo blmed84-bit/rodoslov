@@ -160,6 +160,44 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#2b2416;color:#fff;padding:10px 18px;border-radius:10px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:50;max-width:80vw}
 #toast.show{opacity:1}
 /* --- штампа --- */
+
+#wiz{display:none;position:fixed;inset:0;z-index:45;background:#fbf7ef;flex-direction:column}
+#wiz.on{display:flex}
+#wizBar{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:#fffdf8;flex-wrap:wrap}
+#wizBar .big{font-weight:700;font-size:1.15em;color:#7a4a1e}
+#wizDots span{display:inline-flex;width:30px;height:30px;border-radius:50%;align-items:center;justify-content:center;background:#e8dfcc;color:#7a6a50;font-weight:700;margin-right:4px;font-size:.8em}
+#wizDots .done{background:#c9b48a;color:#fff}#wizDots .cur{background:#7a4a1e;color:#fff}
+#wizTalk{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.85em}#wizDot{width:14px;height:14px;border-radius:50%;background:#cfc6b4;display:inline-block}
+#wizMain{flex:1;display:flex;min-height:0}
+#wizLeft{flex:1;padding:14px 22px;overflow:auto;display:flex;flex-direction:column;min-height:0}
+#wizTitle{margin:0 0 6px;color:#7a4a1e}
+#wizBody{flex:1;min-height:0;display:flex;flex-direction:column}
+#wizSide{width:290px;padding:14px;border-left:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:8px;overflow:auto}
+#wizSide:empty{display:none}
+.wz-q{font-size:1.15em;margin:0 0 12px;line-height:1.35}.wz-q.small{font-size:1em;margin-bottom:8px}
+.wz-cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));align-content:start}
+.wz-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;border:3px solid #e2d6bd;border-radius:14px;background:#fff;cursor:pointer;text-align:center;font:inherit;color:inherit}
+.wz-card:hover{border-color:#c9a86a}.wz-card.on{border-color:#7a4a1e;background:#fff8ea;box-shadow:0 0 0 3px rgba(122,74,30,.15)}
+.wz-l{font-weight:700;font-size:1.05em}.wz-s{color:var(--muted);font-size:.85em}
+.wz-art{width:100%;max-width:230px;height:210px}
+.wz-info{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;background:#7a4a1e;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+.wz-sample{font-size:.85em;text-align:left;background:#fffdf8;border:1px solid #eee3cf;border-radius:8px;padding:10px;min-height:120px;width:100%;box-sizing:border-box;line-height:1.4}
+.wz-ix{line-height:1.5}.wz-note{color:#999;font-size:.8em}
+.wz-font{text-align:left;padding:8px;min-height:80px;line-height:1.35}
+.wz-size{padding:16px 4px;min-height:60px;display:flex;align-items:center;justify-content:center}
+.wz-thumb{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.25);overflow:hidden}.wz-thumb.pl{width:260px}.wz-thumb.pl svg,.wz-big.pl svg{width:100%;height:auto;display:block}
+.wz-sideT{font-weight:700;color:#7a4a1e}.wz-sideI{color:var(--muted);font-size:.85em;text-align:center}
+.wz-big{background:#fff;box-shadow:0 3px 16px rgba(0,0,0,.3);overflow:hidden;margin:8px auto 0;flex:none}.wz-big.pl{width:100%}
+.wz-nav{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.wz-nav button.on{background:#7a4a1e;color:#fff}
+.wz-final{font-size:1.1em;line-height:1.6;background:#fff;border:1px solid #e8dcc4;border-radius:12px;padding:16px 20px}
+.wz-go{margin-top:18px}.wz-go button{font-size:1.3em;padding:14px 30px;background:#2f6b3a;border-color:#2f6b3a;color:#fff}
+#wizFoot{display:flex;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--line);background:#fffdf8}#wizFoot button{font-size:1.1em;padding:10px 26px}
+@keyframes wzFold{0%,25%{transform:scaleX(1)}55%,80%{transform:scaleX(-1)}100%{transform:scaleX(1)}}
+.wz-flap{animation:wzFold 4s ease-in-out infinite}
+@keyframes wzBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+.wz-book{animation:wzBob 3s ease-in-out infinite}
+.pc-row{display:flex;gap:16px;flex-wrap:wrap}.pc{flex:1;min-width:220px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 16px;font-size:1.7em;border:3px solid #e2d6bd;border-radius:16px;background:#fff;cursor:pointer}
+.pc b{font-size:.62em}.pc span{font-size:.42em;color:var(--muted);line-height:1.3}.pc.help{border-color:#2f6b3a;background:#f1f8ef}.pc:hover{box-shadow:0 0 0 4px rgba(122,74,30,.15)}
 #printArea{display:none}
 @media print{
   body > *{display:none !important}
@@ -458,6 +496,14 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
   <div id="prevStage"></div>
   <div id="prevInfo" style="color:#fff;background:#3d3d3d;padding:6px 16px;font-size:.85em;line-height:1.3;min-height:1.3em"></div>
 </div>
+<div id="wiz">
+  <div id="wizBar"><span class="big">🖨 Штампа уз помоћника</span><span id="wizDots"></span><span class="sp" style="flex:1"></span><span id="wizTalk"><span id="wizDot"></span><span id="wizTalkTxt"></span></span><button id="wizRepeat">🔊 Понови питање</button><button id="wizClose">✕ Затвори</button></div>
+  <div id="wizMain"><div id="wizLeft"><h2 id="wizTitle"></h2><div id="wizBody"></div></div><div id="wizSide"></div></div>
+  <div id="wizFoot"><button id="wizBack">◀ Назад</button><button id="wizNext" class="primary">Даље ▶</button></div>
+</div>
+<dialog id="printChoice"><div class="dh"><h2 style="margin:0">Како желите да штампате?</h2></div>
+  <div class="db"><div class="pc-row"><button id="pcHelp" class="pc help">🎙<b>Уз помоћ помоћника</b><span>помоћник вас пита корак по корак, објасни величине и покаже како ће изгледати</span></button><button id="pcSelf" class="pc">🖨<b>Сам</b><span>ако већ знате шта хоћете</span></button></div></div>
+  <div class="df"><button id="pcCancel">Одустани</button></div></dialog>
 <div id="printArea"></div>
 <div id="toast"></div>
 
@@ -467,7 +513,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.12.1';
+const APP_VERSION='2026.10.12.2';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -1301,6 +1347,7 @@ const UPUTSTVO=`КАКО СЕ КОРИСТИ ПРОГРАМ (за твоја о�
 • Стабло: кружић са бројем испод особе (нпр. +5) отвара скривене потомке, кружић „−“ их затвара. Точкић миша увећава и умањује, превлачење мишем помера. „Уклопи“ смешта цело стабло на екран. Двоклик на особу отвара њен образац. „Корен“ је особа на врху стабла.
 • Кад је отворен преглед књиге и корисник каже „даље“, „следећа“ или „још“, отвори следећу страну (оп „преглед“, врста „текст“, страна = тренутна + 1) и у једној-две реченице реци шта је на њој; „назад“ = претходна страна.
 • Ако корисник каже „покажи ми књигу“ или „хоћу да видим књигу“, отвори преглед књиге (оп „преглед“, врста „текст“, страна 1) и кратко објасни: прва страна је насловна, затим садржај, а дугме „Следећа“ листа стране.
+• ВОДИЧ ЗА ШТАМПУ: кад корисник каже да хоће да штампа или направи PDF, а није сам рекао све појединости, понуди водич и одмах га покрени: {"оп":"водич","вредност":"почни"} (може и "врста":"књига"|"плакат"). Порука тада само: „Добро, проћи ћемо кроз то заједно.“ — програм сам поставља питања (величина, обим, списак имена, слова, преглед). Док је водич отворен, видиш тренутни корак у подешавањима испод.
 • ШТАМПАНИ РОДОСЛОВ — ГЛАВНИ НАЧИН ЈЕ ТЕКСТУАЛНИ РОДОСЛОВ КАО КЊИГА (део „Текст“ → „Штампај / PDF“): насловна страна, садржај са бројевима страна, текст по гранама (прво цео Маринков род, па Марков, Јовов, Мијаилов и Ружичин; деца увучена испод родитеља), на крају регистар имена (азбучно, са бројем стране). Формат: knjiga.format „A5“ (мала књига; у копирници се одштампа као брошура/књижица), „knjizica“ (програм сам распореди стране на листове A4: штампа се обострано, окретање по краћој ивици, листови се савију на пола и хефтају — права књижица и код куће), „A4“. Корисник жели баш такав родослов: кад говори о штампи, подразумевај текстуални родослов, осим ако изричито тражи цртеж/стабло.
 • ЦРТЕЖ СТАБЛА (дијаграм са кућицама) је за ВЕЛИКИ ПАПИР — зове се ПЛАКАТ: stampa.raspored „plakat“ — цело стабло на једном листу: прва колена у кућицама, а остали потомци као увучени спискови ситнијим словима. Програм сам израчуна потребан папир (A1, A0 или ролна плотера 91,4 cm) — то пише у прегледу. Штампа се у копирници са плотером, PDF на USB-у. На A4 цртеж целог стабла није читљив — тада предложи текстуални родослов.
 • PDF и штампа: у делу „Стабло“ (или „Текст“) кликне се „Штампај / PDF“ горе десно, у прозору „Штампање стабла“ кликне се „Настави“. Отвори се Chrome прозор за штампање: десно, код „Одредиште“, треба да пише „Сачувај као PDF“ (ако пише име штампача, кликне се на то и изабере „Сачувај као PDF“), па се кликне плаво дугме „Сачувај“ доле десно; затим се изабере „Радна површина“, упише име фајла и кликне „Сачувај“. За штампу на папиру, код „Одредиште“ се изабере штампач и кликне „Штампај“.
@@ -1348,6 +1395,7 @@ function aiSystem(){ const DB=dataBlocks(); return [
 - {"оп":"провери","id":"..."} — програм ти каже да ли је особа у стаблу и PDF-у, на којој страни, а ако није — зашто; онда одговараш у следећем кораку
 - {"оп":"затвори_преглед"}
 - {"оп":"ворд"} — кад корисник каже да је нешто дописао у Ворду / у „Дописима“, или тражи да прочиташ Ворд, учиташ допуне. Програм сам прочита фајл, нађе нове редове о родослову, упореди са подацима и предложи упис, а корисник потврди. Порука: „Читам Ворд.“ Напомена: тај фајл има и друге текстове — програм их прескаче.
+- {"оп":"водич","вредност":"почни"|"даље"|"назад"|"затвори"|<вредност избора у тренутном кораку>} — водич за штампу корак по корак (види упутство)
 - {"оп":"научи_изговор","реч":"Миладин","слог":null} — кад корисник каже да погрешно изговараш неко име или реч (нагласак), или хоће да те научи. Програм после твоје поруке сам води разговор: замоли га да изговори реч, сам чује нагласак, изговори реч и пита „Да ли је овако?“. Ако корисник већ каже на ком је слогу нагласак („на другом слогу“), упиши „слог“: 2 (последњи = -1), иначе null. Реч пиши у основном облику (номинатив), једну реч. Твоја порука тада је кратка, нпр. „Добро, научите ме.“
 - {"оп":"подешавање","кључ":"razgovor.pauza","вредност":"3"} — колико секунди тишине чекаш пре него што одговориш ("1.5"…"5"). Ако корисник каже да га прекидаш или да не стигне да заврши, повећај за 1 („Чекаћу дуже.“).
 
@@ -1370,7 +1418,7 @@ function aiSystem(){ const DB=dataBlocks(); return [
 
 ${UPUTSTVO}`},
  {type:'text', text:`ПОДАЦИ РОДОСЛОВА (ред: id|име „надимак“ презиме|пол|године|о:отац|м:мајка|бр:бракови(редни)|место|напомена):\n${DB.snap}`, cache_control:{type:'ephemeral'}},
- {type:'text', text:`${DB.delta}ТРЕНУТНА ПОДЕШАВАЊА: ${JSON.stringify(post())}. ${previewInfo()} НЕПОВЕЗАНЕ ОСОБЕ (нису у стаблу): ${(u=>u.length?u.slice(0,40).map(p=>p.id+' '+shortName(p)+(yrs(p)?' ('+yrs(p)+')':'')).join('; ')+(u.length>40?' …и још '+(u.length-40):''):'нема')(unconnected())}. Величина слова у програму: ${({'17':'mala','19':'obicna','22':'velika'})[String(settings.fs)]||'obicna'}. Сада је отворен део: ${({personsView:'Особе',treeView:'Стабло',textView:'Текст',aiView:'Помоћник'})[($$('.view.active')[0]||{}).id]||''}.`} ]; }
+ {type:'text', text:`${DB.delta}${wzContext()} ТРЕНУТНА ПОДЕШАВАЊА: ${JSON.stringify(post())}. ${previewInfo()} НЕПОВЕЗАНЕ ОСОБЕ (нису у стаблу): ${(u=>u.length?u.slice(0,40).map(p=>p.id+' '+shortName(p)+(yrs(p)?' ('+yrs(p)+')':'')).join('; ')+(u.length>40?' …и још '+(u.length-40):''):'нема')(unconnected())}. Величина слова у програму: ${({'17':'mala','19':'obicna','22':'velika'})[String(settings.fs)]||'obicna'}. Сада је отворен део: ${({personsView:'Особе',treeView:'Стабло',textView:'Текст',aiView:'Помоћник'})[($$('.view.active')[0]||{}).id]||''}.`} ]; }
 let lastLat=0;
 function logConv(k, html){ if(!Array.isArray(D.dnevnik)) D.dnevnik=[]; const x=String(html).replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').trim(); if(!x) return; const e={t:stamp(), k, x:x.slice(0,1500)}; if(k==='п'&&lastLat){ e.ms=lastLat; lastLat=0; } if(k==='п') sendReportSoon(); if(k==='о'&&conv.on&&conv.slus){ e.slus=conv.slus; conv.slus=0; if(conv.stt){ e.stt=conv.stt; conv.stt=0; } } D.dnevnik.push(e); if(D.dnevnik.length>3000) D.dnevnik=D.dnevnik.slice(-2500); dnevnikNew=true; try{ localStorage.setItem(LS_DATA, JSON.stringify(D)); }catch(err){} }
 let dnevnikNew=false;
@@ -1391,7 +1439,7 @@ function applyOps(ops){ pushHistory(); const made=[]; if(ops.length) logEv('из
     else if(op['оп']==='брак'&&P.has(op.a)&&P.has(op.b)){ D.marriages.push({id:newId('b'), a:op.a, b:op.b, red:+op.red||1, nap:op.nap||''}); index(); }
     else if(op['оп']==='обриши'&&P.has(op.id)){ const id=op.id; D.persons=D.persons.filter(x=>x.id!==id); D.marriages=D.marriages.filter(m=>m.a!==id&&m.b!==id); for(const x of D.persons){ if(x.otac===id) x.otac=null; if(x.majka===id) x.majka=null; } index(); } }
   commit('Измене изведене'); renderList(); if(made.length) select(made[0]); return made; }
-const IMMEDIATE=new Set(['ворд','научи_изговор','подешавање','pdf','жеља','прикажи','покажи_дугме','преглед','затвори_преглед','погледај','провери']);
+const IMMEDIATE=new Set(['водич','ворд','научи_изговор','подешавање','pdf','жеља','прикажи','покажи_дугме','преглед','затвори_преглед','погледај','провери']);
 function previewInfo(){ if(!PV.on||!PV.B) return 'Преглед штампе није отворен.';
   if(PV.B.kind==='book'){ const pg=PV.B.pages[PV.page]; return `ПРЕГЛЕД ШТАМПЕ ЈЕ ОТВОРЕН — ТЕКСТУАЛНИ РОДОСЛОВ (књига): страна ${PV.page+1} од ${PV.B.pages.length}, ${PV.mode==='p'?'пуни':'сажети'} приказ. ${bookSummary(PV.B)} На тој страни: ${(pg.text||'').slice(0,700)}`; }
   if(PV.B.plakat) return `ПРЕГЛЕД ШТАМПЕ ЈЕ ОТВОРЕН — ${posterSummary(PV.B.plakat)}`; const pg=PV.B.pages[PV.page]; const r=P.get(PV.B.root);
@@ -1432,8 +1480,10 @@ function runImmediate(ops){ let changed=false; const after=[];
     else if(k==='преглед'){ const mode=o['приказ']==='пуно'?'p':(o['приказ']==='сажето'?'s':null); openPreview(o['страна']||1, mode, o['корен'], o['врста']==='стабло'?'tree':'book'); }
     else if(k==='затвори_преглед') closePreview();
     else if(k==='научи_изговор') after.push(()=>learnPron(o['реч'], o['слог']));
-    else if(k==='ворд') after.push(()=>importWord(true)); }
+    else if(k==='ворд') after.push(()=>importWord(true));
+    else if(k==='водич'){ const v=String(o['вредност']??'почни'); if(v==='почни'){ after.push(()=>wzStartAssisted(o['врста']==='плакат'?'plakat':(o['врста']==='књига'?'knjiga':null))); } else if(!WZ.on){} else if(v==='даље') wzGo(WZ.i+1); else if(v==='назад') wzGo(WZ.i-1); else if(v==='затвори') wzClose(); else wzChoose(v==='true'?true:v==='false'?false:v, false); } }
   if(ops.length) logEv('одмах',{ops:ops.map(o=>o['оп']+(o['кључ']?':'+o['кључ']+'='+o['вредност']:'')).join(', ').slice(0,300)});
+  if(changed && WZ.on){ const st=wzStep(); if(st&&st.preview) wzRenderPreview(); else wzRender(); }
   if(changed){ commit(); saveQuiet(); if($('#treeView').classList.contains('active')) renderTree(); if($('#textView').classList.contains('active')) renderReport(); if(PV.on){ PV.B=null; renderPreview(); } }
   return after; }
 async function confirmPending(p){ if(p.linked) applyOpsLinked(p.ops); else applyOps(p.ops); if(p.then) p.then(); logEv('уписано',{n:p.ops.length, ops:p.ops.map(o=>o['оп']).join(',')}); if(p.box) p.box.innerHTML='<b>✔ Уписано.</b>'; chatHist.push({role:'user',content:'[програм: измене су изведене]'}); const ok=await saveQuiet(); return ok?'Уписано и сачувано.':'Уписано. Кад завршите, кликните Сачувај горе десно.'; }
@@ -1442,6 +1492,7 @@ const NO=/^(не|немој|нећу|откажи|није|погрешно|ст
 const conv={on:false, stopListen:null, pending:null, after:[]};
 async function handleUtterance(text, voice){
   const t=norm(text).replace(/[.,!?…;:"„“]/g,' ').replace(/\s+/g,' ').trim(); const words=t?t.split(' ').length:0;
+  if(WZ.on){ const wr=wzHear(text); if(wr!==null){ if(wr) addMsg('ai',esc(wr)); return wr; } }
   if(conv.najavaPitanje){ conv.najavaPitanje=false;
     if(YES.test(t) && words<=6 || /^(покажи|покажите|важи|може|изволите|хајде|ајде)/.test(t)){ showView('textView'); openPreview(1, 's', D.koren, 'book'); logEv('најава-да',{}); chatHist.push({role:'user',content:'[програм: на почетку разговора помоћник је понудио да покаже како изгледа књига родослова; корисник је пристао и сада је отворен преглед књиге на првој страни]'},{role:'assistant',content:JSON.stringify({"порука":"Ево, на екрану је насловна страна.","измене":[]})});
       const m='Хвала вам. Ево, на екрану је насловна страна ваше књиге. Кад кажете „даље“, показаћу вам садржај, па прве стране текста — прво Маринков род. На крају књиге је списак свих имена, са бројем стране. Кад погледате, само реците шта бисте желели другачије, или да се вратимо уношењу података.'; addMsg('ai',esc(m)); return m; }
@@ -1488,7 +1539,7 @@ async function aiSend(){
 /* ------------------------------------------------ разговор гласом */
 let audioCtx=null;
 let wakeLock=null; async function keepAwake(){ try{ if(document.visibilityState==='visible' && navigator.wakeLock && !wakeLock){ wakeLock=await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',()=>{ wakeLock=null; }); } }catch(e){ if(!keepAwake.warned){ keepAwake.warned=true; console.info('wakeLock', e&&e.name); } } }
-function talkState(s, txt){ const d=$('#talkDot'); d.className=s||''; if(txt!=null) $('#talkText').textContent=txt; const pd=$('#prevDot'); if(pd){ pd.style.background={listen:'#2f6b3a',speech:'#17a34a',think:'#c98a1a',speak:'#1a4fa3'}[s]||'#cfc6b4'; $('#prevTalkTxt').textContent=conv.on?(txt||''):''; } }
+function talkState(s, txt){ const d=$('#talkDot'); d.className=s||''; if(txt!=null) $('#talkText').textContent=txt; const wd=$('#wizDot'); if(wd){ wd.style.background={listen:'#2f6b3a',speech:'#17a34a',think:'#c98a1a',speak:'#1a4fa3'}[s]||'#cfc6b4'; $('#wizTalkTxt').textContent=conv.on?(txt||''):'(кликните ✕ Затвори или реците „затвори“)'; } const pd=$('#prevDot'); if(pd){ pd.style.background={listen:'#2f6b3a',speech:'#17a34a',think:'#c98a1a',speak:'#1a4fa3'}[s]||'#cfc6b4'; $('#prevTalkTxt').textContent=conv.on?(txt||''):''; } }
 async function getMic(){ if(!micStream||!micStream.active){ micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}); micStream.getTracks().forEach(t=>t.onended=()=>{ micStream=null; }); } return micStream; }
 async function transcribe(blob){ if(settings.stt==='gemini'&&settings.gemini) return sttGemini(blob); if(settings.eleven) return sttScribe(blob); if(settings.gemini) return sttGemini(blob); throw new Error('нема кључа за препознавање говора'); }
 function useChromeStt(){ return settings.stt==='chrome' || (!settings.eleven && !settings.gemini); }
@@ -1553,8 +1604,9 @@ function fillIzgUI(){ const z=$('#izgList'); if(!z) return; const L=izg(); z.inn
 const NAJAVA_ID='2026-10-11-knjiga';
 function NAJAVA_TEXT(){ return 'Добар дан. Пре него што почнемо, да вам кратко кажем шта је ново. Борис и ја смо пажљиво прегледали наш прошли разговор и његова објашњења. Сада разумем шта желите: одштампан родослов као текст, као ону страну коју сте већ одштампали, само уређен као мала књига — са насловном страном, садржајем и списком имена на крају, а редом: прво цео Маринков род, па Марков, Јовов и Мијаилов. То сада умем да направим. Цртеж стабла остаје за велики папир, као плакат за копирницу. Сада вам и брже одговарам, а екран се више неће гасити док радимо.'+(azWorkerOk?' Можда ћете приметити и да ми је глас другачији — сада говорим српским гласом.':'')+' Узгред, знам да нисам савршен и да још не звучим сасвим природно, али сам спреман да поправим свој изговор. Ако желите, слободно ме исправите и реците ми како се нешто правилно изговара. Ако не желите, не морате — ако вам мој глас не смета много, радо ћемо се посветити самом родослову.'+' Надамо се да ћемо од сада много боље испуњавати ваше жеље. Знам да вам је пре свега стало да што брже уносимо измене и ваше нове податке. Ипак, молим вас, дозволите ми да вам прво покажем како би изгледао ваш жељени родослов кад се одштампа. Мислим да ћете бити задовољни, а онда ћемо се радо вратити уношењу нових података. Да ли смем да вам покажем?'; }
 const BYE=/(довиђења|збогом|то је све|крај разговора|завршили смо|заврши разговор|хвала,? то је (све|то)|пријатно)/;
-async function startConversation(){
+async function startConversation(firstSay){
   if(conv.on){ stopConversation(); return; }
+  if(typeof firstSay!=='string') firstSay=null;
   conv.on=true; $('#talkBtn').classList.add('on'); $('#talkBtn').textContent='■ Заврши разговор'; conv.t0=performance.now(); conv.n=0; conv.razlog='дугме';
   keepAwake(); logEv('старт',{v:APP_VERSION, budan:!!wakeLock, azServis:azWorkerOk, tts2:ttsEng(), azGlas:settings.azureVoice, stt:useChromeStt()?'chrome':settings.stt, tts:settings.ttsEngine, ttsModel:settings.ttsModel, glas:settings.ttsEngine==='azure'?settings.azureVoice:settings.voice, model:settings.claudeModel, pauza:post().razgovor.pauza, kljuc:!!settings.claude});
   ensureWritePermission(); ensureWordPermission();
@@ -1562,7 +1614,7 @@ async function startConversation(){
   if(!useChromeStt()){ try{ await getMic(); }catch(e){ addMsg('ai','Микрофон није доступан. Проверите да је укључен.'); stopConversation(); return; } }
   let greet='Како могу да вам помогнем?'; let najava=null;
   if(!Array.isArray(D.najave)) D.najave=[];
-  if(settings.claude && !D.najave.includes(NAJAVA_ID)){ najava=NAJAVA_TEXT(); greet=najava; }
+  if(firstSay) greet=firstSay; else if(settings.claude && !D.najave.includes(NAJAVA_ID)){ najava=NAJAVA_TEXT(); greet=najava; }
   if(updInfo) greet='Стигла је нова верзија програма. Кад будете хтели, кликните зелено дугме Инсталирај, горе. '+greet;
   if(!settings.claude) greet='Помоћник још није укључен. У подешавањима треба уписати кључ — то ће урадити Борис.';
   addMsg('ai',esc(greet)); talkState('speak','Говорим…'); await say(greet);
@@ -1571,9 +1623,11 @@ async function startConversation(){
   let quiet=0;
   while(conv.on){
     talkState('listen','Слушам вас… (говорите)');
+    if(conv.inject){ const ij=conv.inject; conv.inject=null; talkState('speak','Говорим…'); await say(ij); continue; }
     const tl=performance.now(); const heard=latToCyr(((await listenOnce())||'').trim()); conv.slus=Math.round(performance.now()-tl);
     if(!conv.on) break;
-    if(!heard){ quiet++; if(quiet>=(PV.on?5:3)){ conv.razlog='тишина'; const t='Ако вам још нешто затреба, кликните поново на зелено дугме. Довиђења.'; addMsg('ai',esc(t)); talkState('speak','Говорим…'); await say(t); break; } continue; }
+    if(conv.inject && !heard){ continue; }
+    if(!heard){ quiet++; if(quiet>=(WZ.on?8:PV.on?5:3)){ conv.razlog='тишина'; const t='Ако вам још нешто затреба, кликните поново на зелено дугме. Довиђења.'; addMsg('ai',esc(t)); talkState('speak','Говорим…'); await say(t); break; } continue; }
     quiet=0; addMsg('me',esc(heard));
     if(BYE.test(norm(heard)) && heard.split(/\s+/).length<=6){ conv.razlog='довиђења'; const t='Довиђења, пријатно.'; addMsg('ai',esc(t)); talkState('speak','Говорим…'); await say(t); break; }
     conv.after=[];
@@ -1649,6 +1703,140 @@ async function loadVoices(key){ const r=await fetch('https://api.elevenlabs.io/v
 function showTtsBlocks(){ const az=$('#s_ttsEngine').value==='azure'; $('#azureBlock').style.display=az?'block':'none'; $('#elevenBlock').style.display=az?'none':'block'; }
 function fillVoiceSel(){ const sel=$('#s_voiceSel'); const list=(settings.voices&&settings.voices.length)?settings.voices:PREMADE; sel.innerHTML=list.map(([n,id])=>`<option value="${id}">${esc(n)}</option>`).join('')+`<option value="">(ручно уписан id)</option>`; sel.value=list.some(x=>x[1]===settings.voice)?settings.voice:''; $('#s_voice').value=settings.voice||''; }
 
+/* ============================================================ ВОДИЧ ЗА ШТАМПУ — помоћник води корак по корак */
+const WZ={on:false, i:0, vrsta:'knjiga', mode:'s', B:null, page:0, busy:false, counts:{}};
+/* ---- слике (SVG): особа висока 175 cm и предмет у правој размери */
+function wzPerson(x, h){ // x = средина, h = висина у cm (175)
+  const k=h/175, y0=190-h; const c='#8a7a63';
+  return `<g fill="${c}" opacity=".85"><circle cx="${x}" cy="${y0+12*k}" r="${11*k}"/><path d="M${x-22*k},${y0+30*k} Q${x},${y0+22*k} ${x+22*k},${y0+30*k} L${x+19*k},${y0+95*k} L${x-19*k},${y0+95*k} Z"/><rect x="${x-17*k}" y="${y0+93*k}" width="${15*k}" height="${82*k}" rx="${6*k}"/><rect x="${x+2*k}" y="${y0+93*k}" width="${15*k}" height="${82*k}" rx="${6*k}"/></g>`; }
+function wzBookArt(kind){ // особа (175 cm) држи књигу/лист испред груди — права размера
+  const x=60, y0=15; const c='#8a7a63';
+  const W=kind==='A4'?21:kind==='knjizica'?29.7:14.8, H=kind==='A4'?29.7:21; const top=50, L=x-W/2;
+  const body=`<g fill="${c}" opacity=".85"><circle cx="${x}" cy="${y0+11}" r="10.5"/><rect x="${x-4}" y="${y0+20}" width="8" height="6"/><path d="M${x-22},${y0+33} Q${x},${y0+24} ${x+22},${y0+33} L${x+19},${y0+98} L${x-19},${y0+98} Z"/></g>`;
+  let item;
+  if(kind==='knjizica') item=`<rect x="${L}" y="${top}" width="${W/2}" height="${H}" fill="#fff" stroke="#7a4a1e" stroke-width=".7"/><g class="wz-flap" style="transform-origin:${x}px ${top}px"><rect x="${x}" y="${top}" width="${W/2}" height="${H}" fill="#fbf3e2" stroke="#7a4a1e" stroke-width=".7"/><g stroke="#c9b48a" stroke-width=".5">${[4,7,10,13,16].map(d=>`<line x1="${x+2}" x2="${x+W/2-2}" y1="${top+d}" y2="${top+d}"/>`).join('')}</g></g><line x1="${x}" y1="${top-1}" x2="${x}" y2="${top+H+1}" stroke="#7a4a1e" stroke-dasharray="1.2 1.2" stroke-width=".5"/>`;
+  else item=`<g class="${kind==='A5'?'wz-book':''}"><rect x="${L}" y="${top}" width="${W}" height="${H}" rx="${kind==='A4'?0:.8}" fill="${kind==='A4'?'#fff':'#ead9b8'}" stroke="#7a4a1e" stroke-width=".8"/>${kind==='A4'?`<g stroke="#bbb" stroke-width=".5">${[4,7,10,13,16,19,22,25].map(d=>`<line x1="${L+3}" x2="${L+W-3}" y1="${top+d}" y2="${top+d}"/>`).join('')}</g>`:`<rect x="${L+2.5}" y="${top+4}" width="${W-5}" height="2.6" fill="#7a4a1e" opacity=".6"/><rect x="${L+4}" y="${top+8.5}" width="${W-8}" height="1.3" fill="#7a4a1e" opacity=".4"/><rect x="${L+.6}" y="${top}" width="1.2" height="${H}" fill="#7a4a1e" opacity=".35"/>`}</g>`;
+  const hy=top+H*0.55; const arms=`<g stroke="${c}" stroke-width="5.5" stroke-linecap="round" fill="none"><path d="M${x-19},${y0+36} Q${x-27},${hy-6} ${L-1},${hy}"/><path d="M${x+19},${y0+36} Q${x+27},${hy-6} ${L+W+1},${hy}"/></g><g fill="#b39f80"><circle cx="${L-.5}" cy="${hy}" r="3.3"/><circle cx="${L+W+.5}" cy="${hy}" r="3.3"/></g>`;
+  const lab=kind==='A4'?'21 × 30 cm':kind==='knjizica'?'A4 → 15 × 21 cm':'15 × 21 cm';
+  return `<svg viewBox="8 6 104 98" class="wz-art">${body}${item}${arms}<text x="${x}" y="${top+H+9}" font-size="6" text-anchor="middle" fill="#fff" font-weight="700">${lab}</text></svg>`; }
+function wzPosterArt(p){ const S={A2:[59.4,42],A1:[84.1,59.4],A0:[118.9,84.1],auto:[84.1,59.4]}[p]||[84.1,59.4]; const [w,h]=S; const vb=Math.max(150, w+60);
+  const px=40+w/2+8, top=150-h-40;
+  return `<svg viewBox="0 0 ${vb} 192" class="wz-art"><rect x="0" y="0" width="${vb}" height="190" fill="#f6efe2"/><line x1="0" y1="190" x2="${vb}" y2="190" stroke="#b9a98b" stroke-width="2"/>${wzPerson(20,175)}
+    <rect x="${40}" y="${top}" width="${w}" height="${h}" fill="#fff" stroke="#7a4a1e" stroke-width="1.2"/>
+    <g fill="#7a4a1e" opacity=".55"><rect x="${40+w/2-6}" y="${top+4}" width="12" height="3"/>${[0,1,2,3,4].map(i=>`<rect x="${40+6+i*(w-12)/5}" y="${top+12}" width="${(w-12)/5-3}" height="4"/>`).join('')}</g>
+    <g fill="#d7c8aa">${[0,1,2,3,4,5,6,7,8].map(i=>`<rect x="${40+4+i*(w-8)/9}" y="${top+20}" width="${(w-8)/9-1.5}" height="${h-26}"/>`).join('')}</g>
+    <text x="${40+w/2}" y="${top-4}" font-size="6" text-anchor="middle" fill="#7a4a1e" font-weight="700">${String(w).replace('.',',')} × ${String(h).replace('.',',')} cm</text><text x="20" y="12" font-size="5" text-anchor="middle" fill="#8a7a63">175 cm</text></svg>`; }
+function wzKindArt(k){ return k==='knjiga' ? wzBookArt('A5') : wzPosterArt('A1'); }
+/* ---- кораци */
+function wzSample(mode){ const z=D.persons.find(p=>p.ime==='Живко'&&p.rodj==='1883')||P.get(children(D.koren)[0]?.id)||P.get(D.koren); return bookPara(z, fieldsFor(mode)); }
+const WZ_STEPS=[
+ {id:'vrsta', title:'Шта штампамо?', q:'Шта бисте желели да одштампамо? Прво: родослов као књигу, текст по гранама, као страну коју сте већ одштампали. Друго: велики плакат са цртежом стабла, за зид, који се штампа у копирници. Реците: књига или плакат.',
+  opts:()=>[{v:'knjiga', label:'Књига — текст родослова', sub:'као страна коју сте одштампали, са садржајем и списком имена', art:wzKindArt('knjiga'), m:/књиг|текст|прв|једн/},
+            {v:'plakat', label:'Плакат — цртеж стабла', sub:'цело стабло на једном великом листу, за зид; штампа се у копирници', art:wzKindArt('plakat'), m:/плакат|постер|цртеж|стабл|друг|зид/}],
+  get:()=>WZ.vrsta, set:v=>{ WZ.vrsta=v; if(v==='plakat') setPost('stampa.raspored','plakat'); }},
+ {id:'format', when:()=>WZ.vrsta==='knjiga', title:'Које величине да буде књига?', q:'Које величине да буде књига? Прва могућност: мала књига A5, као свеска — то је пола обичног листа, 15 са 21 центиметар, а штампа се у копирници. Друга: иста таква мала књига, али је одштампате код куће на обичне листове, са обе стране, па их савијете на пола. Трећа: обичан велики лист A4, као папир за штампач, 21 са 30 центиметара. Реците: прва, друга или трећа.',
+  opts:()=>[{v:'A5', label:'Мала књига A5', sub:'15 × 21 cm, као свеска · штампа се у копирници', art:wzBookArt('A5'), m:/a5|а5|мал|свеск|копирниц|прв/, say:'A5 је мала књига, пола обичног листа — 15 са 21 центиметар, као школска свеска или мала књига. Најлепше изгледа кад је одштампају у копирници као брошуру, хефтану у средини.'},
+            {v:'knjizica', label:'Мала књига — штампа код куће', sub:'обични листови, са обе стране, савијени на пола', art:wzBookArt('knjizica'), m:/кућ|савиј|пресавиј|друг/, say:'Ово је иста мала књига, али је штампате на свом штампачу. Програм сам распореди стране тако да на сваки обичан лист дођу четири стране, две са сваке стране листа. Кад одштампате, листове само савијете на пола, ставите један у други и хефтате у средини — и добијете књижицу.'},
+            {v:'A4', label:'Велики лист A4', sub:'21 × 30 cm, обичан папир за штампач', art:wzBookArt('A4'), m:/a4|а4|велик|обичан|лист|трећ/, say:'A4 је обичан лист за штампач, 21 са 30 центиметара. Слова и текст су крупнији, а страна је мање.'}],
+  get:()=>post().knjiga.format, set:v=>setPost('knjiga.format',v)},
+ {id:'papir', when:()=>WZ.vrsta==='plakat', title:'Колики да буде плакат?', q:'Колики да буде плакат? Прво: A1, 84 са 59 центиметара — као већа слика на зиду; то је најмањи на ком се све чита. Друго: A0, 119 са 84 центиметра — дупло већи, као врата ормара, а слова су крупнија. Треће: A2, 59 са 42 центиметра — мањи, али су слова ситна. Реците: прво, друго или треће.',
+  opts:()=>[{v:'A1', label:'A1 — 84 × 59 cm', sub:'као већа слика на зиду · препоручено', art:wzPosterArt('A1'), m:/a1|а1|прв|препоруч/, say:'A1 је лист 84 са 59 центиметара, отприлике као већа уоквирена слика. На њему стаје цело стабло, а слова у списковима су довољно читка.'},
+            {v:'A0', label:'A0 — 119 × 84 cm', sub:'дупло већи · крупнија слова', art:wzPosterArt('A0'), m:/a0|а0|нула|друг|већ/, say:'A0 је највећи обичан формат, 119 са 84 центиметра, као врата ормара. Слова су најкрупнија и најлакше се чита.'},
+            {v:'A2', label:'A2 — 59 × 42 cm', sub:'мањи · слова су ситна', art:wzPosterArt('A2'), m:/a2|а2|трећ|мањ/, say:'A2 је 59 са 42 центиметра. Стабло стане, али су слова врло ситна, па то не препоручујем.'}],
+  get:()=>post().stampa.plakatPapir==='auto'?'A1':post().stampa.plakatPapir, set:v=>setPost('stampa.plakatPapir',v)},
+ {id:'obim', when:()=>WZ.vrsta==='knjiga', title:'Колико детаљно?', q:'Колико детаљно да пише о свакој особи? Прво, сажето: име, године, супружник и деца. Друго, пуно: исто то, и места и напомене. На екрану видите пример за Живка. Реците: сажето или пуно.',
+  opts:()=>[{v:'s', label:'Сажето', sub:'име, године, супружник и деца', html:`<div class="wz-sample">${wzSample('s')}</div>`, m:/саже|кратк|прв|мање/},
+            {v:'p', label:'Пуно', sub:'и места и напомене', html:`<div class="wz-sample">${wzSample('p')}</div>`, m:/пун|детаљ|све|друг|више/}],
+  get:()=>WZ.mode, set:v=>{ WZ.mode=v; textMode=v; }},
+ {id:'registar', when:()=>WZ.vrsta==='knjiga', title:'Списак имена на крају?', q:'Да ли да на крају књиге буде списак свих имена, азбучним редом, са бројем стране где се свака особа помиње? Тако рођак брзо нађе себе и своје. То додаје отприлике десетак страна. Реците: да или не.',
+  opts:()=>[{v:true, label:'Да, са списком имена', sub:'азбучно, са бројем стране', html:`<div class="wz-sample wz-ix"><b>Л</b><br>Лакетић<br>&nbsp; Живко (1883–1966) … 3<br>&nbsp; Миладин (1925–1976) … 4<br>&nbsp; Обрен (1914–2005) … 3<br><span class="wz-note">(пример изгледа)</span></div>`, m:/^(да|хоћу|може|наравно)|са списк|са регист/},
+            {v:false, label:'Не, без списка', sub:'књига је краћа', html:`<div class="wz-sample" style="text-align:center;padding-top:30px;color:#888">— без списка имена —</div>`, m:/^не|без/}],
+  get:()=>post().knjiga.registar, set:v=>setPost('knjiga.registar',v)},
+ {id:'font', when:()=>WZ.vrsta==='knjiga', title:'Какав облик слова?', q:'Какав облик слова вам се највише допада? На екрану је шест писама, исти текст у сваком. Реците број, од првог до шестог, или име, на пример Palatino.',
+  opts:()=>Object.entries(BOOK_FONTS).map(([k,[nm,stack]],i)=>({v:k, label:(i+1)+'. '+nm.split(' (')[0], sub:nm.replace(/^[^(]*\(|\)$/g,''), html:`<div class="wz-font" style="font-family:${stack.replace(/"/g,"'")}"><b>Маринко „Бан“ Лакетић</b> (1861–) — супруга Ружица Чоловић. Деца: Живко, Милосав, Радован.</div>`, m:new RegExp(['(сегое|segoe|савремен)','(џорџ|ђорђ|georgia|класич)','(тајмс|times|њу роман)','(палатин|palatino|свечан)','(камбриј|cambria|јасан)','(калибр|calibri|мек)'][i]+'|^'+['прв|један','друг|два','трећ|три','четврт|четири','пет','шест'][i])})),
+  get:()=>post().knjiga.font, set:v=>setPost('knjiga.font',v)},
+ {id:'slova', when:()=>WZ.vrsta==='knjiga', title:'Колика слова?', q:'Колика да буду слова? Што су слова крупнија, књига има више страна. Испод сваке величине пише колико би страна имала. Реците: ситнија, обична или крупнија.',
+  opts:()=>[['najmanja','Најситнија'],['mala','Ситнија'],['srednja','Обична'],['velika','Крупнија'],['najveca','Најкрупнија']].map(([v,l],i)=>({v, label:l, sub:WZ.counts[v]?WZ.counts[v]+' страна':'…', html:`<div class="wz-size" style="font-size:${[.84,.92,1,1.12,1.26][i]*17}px;font-family:${bookFontStack().replace(/"/g,"'")}">Живко Лакетић (1883–1966)</div>`, m:[/најситн|најмањ/,/^ситн|^мањ|ситнија|прв/,/обичн|средњ|исто|друг/,/^крупн|већ|трећ/,/најкрупн|највећ/][i]})),
+  get:()=>post().knjiga.slova, set:v=>setPost('knjiga.slova',v), prep:()=>wzCounts()},
+ {id:'pregled', title:'Овако ће изгледати', q:null, preview:true},
+ {id:'stampa', title:'Штампање', q:null, final:true}];
+function wzSteps(){ return WZ_STEPS.filter(s=>!s.when||s.when()); }
+function wzStep(){ return wzSteps()[WZ.i]; }
+async function wzCounts(){ const k=post().knjiga.slova; const out={}; for(const v of ['najmanja','mala','srednja','velika','najveca']){ setPost('knjiga.slova',v); try{ out[v]=buildBook(D.koren, WZ.mode).pages.length; } finally { setPost('knjiga.slova',k); } await sleep(0); } WZ.counts=out; }
+/* ---- приказ */
+function wzRender(){ const st=wzStep(); const L=wzSteps(); const el=$('#wiz'); if(!el) return;
+  $('#wizDots').innerHTML=L.map((s,i)=>`<span class="${i<WZ.i?'done':i===WZ.i?'cur':''}">${i+1}</span>`).join('');
+  $('#wizTitle').textContent=st.title; $('#wizBack').disabled=WZ.i===0; $('#wizNext').style.display=(st.final)?'none':'';
+  const body=$('#wizBody');
+  if(st.preview) return wzRenderPreview();
+  if(st.final) return wzRenderFinal();
+  const cur=st.get(); const opts=st.opts();
+  const hint=(st.q.match(/Реците[^.]*\./)||[''])[0]; body.innerHTML=`<div class="wz-q">${esc(hint?hint.replace(/\.$/,'')+' — или кликните на слику.':'Кликните на слику.')}</div><div class="wz-cards n${opts.length}">${opts.map((o,i)=>`<button class="wz-card ${String(o.v)===String(cur)?'on':''}" data-i="${i}">${o.art||o.html||''}<div class="wz-l">${esc(o.label)}</div><div class="wz-s">${esc(o.sub||'')}</div>${o.say?'<span class="wz-info" title="Објасни">?</span>':''}</button>`).join('')}</div>`;
+  body.querySelectorAll('.wz-card').forEach(b=>b.onclick=(e)=>{ const o=opts[+b.dataset.i]; if(e.target.classList.contains('wz-info')){ wzSay(o.say); return; } wzChoose(o.v, true); });
+  wzSide(); }
+function wzSide(){ const side=$('#wizSide'); if(!side) return; const st=wzStep();
+  if(WZ.vrsta==='plakat'){ const B=posterPages(D.koren,'s'); if(B.plakat){ side.innerHTML=`<div class="wz-sideT">Ваш плакат</div><div class="wz-thumb pl">${B.pages[0].svg}</div><div class="wz-sideI">${esc(B.plakat.opis)}</div>`; } return; }
+  clearTimeout(wzSide.t); wzSide.t=setTimeout(()=>{ WZ.B=buildBook(D.koren, WZ.mode); const B=WZ.B; const pg=B.pages[Math.min(B.bodyStart-1,B.pages.length-1)]; const w=B.F.w*96/25.4, h=B.F.h*96/25.4; const sc=Math.min(250/w, 340/h);
+    side.innerHTML=`<div class="wz-sideT">Ваша књига</div><div class="wz-thumb" style="width:${w*sc}px;height:${h*sc}px"><div style="transform:scale(${sc});transform-origin:0 0;width:${w}px;height:${h}px">${pg.html}</div></div><div class="wz-sideI">${B.pages.length} страна · ${B.F.imposed?'A5 за савијање ('+Math.ceil(B.pages.length/4)+' листова A4)':B.F.key}</div>`; },60); }
+function wzRenderPreview(){ const body=$('#wizBody'); $('#wizSide').innerHTML='';
+  if(WZ.vrsta==='plakat'){ const B=posterPages(D.koren,'s'); body.innerHTML=`<div class="wz-q">Овако ће изгледати плакат. Ако вам се допада, кликните „Даље“. Ако нешто хоћете другачије, само реците.</div><div class="wz-big pl">${B.pages[0].svg}</div><div class="wz-sideI">${esc(posterSummary(B.plakat))}</div>`; return; }
+  const B=WZ.B=buildBook(D.koren, WZ.mode); WZ.page=Math.min(WZ.page, B.pages.length-1); const pg=B.pages[WZ.page]; const r=body.getBoundingClientRect(); const w=B.F.w*96/25.4, h=B.F.h*96/25.4; const sc=Math.min((r.width-40)/w, (r.height-150)/h, 1.6);
+  const jumps=[['Насловна',0],['Садржај',B.tocLen?1:null],['Почетак текста',B.bodyStart-1],['Последња страна текста',B.pages.length-B.ixLen-1],['Списак имена',B.ixLen?B.pages.length-B.ixLen:null]].filter(j=>j[1]!=null);
+  body.innerHTML=`<div class="wz-q small">Страна ${WZ.page+1} од ${B.pages.length}. Реците „даље“ или „назад“, или шта бисте хтели другачије. Кад вам се допада, реците „штампај“.</div>
+   <div class="wz-nav"><button id="wzPrevP">◀ Претходна</button>${jumps.map(([l,i])=>`<button data-j="${i}" class="${i===WZ.page?'on':''}">${l}</button>`).join('')}<button id="wzNextP">Следећа ▶</button></div>
+   <div class="wz-big" style="width:${w*sc}px;height:${h*sc}px"><div style="transform:scale(${sc});transform-origin:0 0;width:${w}px;height:${h}px">${pg.html}</div></div>`;
+  $('#wzPrevP').onclick=()=>{ if(WZ.page>0){ WZ.page--; wzRenderPreview(); } }; $('#wzNextP').onclick=()=>{ if(WZ.page<B.pages.length-1){ WZ.page++; wzRenderPreview(); } };
+  body.querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>{ WZ.page=+b.dataset.j; wzRenderPreview(); }); }
+function wzFinalText(){ if(WZ.vrsta==='plakat') return 'Сада ћу отворити прозор за штампање. Десно, где пише Одредиште, треба да пише Сачувај као PDF. Кликните плаво дугме Сачувај и сачувајте на радну површину. Тај PDF однесите на USB-у у копирницу која има велики штампач — плотер — и реците величину папира. Кликните зелено дугме Штампај, доле.';
+  const f=post().knjiga.format; if(f==='A5') return 'Сада ћу отворити прозор за штампање. Десно, где пише Одредиште, треба да пише Сачувај као PDF. Кликните плаво дугме Сачувај и сачувајте на радну површину. Тај PDF однесите у копирницу и реците: брошура A5, хефтано у средини. Кликните зелено дугме Штампај, доле.';
+  if(f==='knjizica') return 'Сада ћу отворити прозор за штампање. Код Одредиште изаберите свој штампач. Затим кликните Још подешавања, и код Обострано изаберите Окрени по краћој ивици. Кликните Штампај. Кад се одштампа, сложите листове редом, савијте их на пола и хефтајте у средини. Кликните зелено дугме Штампај, доле.';
+  return 'Сада ћу отворити прозор за штампање. Ако хоћете PDF, десно код Одредиште треба да пише Сачувај као PDF. Ако хоћете на папир, изаберите свој штампач. Кликните зелено дугме Штампај, доле.'; }
+function wzRenderFinal(){ $('#wizSide').innerHTML=''; const body=$('#wizBody'); const t=wzFinalText();
+  body.innerHTML=`<div class="wz-q">Све је спремно.</div><div class="wz-final">${esc(t).replace(/\. /g,'.<br>')}</div><div class="wz-go"><button id="wzPrint" class="primary">🖨 Штампај / PDF</button></div>`;
+  $('#wzPrint').onclick=wzPrint; }
+function wzPrint(){ logEv('водич',{korak:'штампа', vrsta:WZ.vrsta, format:post().knjiga.format, mode:WZ.mode}); const v=WZ.vrsta; wzClose(true); if(v==='plakat'){ setPost('stampa.raspored','plakat'); commit(); printTree('s', D.koren); } else { commit(); printBook(D.koren, WZ.mode); } }
+/* ---- кретање и глас */
+function wzSay(t){ if(!t) return; addMsg('ai',esc(t)); if(conv.on){ conv.inject=(conv.inject?conv.inject+' ':'')+t; if(conv.stopListen) conv.stopListen(); else { sayGen++; if(curAudio){ try{ curAudio.pause(); }catch(e){} } } } else speak(t); }
+function wzAsk(){ const st=wzStep(); if(st.preview) return wzSay(WZ.vrsta==='plakat'?'Овако ће изгледати ваш плакат. Ако вам се допада, реците даље. Ако хоћете нешто другачије, само реците.':'Ово је ваша књига, страна по страна. Сада видите насловну страну. Реците даље, па ћу вам показати садржај и прве стране текста. Можете рећи и: покажи списак имена, или покажи последњу страну. Ако вам се нешто не допада, само реците шта бисте хтели другачије.');
+  if(st.final) return wzSay(wzFinalText()); wzSay(st.q); }
+async function wzGo(i, speakQ=true){ const L=wzSteps(); WZ.i=Math.max(0,Math.min(L.length-1,i)); const myI=WZ.i; const st=wzStep(); if(st.prep){ $('#wizBody').innerHTML='<div class="wz-q">Само тренутак…</div>'; await st.prep(); if(WZ.i!==myI||!WZ.on) return; } if(st.preview) WZ.page=0; wzRender(); if(speakQ) wzAsk(); }
+function wzChoose(v, clicked){ const st=wzStep(); if(!st||!st.set) return; st.set(v); commit(); logEv('водич',{korak:st.id, izbor:String(v), klik:!!clicked}); const o=st.opts().find(x=>String(x.v)===String(v)); wzRender();
+  const conf='Добро: '+(o?o.label.replace(/^\d+\. /,'').replace(/ — .*$/,''):'')+'.'; const L=wzSteps(); if(WZ.i<L.length-1){ WZ.i++; const myI=WZ.i; const nx=wzStep(); (async()=>{ if(nx.prep){ $('#wizBody').innerHTML='<div class="wz-q">Само тренутак…</div>'; await nx.prep(); if(WZ.i!==myI||!WZ.on) return; } if(nx.preview) WZ.page=0; wzRender(); const q=nx.preview||nx.final?null:nx.q; if(q) wzSay(conf+' '+q); else { wzSay(conf); wzAsk(); } })(); } }
+function wzOpen(vrsta){ WZ.on=true; WZ.i=0; WZ.page=0; WZ.mode=textMode||'s'; if(vrsta) WZ.vrsta=vrsta; closePreview(); $('#wiz').classList.add('on'); logEv('водич',{korak:'почетак'}); wzGo(0, false); }
+function wzClose(silent){ WZ.on=false; $('#wiz').classList.remove('on'); if(!silent) logEv('водич',{korak:'затворен', na:wzStep()?.id}); }
+async function wzStartAssisted(vrsta){ wzOpen(vrsta); const intro='Добро, проћи ћемо кроз штампу заједно, корак по корак. Можете ми одговарати гласом, или кликнути на слику. '+wzStep().q;
+  if(conv.on){ wzSay(intro); return; } if(!settings.claude&&!ttsReady()){ return; } startConversation(intro); }
+/* ---- одговор гласом док је водич отворен */
+const WZ_NEXT=/^(даље|следећ|још|напред|идемо|настави|добро је|у реду је|свиђа ми се|допада ми се|може|океј|ок)\b/;
+const WZ_BACK=/^(назад|претходн|врати)/;
+function wzHear(text){ const t=norm(text).replace(/[.,!?…;:"„“]/g,' ').replace(/\s+/g,' ').trim(); const st=wzStep(); if(!st) return null;
+  if(/^(затвори|изађи|прекини|откажи)( водич| штампу)?$/.test(t)){ wzClose(); return 'Добро, затворио сам водич. Кад будете хтели, само реците да штампамо.'; }
+  if(/^(понови|поново|молим|шта си рекао|нисам разумео|нисам чуо)/.test(t)){ wzAsk(); return ''; }
+  if(st.preview){ const B=WZ.B; if(WZ_BACK.test(t)){ if(WZ.page>0) WZ.page--; wzRenderPreview(); return 'Страна '+(WZ.page+1)+'.'; }
+    if(/штампај|одштампај|направи pdf|направи пдф|готово|то је то/.test(t)){ wzGo(WZ.i+1); return ''; }
+    if(/списак|регист/.test(t)&&B&&B.ixLen){ WZ.page=B.pages.length-B.ixLen; wzRenderPreview(); return 'Ово је списак имена, на крају књиге. Свака особа има број стране на којој се помиње.'; }
+    if(/садрж/.test(t)&&B&&B.tocLen){ WZ.page=1; wzRenderPreview(); return 'Ово је садржај. Свака грана има број стране на којој почиње.'; }
+    if(/насловн|почетак књиге|прва страна/.test(t)){ WZ.page=0; wzRenderPreview(); return 'Ово је насловна страна.'; }
+    if(/последњ/.test(t)&&B){ WZ.page=B.pages.length-B.ixLen-1; wzRenderPreview(); return 'Ово је последња страна текста.'; }
+    if(WZ_NEXT.test(t)&&!/свиђа|допада/.test(t)){ if(B&&WZ.page<B.pages.length-1){ WZ.page++; wzRenderPreview(); const pg=B.pages[WZ.page]; return WZ.page===1&&B.tocLen?'Ово је садржај.':(WZ.page===B.bodyStart-1?'Овде почиње текст: прво Милош, па цео Маринков род.':'Страна '+(WZ.page+1)+'.'); } wzGo(WZ.i+1); return ''; }
+    if(/свиђа|допада|добро је|лепо/.test(t)){ wzGo(WZ.i+1); return ''; }
+    return null; }
+  if(st.final){ if(/штампај|може|да|хоћу|отвори/.test(t)){ wzPrint(); return 'Отварам прозор за штампање.'; } if(WZ_BACK.test(t)){ wzGo(WZ.i-1); return ''; } return null; }
+  if(WZ_BACK.test(t)){ wzGo(WZ.i-1); return ''; }
+  const opts=st.opts();
+  if(/(шта је|шта значи|како изгледа|колик|објасни|не разумем|шта то)/.test(t)){ const o=opts.find(o=>o.say&&o.m.test(t.replace(/(шта је|шта значи|како изгледа|колико је|колика је|објасни)/,'').trim())); if(o) return o.say+' Шта бирате?'; return null; }
+  let hit=opts.find(o=>o.m.test(t)); if(!hit){ const k=ordinal(t); if(k>0&&k<=opts.length) hit=opts[k-1]; if(k===-1) hit=opts[opts.length-1]; }
+  if(hit){ wzChoose(hit.v, false); return ''; }
+  if(WZ_NEXT.test(t)){ wzGo(WZ.i+1); return ''; }
+  return null; }
+function wzContext(){ if(!WZ.on) return ''; const st=wzStep(); return `ОТВОРЕН ЈЕ ВОДИЧ ЗА ШТАМПУ, корак „${st.title}“. ${st.q?'Питање кориснику: '+st.q:''} ${st.opts?'Могући одговори (вредности): '+st.opts().map(o=>o.v+' = '+o.label).join('; ')+'.':''} Ако је корисник изабрао једну од могућности, врати измену {"оп":"водич","вредност":"<вредност>"} и кратку поруку; ако пита нешто, одговори кратко па поново постави питање тог корака. Ако тражи неку другу промену изгледа (нпр. наслов, уводну реч), изведи је подешавањем и реци да се види у прегледу. {"оп":"водич","вредност":"даље"} иде на следећи корак, "назад" на претходни, "затвори" затвара водич.`; }
+function printChoice(kind){ const d=$('#printChoice'); d.dataset.kind=kind; d.showModal(); }
+function bindWizard(){ const origTree=$('#printTreeBtn').onclick; $('#printTextBtn').onclick=()=>printChoice('knjiga'); $('#printTreeBtn').onclick=()=>printChoice('tree');
+  $('#pcCancel').onclick=()=>$('#printChoice').close();
+  $('#pcSelf').onclick=()=>{ const k=$('#printChoice').dataset.kind; $('#printChoice').close(); logEv('штампа-избор',{kako:'сам', kind:k}); if(k==='knjiga') printText(); else origTree(); };
+  $('#pcHelp').onclick=()=>{ const k=$('#printChoice').dataset.kind; $('#printChoice').close(); logEv('штампа-избор',{kako:'помоћник', kind:k}); wzStartAssisted(k==='knjiga'?'knjiga':null); }; $('#wizClose').onclick=()=>wzClose(); $('#wizBack').onclick=()=>wzGo(WZ.i-1); $('#wizNext').onclick=()=>wzGo(WZ.i+1); $('#wizRepeat').onclick=()=>wzAsk();
+  window.addEventListener('resize',()=>{ if(WZ.on && wzStep()?.preview) wzRenderPreview(); }); }
+
 /* ============================================================ подешавања, приказ, старт */
 function showView(id){ $$('.view').forEach(v=>v.classList.toggle('active',v.id===id)); $$('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id)); if(id==='treeView'){ if(!curLayout) renderTree(true); else renderTree(); } if(id==='textView') renderReport(); if(id==='aiView' && !$('#chat').children.length) addMsg('ai','Кликните на зелено дугме „Започни разговор“ и реците шта желите. На пример: „Додај Милошу, Веричином сину, кћерку Ану рођену 2026.“, „Направи ми PDF стабла“ или „Како да сачувам?“'); }
 function fillPostUI(){ $$('[data-pk]').forEach(el=>{ const v=getPost(el.dataset.pk); if(el.type==='checkbox') el.checked=!!v; else el.value=v??''; }); $('#verLbl').textContent=APP_VERSION; fillIzgUI();
@@ -1691,7 +1879,7 @@ function init(){
   treeRoot=D.koren; textRoot=D.koren; $('#treeDepth').value=String(post().stablo.generacije||'2');
   $$('nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));
   $('#saveBtn').onclick=saveFile; $('#helpBtn').onclick=()=>$('#helpDlg').showModal(); $('#helpClose').onclick=()=>$('#helpDlg').close(); $('#undoBtn').onclick=undo; $('#undoBtn').disabled=true;
-  bindForm(); bindTree(); bindText(); bindMics(); bindSettings(); $('#aiSend').onclick=aiSend; $('#wordBtn').onclick=()=>importWord(false); $('#wordPick').onclick=()=>pickWordFile().catch(()=>{}); $('#wordForget').onclick=async()=>{ try{ await idb.set('word',null); }catch(e){} fillWordUI(); }; $('#reportBtn').onclick=saveReport; $('#reportSend').onclick=async()=>{ D.izvPoslatiZelje=true; toast((await sendReport())?'Извештај је послат.':'Слање није успело (нема адресе или мреже).',4000); }; fillWordUI(); $('#talkBtn').onclick=startConversation; bindPreview();
+  bindForm(); bindTree(); bindText(); bindMics(); bindSettings(); setTimeout(bindWizard,0); $('#aiSend').onclick=aiSend; $('#wordBtn').onclick=()=>importWord(false); $('#wordPick').onclick=()=>pickWordFile().catch(()=>{}); $('#wordForget').onclick=async()=>{ try{ await idb.set('word',null); }catch(e){} fillWordUI(); }; $('#reportBtn').onclick=saveReport; $('#reportSend').onclick=async()=>{ D.izvPoslatiZelje=true; toast((await sendReport())?'Извештај је послат.':'Слање није успело (нема адресе или мреже).',4000); }; fillWordUI(); $('#talkBtn').onclick=()=>startConversation(); bindPreview();
   $('#updInstall').onclick=installUpdate; $('#updLater').onclick=()=>{ $('#updBanner').style.display='none'; };
   setTimeout(()=>{ if(navigator.onLine!==false) checkUpdate(false); },1500);
   $('#aiInput').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); aiSend(); } });
