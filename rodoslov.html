@@ -535,7 +535,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.12.20';
+const APP_VERSION='2026.10.12.21';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -1735,7 +1735,8 @@ function NAJAVA_TEXT(){ const glas=azWorkerOk && !D.najave.includes(NAJAVA_STARA
   return 'Добар дан. Ово ћу вам рећи само овај пут, на почетку. Борис и ја смо пажљиво прегледали ваше примедбе и доста тога смо поправили — о томе ћу вам рећи мало касније.'
    +(glas?' Можда ћете приметити да ми је глас другачији — сада говорим српским гласом. Знам да још не звучим сасвим природно; ако нешто погрешно изговорим, слободно ме исправите.':'')
    +' Прво нешто важно. Знам да сте нове податке сами уписивали у Ворду, у фајлу Дописи. То је одлично. Могу сада да их преузмем у родослов, тако да не морате ништа поново да говорите. Сваку допуну ћу вам показати на екрану, па ви одлучите шта да упишем. Да ли желите да сада преузмемо податке које сте укуцали у Дописима?'; }
-const NAJAVA3_ID='2026-10-12-provera'; const NAJAVA4_ID='2026-10-12-sansa'; const NAJAVA5_ID='2026-10-12-tiho';
+const NAJAVA3_ID='2026-10-12-provera'; const NAJAVA4_ID='2026-10-12-sansa'; const NAJAVA5_ID='2026-10-12-tiho'; const NAJAVA6_ID='2026-10-12-format';
+const FORMAT_TEXT='Пре него што наставимо, да се договоримо о једној важној ствари, да више не буде забуне као малопре са пробном страном. Реч је о величини књиге кад се одштампа. Показаћу вам на сликама три могућности, па ви изаберете. Од тада књигу правим само у тој величини. Можете ми одговорити гласом, или кликнути на слику. ';
 const TIHO_TEXT='Још нешто бих вам предложио, ако се слажете. Борис ми је рекао да наш разговор наглас понекад смета вашој супрузи док нешто ради или чита. Зато сам припремио „тихи рад“: ја више не говорим наглас, него моје одговоре читате овде на екрану, крупним словима. А ви уместо да говорите, кликнете на дугме: „Даље“ кад сте погледали страну, „Да“ или „Не“ кад вас нешто питам. Кад хоћете нешто да исправите, и даље ми слободно кажете гласом — слушам вас све време. Тако би се много мање причало у соби. Ако вам то не одговара или вас збуни, у сваком тренутку кликнете „Укључи глас“ и све је као пре. Да ли да пробамо тихи рад?';
 function ivanjicaText(){ const b=D.persons.find(q=>q.ime==='Борис'&&q.prezime==='Лакетић'&&/^19/.test(q.rodj||'')); if(!b) return '';
   if(/ивањиц/i.test(b.mesto||'')){ conv.ivanjica=b.id; return 'Прво оно о Ивањици, да то рашчистимо. Погрешно сам прочитао ваше Дописе: тамо пише само да је Борис у Ивањици завршио школу, а ја сам то узео као место становања. И, нажалост, то је уписано — код Бориса сада стоји место Ивањица. Да ли да вратим на Немачка, како је било?'; }
@@ -1889,6 +1890,7 @@ async function startConversation(firstSay){
   if(posle && posle.v!==APP_VERSION) posle=null; if(posle){ try{ localStorage.removeItem('rodoslov.novaVer'); }catch(e){} }
   if(firstSay) greet=firstSay;
   else if(settings.claude && !D.najave.includes(NAJAVA_ID)){ najava=NAJAVA_TEXT(); greet=najava; conv.uvod={korak:'dopisi'}; }
+  else if(settings.claude && D.najave.includes(NAJAVA5_ID) && !D.najave.includes(NAJAVA6_ID)){ D.najave.push(NAJAVA6_ID); commit(); saveQuiet(); logEv('увод',{korak:'формат'}); setTimeout(()=>{ wzOpenSamo(['format','slova']); },300); greet=(posle?'':'Добар дан. ')+FORMAT_TEXT+(WZ_STEPS.find(x=>x.id==='format').q||''); }
   else if(settings.claude && D.najave.includes(NAJAVA4_ID) && !D.najave.includes(NAJAVA5_ID)){ D.najave.push(NAJAVA5_ID); commit(); saveQuiet(); conv.uvod={korak:'tiho'}; logEv('увод',{korak:'тихо-понуда'}); greet=(posle?'':'Добар дан. ')+TIHO_TEXT; }
   else if(settings.claude && !D.najave.includes(NAJAVA4_ID)){ D.najave.push(NAJAVA4_ID); if(!D.najave.includes(NAJAVA3_ID)) D.najave.push(NAJAVA3_ID); if(!D.najave.includes('2026-10-12-provera2')) D.najave.push('2026-10-12-provera2'); ['2026-10-12-dopisi','2026-10-11-knjiga','2026-10-12-stampa','2026-10-12-jos'].forEach(x=>{ if(!D.najave.includes(x)) D.najave.push(x); }); commit(); saveQuiet(); conv.uvod={korak:'sansa'}; logEv('увод',{korak:'шанса'}); greet=SANSA_TEXT(); }
   else if(settings.claude && D.najave.includes(NAJAVA3_ID) && !D.najave.includes('2026-10-12-provera2')){ D.najave.push('2026-10-12-provera2'); commit(); saveQuiet(); conv.uvod={korak:'provera'}; logEv('увод',{korak:'провера-дописа-2'}); greet=(posle?'':'Добар дан. ')+UVOD_PROVERA2; }
@@ -2043,9 +2045,9 @@ const WZ_STEPS=[
   get:()=>post().knjiga.slova, set:v=>setPost('knjiga.slova',v), prep:()=>wzCounts()},
  {id:'pregled', title:'Овако ће изгледати', q:null, preview:true},
  {id:'stampa', title:'Штампање', q:null, final:true}];
-function wzSteps(){ return WZ_STEPS.filter(s=>!s.when||s.when()); }
+function wzSteps(){ return WZ_STEPS.filter(s=>(!s.when||s.when())&&(!WZ.samo||WZ.samo.includes(s.id))); }
 function wzStep(){ return wzSteps()[WZ.i]; }
-async function wzCounts(){ const k=post().knjiga.slova; const out={}; for(const v of ['najmanja','mala','srednja','velika','najveca']){ setPost('knjiga.slova',v); try{ out[v]=buildBook(D.koren, WZ.mode).pages.length; } finally { setPost('knjiga.slova',k); } await sleep(0); } WZ.counts=out; }
+async function wzCounts(){ const out={}; for(const v of ['najmanja','mala','srednja','velika','najveca']){ const k=post().knjiga.slova; setPost('knjiga.slova',v); try{ out[v]=buildBook(D.koren, WZ.mode).pages.length; } finally { setPost('knjiga.slova',k); } await sleep(0); } WZ.counts=out; }
 /* ---- приказ */
 function wzRender(){ const st=wzStep(); const L=wzSteps(); const el=$('#wiz'); if(!el) return;
   $('#wizDots').innerHTML=L.map((s,i)=>`<span class="${i<WZ.i?'done':i===WZ.i?'cur':''}">${i+1}</span>`).join('');
@@ -2084,8 +2086,9 @@ function wzAsk(){ const st=wzStep(); if(st.preview) return wzSay(WZ.vrsta==='pla
   if(st.final) return wzSay(wzFinalText()); wzSay(st.q); }
 async function wzGo(i, speakQ=true){ const L=wzSteps(); WZ.i=Math.max(0,Math.min(L.length-1,i)); const myI=WZ.i; const st=wzStep(); if(st.prep){ $('#wizBody').innerHTML='<div class="wz-q">Само тренутак…</div>'; await st.prep(); if(WZ.i!==myI||!WZ.on) return; } if(st.preview) WZ.page=0; wzRender(); if(speakQ) wzAsk(); }
 function wzChoose(v, clicked){ const st=wzStep(); if(!st||!st.set) return; st.set(v); commit(); logEv('водич',{korak:st.id, izbor:String(v), klik:!!clicked}); const o=st.opts().find(x=>String(x.v)===String(v)); wzRender();
-  const conf='Добро: '+(o?o.label.replace(/^\d+\. /,'').replace(/ — .*$/,''):'')+'.'; const L=wzSteps(); if(WZ.i<L.length-1){ WZ.i++; const myI=WZ.i; const nx=wzStep(); (async()=>{ if(nx.prep){ $('#wizBody').innerHTML='<div class="wz-q">Само тренутак…</div>'; await nx.prep(); if(WZ.i!==myI||!WZ.on) return; } if(nx.preview) WZ.page=0; wzRender(); const q=nx.preview||nx.final?null:nx.q; if(q) wzSay(conf+' '+q); else { wzSay(conf); wzAsk(); } })(); } }
-function wzOpen(vrsta){ WZ.on=true; WZ.i=0; WZ.page=0; WZ.mode=textMode||'s'; if(vrsta) WZ.vrsta=vrsta; closePreview(); $('#wiz').classList.add('on'); logEv('водич',{korak:'почетак'}); wzGo(0, false); }
+  const conf='Добро: '+(o?o.label.replace(/^\d+\. /,'').replace(/ — .*$/,''):'')+'.'; const L=wzSteps(); if(WZ.samo && WZ.i>=L.length-1){ const f=post().knjiga.format, sl=post().knjiga.slova; WZ.samo=null; wzClose(true); logEv('водич',{korak:'договор', format:f, slova:sl}); const fl={A5:'мала књига A5, као свеска, штампа се у копирници',knjizica:'мала књига, штампа код куће на обичним листовима савијеним на пола',A4:'велики лист A4, обичан папир за штампач'}[f]||f; const m=conf+' Договорено. Од сада књигу правим овако: '+fl+', слова '+({najmanja:'најситнија',mala:'ситнија',srednja:'обична',velika:'крупнија',najveca:'најкрупнија'}[sl]||sl)+'. Пробне стране ћу вам штампати увећане на цео лист да се лако читају. Кад год пожелите другачије, само реците. Сада можемо даље — реците коју страну да отворим или које име.'; wzSay(m); return; } if(WZ.i<L.length-1){ WZ.i++; const myI=WZ.i; const nx=wzStep(); (async()=>{ if(nx.prep){ $('#wizBody').innerHTML='<div class="wz-q">Само тренутак…</div>'; await nx.prep(); if(WZ.i!==myI||!WZ.on) return; } if(nx.preview) WZ.page=0; wzRender(); const q=nx.preview||nx.final?null:nx.q; if(q) wzSay(conf+' '+q); else { wzSay(conf); wzAsk(); } })(); } }
+function wzOpenSamo(ids){ WZ.samo=ids; WZ.vrsta='knjiga'; WZ.on=true; WZ.i=0; WZ.page=0; WZ.mode=textMode||'s'; closePreview(); $('#wiz').classList.add('on'); logEv('водич',{korak:'почетак-договор'}); wzGo(0, false); }
+function wzOpen(vrsta){ WZ.samo=null; WZ.on=true; WZ.i=0; WZ.page=0; WZ.mode=textMode||'s'; if(vrsta) WZ.vrsta=vrsta; closePreview(); $('#wiz').classList.add('on'); logEv('водич',{korak:'почетак'}); wzGo(0, false); }
 function wzClose(silent){ WZ.on=false; $('#wiz').classList.remove('on'); if(!silent) logEv('водич',{korak:'затворен', na:wzStep()?.id}); }
 async function wzStartAssisted(vrsta){ wzOpen(vrsta); const intro='Добро, проћи ћемо кроз штампу заједно, корак по корак. Можете ми одговарати гласом, или кликнути на слику. '+wzStep().q;
   if(conv.on){ wzSay(intro); return; } if(!settings.claude&&!ttsReady()){ return; } startConversation(intro); }
