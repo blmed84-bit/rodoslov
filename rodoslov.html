@@ -535,7 +535,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.12.18';
+const APP_VERSION='2026.10.12.19';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -1004,7 +1004,7 @@ function bookBlocks(rootId, mode){ const f=fieldsFor(mode); const K=post().knjig
     out.push({cls:'p', depth, trail, anc, cont:head, fam:!head&&ch.length>0&&depth>0, html:bookPara(p,f,anc), ids, branch, pid:id}); const anc2=anc.concat([id]);
     const G=childGroups(p);
     if(G){ G.forEach((g,gi)=>{ const tg=trail.slice(); tg[depth+1]=gi===G.length-1;
-        const who=g.sp?(p.pol==='ж'?'муж ':'супруга ')+nmF(g.sp.s,f):''; out.push({cls:'mg', depth:depth+1, trail:tg, anc:anc2, html:g.sp?`деца из ${roman(g.red)} брака — ${esc(who)}`:'остала деца', keepNext:true, branch, ids:[], pid:null});
+        const who=g.sp?(p.pol==='ж'?'муж ':'супруга ')+nmF(g.sp.s,f):''; const ORD=['','први','други','трећи','четврти','пети','шести']; out.push({cls:'mg', depth:depth+1, trail:tg, anc:anc2, html:g.sp?`${esc(posIme(p.ime,false))} ${ORD[g.red]||roman(g.red)+'.'} брак — ${esc(who)}`:'остала деца', keepNext:true, branch, ids:[], pid:null});
         g.kids.forEach((c,ci)=>{ const tc=tg.slice(); tc[depth+2]=ci===g.kids.length-1; walk(c.id, depth+2, tc, anc2); }); }); }
     else ch.forEach((c,ci)=>{ const tc=trail.slice(); tc[depth+1]=ci===ch.length-1; walk(c.id, depth+1, tc, anc2); }); };
   const rp=P.get(rootId); const anc0=[]; { let q=rp; const seen=new Set(); while(q&&!seen.has(q.id)){ seen.add(q.id); const par=P.get(q.otac)||P.get(q.majka); if(!par) break; anc0.unshift(par.id); q=par; } }
