@@ -535,7 +535,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.12.16';
+const APP_VERSION='2026.10.12.17';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -997,8 +997,8 @@ function bookPara(p, f, anc){ const Y=q=>{ const y=yrs(q); return (f.godine&&y)?
 function bookBlocks(rootId, mode){ const f=fieldsFor(mode); const K=post().knjiga; const out=[]; let branch=null;
   const walk=(id, depth, trail, anc)=>{ const p=P.get(id); if(!p) return; const ch=children(id); if(depth===1) branch=id;
     const ids=[id, ...spouses(id).map(x=>x.s.id)]; let head=false;
-    if(depth===1 && ch.length){ head=true; const y=yrs(p);
-      out.push({cls:'h2', depth, trail, anc, html:'<span class="hu">'+esc(nmF(p,f))+((f.godine&&y)?` <span class="yrs">(${esc(y)})</span>`:'')+'</span>', toc:depth, tocText:nmF(p,f)+((f.godine&&y)?` (${y})`:''), keepNext:true, newPage:K.novaStrana, branch, ids:[], pid:id}); }
+    if(depth===1 && ch.length){ head=true; const y=yrs(p); const fh=anc&&anc.length?famHead(p,anc):nmF(p,f);
+      out.push({cls:'h2', depth, trail, anc, html:'<span class="hu">'+esc(fh)+((f.godine&&y)?` <span class="yrs">(${esc(y)})</span>`:'')+'</span>', toc:depth, tocText:fh+((f.godine&&y)?` (${y})`:''), keepNext:true, newPage:K.novaStrana, branch, ids:[], pid:id}); }
     else if(depth>=2 && ch.length){ head=true; const y=yrs(p);
       out.push({cls:'hf', depth, trail, anc, html:esc(famHead(p, anc)), toc:depth<=3?depth:0, tocText:nmF(p,f)+((f.godine&&y)?` (${y})`:''), keepNext:true, newPage:false, branch, ids:[], pid:id}); }
     out.push({cls:'p', depth, trail, anc, cont:head, fam:!head&&ch.length>0&&depth>0, html:bookPara(p,f,anc), ids, branch, pid:id}); const anc2=anc.concat([id]);
