@@ -526,7 +526,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.12.6';
+const APP_VERSION='2026.10.12.7';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -925,6 +925,7 @@ function bookCss(F){ const bw=post().stampa.crnobelo;
 .bpage .bb.h2 .hu{border-bottom:.3mm solid #999;display:block;padding-bottom:.6mm}
 .bpage .bb.h3{font-size:1.1em;font-weight:700;padding-top:1.8mm}
 .bpage .bb.h4{font-size:1.0em;font-weight:700;padding-top:1.3mm}
+.bpage .bb.hf{font-size:1.04em;font-weight:700;text-align:center;padding-top:2mm;padding-bottom:.4mm;letter-spacing:.01em}
 .bpage .yrs{color:${bw?'#000':'#444'}}.bpage .warn{color:${bw?'#000':'#a33'}}
 .bpage.tp .bc{display:flex;flex-direction:column;align-items:center;text-align:center;height:${F.h-F.t-F.b}mm}
 .bpage .t1{margin-top:28%;font-size:2.2em;font-weight:700;line-height:1.2}.bpage .t2{font-size:1.45em;margin-top:2mm}
@@ -942,6 +943,12 @@ function bookHost(){ let h=$('#bookHost'); if(!h){ h=document.createElement('div
 const GEN_COL=['#8c7a5c','#3f6aa8','#4f8a43','#b26a2b','#86509c','#2d8585','#a54848','#7a6a2a','#5a5a5a','#5a5a5a','#5a5a5a'];
 function bookGuides(d, step){ return ''; }
 function genIme(n){ n=String(n||''); if(!n) return ''; if(/[оО]$/.test(n)) return n.slice(0,-1)+'а'; if(/[аА]$/.test(n)) return n.slice(0,-1)+'е'; if(/[еЕ]$/.test(n)) return n+'та'; if(/[иИ]$/.test(n)) return n+'ја'; return n+'а'; }
+function posIme(n, z){ n=String(n||'').replace(/\s*[„"].*$/,'').trim(); if(!n) return ''; let r;
+  if(/^павле$/i.test(n)) r='Павлов'; else if(/(ђ|њ|љ|ј)е$/i.test(n)) r=n.slice(0,-1)+'ев'; else if(/е$/i.test(n)) r=n+'тов'; else if(/о$/i.test(n)) r=n.slice(0,-1)+'ов';
+  else if(/а$/i.test(n)){ let st=n.slice(0,-1); if(/ц$/i.test(st)) st=st.slice(0,-1)+'ч'; r=st+'ин'; } else if(/и$/i.test(n)) r=n+'јев';
+  else if(/[тд]ар$/i.test(n)) r=n.slice(0,-2)+'ров'; else if(/[јљњчћђџшжц]$/i.test(n)) r=n+'ев'; else r=n+'ов';
+  return z?r+'а':r; }
+function famHead(p, anc){ const par=anc&&anc.length?P.get(anc[anc.length-1]):null; const nm=(p.ime||'')+(p.nadimak?` „${p.nadimak}“`:''); if(!par) return nm; const z=p.pol==='ж'; return posIme(par.ime, z)+' '+(z?'кћи':'син')+' '+nm; }
 function linText(p, anc){ if(!anc||!anc.length) return ''; const par=P.get(anc[anc.length-1]); const gp=anc.length>1?P.get(anc[anc.length-2]):null; if(!par) return '';
   const z=p.pol==='ж'; return (z?'кћи ':'син ')+genIme(par.ime)+(gp?', '+(z?'унука ':'унук ')+genIme(gp.ime):''); }
 function ancChain(anc){ return (anc||[]).map(id=>{ const q=P.get(id); return q?(q.ime||'')+(q.nadimak?` „${q.nadimak}“`:''):''; }).filter(Boolean).join(' → '); }
@@ -961,8 +968,10 @@ function bookPara(p, f, anc){ const Y=q=>{ const y=yrs(q); return (f.godine&&y)?
 function bookBlocks(rootId, mode){ const f=fieldsFor(mode); const K=post().knjiga; const out=[]; let branch=null;
   const walk=(id, depth, trail, anc)=>{ const p=P.get(id); if(!p) return; const ch=children(id); if(depth===1) branch=id;
     const ids=[id, ...spouses(id).map(x=>x.s.id)]; let head=false;
-    if(depth>=1 && depth<=3 && ch.length){ head=true; const cls=depth===1?'h2':depth===2?'h3':'h4'; const y=yrs(p);
-      out.push({cls, depth, trail, anc, html:(cls==='h2'?'<span class="hu">':'')+esc(nmF(p,f))+((f.godine&&y)?` <span class="yrs">(${esc(y)})</span>`:'')+(cls==='h2'?'</span>':''), toc:depth, tocText:nmF(p,f)+((f.godine&&y)?` (${y})`:''), keepNext:true, newPage:depth===1&&K.novaStrana, branch, ids:[], pid:id}); }
+    if(depth===1 && ch.length){ head=true; const y=yrs(p);
+      out.push({cls:'h2', depth, trail, anc, html:'<span class="hu">'+esc(nmF(p,f))+((f.godine&&y)?` <span class="yrs">(${esc(y)})</span>`:'')+'</span>', toc:depth, tocText:nmF(p,f)+((f.godine&&y)?` (${y})`:''), keepNext:true, newPage:K.novaStrana, branch, ids:[], pid:id}); }
+    else if(depth>=2 && ch.length){ head=true; const y=yrs(p);
+      out.push({cls:'hf', depth, trail, anc, html:esc(famHead(p, anc)), toc:depth<=3?depth:0, tocText:nmF(p,f)+((f.godine&&y)?` (${y})`:''), keepNext:true, newPage:false, branch, ids:[], pid:id}); }
     out.push({cls:'p', depth, trail, anc, cont:head, fam:!head&&ch.length>0&&depth>0, html:bookPara(p,f,anc), ids, branch, pid:id}); const anc2=anc.concat([id]);
     const G=childGroups(p);
     if(G){ G.forEach((g,gi)=>{ const tg=trail.slice(); tg[depth+1]=gi===G.length-1;
