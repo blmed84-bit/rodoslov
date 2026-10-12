@@ -345,6 +345,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
     <div id="voicePanel">
       <button id="talkBtn" class="talk">🎙 Започни разговор</button>
       <button id="wordBtn" title="Прочита Ворд фајл DOPISI и предложи шта је ново за родослов" style="font-weight:700">📥 Преузми из дописа</button>
+      <button id="shotBtn" title="Снимак екрана: помоћник види шта видите ви (прозор за штампу, фајлове…)">📷 Покажи ми екран</button>
       <button id="tihoBtn" title="Тихи рад: помоћник не говори наглас, одговоре читате на екрану, а одговарате дугмадима или гласом">🔇 Тихи рад</button>
       <div id="talkState"><span id="talkDot"></span><span id="talkText">Кликните на зелено дугме и реците име особе.</span></div>
     </div>
@@ -534,7 +535,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.12.14';
+const APP_VERSION='2026.10.12.15';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -627,6 +628,22 @@ async function ensureWritePermission(){ try{ const h=await getHandle(); if(h&&h.
 /* ------------------------------------------------ ажурирање програма */
 function verCmp(a,b){ const x=String(a).split('.').map(Number), y=String(b).split('.').map(Number); for(let i=0;i<Math.max(x.length,y.length);i++){ const d=(x[i]||0)-(y[i]||0); if(d) return d; } return 0; }
 let updInfo=null;
+/* ---- снимак екрана (дељење екрана, одобрење једном по покретању) */
+let scr={stream:null, video:null};
+async function screenStart(){ if(scr.stream && scr.stream.active) return true; if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){ toast('Овај прегледач не уме да сними екран.',5000); return false; }
+  try{ const st=await navigator.mediaDevices.getDisplayMedia({video:{displaySurface:'monitor', frameRate:2}, audio:false, selfBrowserSurface:'include', surfaceSwitching:'exclude', monitorTypeSurfaces:'include'});
+    scr.stream=st; const v=document.createElement('video'); v.muted=true; v.srcObject=st; await v.play(); scr.video=v; st.getVideoTracks()[0].addEventListener('ended',()=>{ scr.stream=null; scr.video=null; logEv('екран',{faza:'прекинуто'}); });
+    logEv('екран',{faza:'дељење', vrsta:(st.getVideoTracks()[0].getSettings()||{}).displaySurface||''}); return true; }
+  catch(e){ logEv('екран',{faza:'одбијено', x:String(e&&e.name||e)}); return false; } }
+async function screenShot(){ if(!(scr.stream&&scr.stream.active)) return null; const v=scr.video; if(!v||!v.videoWidth){ await sleep(400); } if(!v||!v.videoWidth) return null;
+  const W=Math.min(1400, v.videoWidth), H=Math.round(v.videoHeight*W/v.videoWidth); const c=document.createElement('canvas'); c.width=W; c.height=H; c.getContext('2d').drawImage(v,0,0,W,H);
+  const data=c.toDataURL('image/jpeg',0.72).split(',')[1]; logEv('екран',{faza:'снимак', w:W, h:H, kb:Math.round(data.length*3/4/1024)}); return data; }
+async function shotAndTell(voice){ let ok=await screenStart(); if(!ok){ const m='Нисам добио дозволу за снимак екрана. Ако желите да вам помогнем око онога што видите, кликните поново на „Покажи ми екран“, па у прозорчићу кликните на „Ceo ekran“, на слику екрана, и на „Deli“.'; addMsg('ai',esc(m)); if(!settings.tiho) speak(m); return; }
+  const data=await screenShot(); if(!data){ const m='Снимак није успео, покушајте још једном.'; addMsg('ai',esc(m)); return; }
+  const img=document.createElement('img'); img.src='data:image/jpeg;base64,'+data; img.style.cssText='max-width:100%;border-radius:10px;border:1px solid #ccc;margin-top:6px'; addMsg('me','📷 Снимак екрана').appendChild(img);
+  conv.shot=data; const text='[снимак екрана: корисник је кликнуо „Покажи ми екран“ — на слици је оно што он сада види. Погледај слику и помози му корак по корак, лаички и благо, онако како је описано у упутству за тастатуру и прозоре; дугмад и натписи су на српској латиници.]';
+  if(conv.on){ conv.click=text; if(conv.stopListen) conv.stopListen(); } else { const r=await handleUtterance(text,false); if(r&&!settings.tiho) speak(r); } }
+
 async function checkPoruka(){ try{ const r=await fetch('https://api.github.com/repos/blmed84-bit/rodoslov/contents/poruka.json?t='+Date.now(),{cache:'no-store', headers:{Accept:'application/vnd.github.raw+json'}}); if(!r.ok) return; const j=await r.json(); if(!j||!j.id||!j.tekst) return;
   if(j.do && Date.now()>Date.parse(j.do)) return; let seen=''; try{ seen=localStorage.getItem('rodoslov.poruka')||''; }catch(e){} if(seen===j.id) return; try{ localStorage.setItem('rodoslov.poruka',j.id); }catch(e){}
   logEv('порука',{id:j.id, x:j.tekst}); if(j.proveri) checkUpdate(false); try{ chatHist.push({role:'user',content:'[програм: Клод (програмер) је послао поруку коју си изговорио кориснику]'},{role:'assistant',content:JSON.stringify({"порука":j.tekst,"измене":[]})}); }catch(e){}
@@ -1448,6 +1465,7 @@ function aiSystem(){ const DB=dataBlocks(); return [
 3. Да отвориш прозор за штампање и PDF, да покажеш особу у стаблу или образцу, да покажеш дугме на екрану — одмах.
 4. Да објасниш како се програм користи (види упутство испод).
 ПОДАЦИ И КЊИГА (важно за разумевање корисника): Корисник не прави разлику између ПОДАТАКА (особе, године, ко је чији син, бракови — то је оно што се уписује и чува) и КЊИГЕ (текст за штампу који програм сваки пут изнова састави из тих података; може се облковати на разне начине, а број страна зависи од облика). Ако пожели да му „сачуваш књигу као текст на радној површини, па да је сам прави“ или нешто слично — не одбијај, него му благо, лаички објасни: књига се не прави ручно, него је програм сам саставља из података; зато је најбоље сваку исправку рећи теби, ти је упишеш у податке, и књига се одмах сама поправи — и данашња и свака следећа. Понуди: „Реците ми шта треба да пише, и ја упишем.“ Ако пита зашто књига има више страна него раније: зато што сада изнад сваке породице стоји наслов и пише лоза уз свако име, како је желео — то заузима простор, а добит је прегледност.
+СНИМАК ЕКРАНА: корисник има дугме „Покажи ми екран“. Кад га први пут кликне, Chrome отвори прозорчић за дељење екрана (латиницом): треба да кликне на картицу „Ceo ekran“, затим на слику екрана, па на плаво дугме „Deli“. То се одобрава само једном по покретању програма; после тога снимак добијаш одмах. Напомена: док је отворен прозор за штампање, програм не може да сними екран — зато прозор за штампу објасни унапред, речима.
 ПРОБНА ШТАМПА (корисник ће тражити да одштампа једну-две стране): рецимо да каже „одштампај двадесет девету страну“. 1) Пре штампе кратко реци: „Укључите штампач ако није укључен, и проверите да има папира.“ 2) Додај {"оп":"pdf","стране":"29"} (или "29-30"). Отвориће се прозор за штампање. 3) Објасни му ТАЈ прозор, полако, једно по једно, латиницом како пише: горе десно пише „Odredište“ (или „Destination“) — ту треба да стоји име вашег штампача, а не „Sačuvaj kao PDF“; ако пише „Sačuvaj kao PDF“, кликните на то и изаберите штампач са списка. Затим доле, плаво дугме „Štampaj“ — кликните на њега. 4) Реци: „Слободно одштампајте, ја чекам. Узмите страну, погледајте је полако — кад будете хтели, само кликните Даље или реците можемо даље.“ 5) Ако нешто не успе (ништа не излази, грешка): смири га — „Ништа страшно, то се дешава“ — и предложи редом: да ли је штампач укључен; да ли светли неко црвено светло; да ли има папира; па покушајте поново. Никад не говори као да је он нешто погрешио. 6) Кад одштампа, похвали га („Одлично, то је то“).
 ТИХИ РАД: ако је укључен (види ТРЕНУТНА ПОДЕШАВАЊА „tiho“), корисник ТЕ НЕ ЧУЈЕ него ЧИТА одговоре на екрану, а најчешће одговара дугмадима „Даље“, „Назад“, „Да“, „Не“. Зато: одговарај кратко (једна до три реченице), јасно и у једном даху; питања постављај тако да на њих може „Да“ или „Не“; кад отвориш страну, напиши само „Страна 29: …“ и једну реченицу ко је на њој. Исправке података корисник и даље говори гласом — то је у реду.
 ТВОЈА УЛОГА И ТОН: Ти си ту да испуниш жеље корисника и да родослов буде што ближи ономе како он то замишља — то је његово животно дело и он је у њему стручњак; ти си његов вредан и одан помоћник. Кад нешто пожели, прихвати то радо („Наравно, радо ћу“, „Добра замисао“) и покажи да ти је стало да му угодиш. Што се рачунара тиче: никад не дај ни наговештај да је нешто требало да зна или да је погрешио. Ако нешто не успе или га збуни, преузми то на себе („Ја сам то могао јасније да објасним“, „Рачунари су понекад баш заплетени, то није до вас“). Не говори „то је лако“ или „само треба да…“. Не користи стручне речи. Похвали га кад нешто уради („Одлично, тако је“). Кад те похвали, захвали се топло и скромно. Ако каже нешто што није сасвим тачно о програму, не исправљај га оштро — благо и љубазно објасни. Нека се после разговора осећа задовољно, сигурно и поштовано.
@@ -1477,10 +1495,11 @@ function aiSystem(){ const DB=dataBlocks(); return [
 - {"оп":"pdf","стране":"29-30"} — ПРОБНА ШТАМПА само тих страна књиге (једна или две стране); без „стране“ штампа се цела књига. Остали облици:
 - {"оп":"pdf","врста":"текст"|"стабло","приказ":"сажето"|"пуно","корен":"id или null"} — отвара Chrome прозор за штампање (корен null = цео родослов; за једну грану корен је њен предак). У поруци кажи: „Отварам прозор за штампање. Проверите да десно пише Сачувај као PDF, па кликните плаво дугме Сачувај.“
 - {"оп":"прикажи","id":"...","где":"особа"|"стабло"}
-- {"оп":"покажи_дугме","дугме":"особе"|"стабло"|"текст"|"помоћник"|"сачувај"|"поништи"|"претрага"|"нова_особа"|"додај_дете"|"додај_брак"|"штампај"|"корен"|"уклопи"|"разговор"}
+- {"оп":"покажи_дугме","дугме":"екран"|"особе"|"стабло"|"текст"|"помоћник"|"сачувај"|"поништи"|"претрага"|"нова_особа"|"додај_дете"|"додај_брак"|"штампај"|"корен"|"уклопи"|"разговор"}
 - {"оп":"жеља","текст":"тачан и потпун опис жеље: шта не ваља, где (страна, особа, део програма) и како би корисник желео"}
 - {"оп":"увод","корак":"обилазак"|"даље"|"крај"|"штампа"|"провера"} — само током једнократног увода (види „ЈЕДНОКРАТНИ УВОД“ у контексту)
 - {"оп":"преглед","врста":"текст"|"стабло","страна":1,"наслов":"наслов породице са списка СТРАНЕ КЊИГЕ (програм сам нађе страну)","id":"id особе (страна на којој је њен пасус)","приказ":"сажето"|"пуно","корен":"id или null"} — отвара преглед штампе на екрану (корисник и ти видите исто). „текст“ = књига (подразумевано кад прича о штампаном родослову).
+- {"оп":"снимак"} — програм ти пошаље СНИМАК ЦЕЛОГ ЕКРАНА корисника (оно што он види: прозор за штампу, прозор за отварање фајла, Ворд…), па у следећем кораку одговараш гледајући слику. Користи кад корисник каже да нешто не види, не зна где да кликне, или кад му објашњаваш неки прозор ван програма. Ако дељење екрана још није одобрено, програм ће ти то рећи — тада замоли корисника да кликне „Покажи ми екран“.
 - {"оп":"погледај","стране":[1,2]} — програм ти пошаље СЛИКЕ тих страна (највише 3) какве ће бити одштампане, са списком особа на свакој; онда одговараш у следећем кораку
 - {"оп":"провери","id":"..."} — програм ти каже да ли је особа у стаблу и PDF-у, на којој страни, а ако није — зашто; онда одговараш у следећем кораку
 - {"оп":"затвори_преглед"}
@@ -1530,7 +1549,7 @@ function applyOps(ops){ pushHistory(); const made=[]; if(ops.length) logEv('из
     else if(op['оп']==='брак'&&P.has(op.a)&&P.has(op.b)){ D.marriages.push({id:newId('b'), a:op.a, b:op.b, red:+op.red||1, nap:op.nap||''}); index(); }
     else if(op['оп']==='обриши'&&P.has(op.id)){ const id=op.id; D.persons=D.persons.filter(x=>x.id!==id); D.marriages=D.marriages.filter(m=>m.a!==id&&m.b!==id); for(const x of D.persons){ if(x.otac===id) x.otac=null; if(x.majka===id) x.majka=null; } index(); } }
   commit('Измене изведене'); renderList(); if(made.length) select(made[0]); return made; }
-const IMMEDIATE=new Set(['увод','водич','ворд','научи_изговор','подешавање','pdf','жеља','прикажи','покажи_дугме','преглед','затвори_преглед','погледај','провери']);
+const IMMEDIATE=new Set(['снимак','увод','водич','ворд','научи_изговор','подешавање','pdf','жеља','прикажи','покажи_дугме','преглед','затвори_преглед','погледај','провери']);
 function previewInfo(){ if(!PV.on||!PV.B) return 'Преглед штампе није отворен.';
   if(PV.B.kind==='book'){ const pg=PV.B.pages[PV.page]; return `ПРЕГЛЕД ШТАМПЕ ЈЕ ОТВОРЕН — ТЕКСТУАЛНИ РОДОСЛОВ (књига): страна ${PV.page+1} од ${PV.B.pages.length}, ${PV.mode==='p'?'пуни':'сажети'} приказ. ${bookSummary(PV.B)} На тој страни: ${(pg.text||'').slice(0,700)}`; }
   if(PV.B.plakat) return `ПРЕГЛЕД ШТАМПЕ ЈЕ ОТВОРЕН — ${posterSummary(PV.B.plakat)}`; const pg=PV.B.pages[PV.page]; const r=P.get(PV.B.root);
@@ -1545,12 +1564,13 @@ function checkPerson(id){ const p=P.get(id); if(!p) return `Особа ${id} н�
   return t; }
 async function followupContent(ops){ const parts=[]; const txt=[];
   for(const o of ops){ if(o['оп']==='провери') txt.push(checkPerson(o.id));
+    if(o['оп']==='снимак'){ if(scr.stream&&scr.stream.active){ const d=await screenShot(); if(d){ parts.push({type:'text',text:'Снимак екрана корисника (оно што он сада види):'}); parts.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:d}}); } } else { txt.push('Снимак екрана није могућ — корисник још није одобрио дељење екрана. Замоли га да кликне на дугме „Покажи ми екран“ (трепери) и објасни прозорчић: кликне на „Ceo ekran“, па на слику екрана, па на „Deli“.'); highlight('екран'); } }
     if(o['оп']==='погледај' && PV.on && PV.B && PV.B.kind==='book'){ const B=PV.B; let want=(Array.isArray(o['стране'])?o['стране']:[PV.page+1]).map(Number).filter(n=>n>=1&&n<=B.pages.length).slice(0,4); if(!want.length) want=[1]; for(const n of want) parts.push({type:'text', text:`Страна ${n} од ${B.pages.length} (${B.F.key}${B.F.imposed?', књижица':''}). Садржај стране, ред по ред (увлачење = нараштај):\n${B.pages[n-1].text.slice(0,3000)}`}); continue; }
     if(o['оп']==='погледај'){ const B=PV.on&&PV.B?PV.B:buildTreePages(treeMode, treeRoot); let want=(Array.isArray(o['стране'])?o['стране']:[PV.on?PV.page+1:1]).map(Number).filter(n=>n>=1&&n<=B.pages.length).slice(0,3); if(!want.length) want=[1];
       for(const n of want){ parts.push({type:'text', text:`Страна ${n} од ${B.pages.length}. Особе на страни: ${B.pages[n-1].names.slice(0,60).join('; ')}`}); try{ parts.push({type:'image', source:{type:'base64', media_type:'image/jpeg', data:await pageToJpeg(B,n-1)}}); }catch(e){ console.warn(e); } } } }
   return [{type:'text', text:'[програм: резултат провере — сада одговори кориснику]'+(txt.length?'\n'+txt.join('\n'):'')}, ...parts]; }
 function stripImages(){ for(const m of chatHist){ if(Array.isArray(m.content)&&m.content.some(c=>c.type==='image')) m.content=m.content.filter(c=>c.type!=='image').map(c=>c.type==='text'?c:{type:'text',text:'[слика стране]'}).concat([{type:'text',text:'[слике страна су биле приказане]'}]); } }
-const BTN_SEL={'особе':'nav button[data-view=personsView]','стабло':'nav button[data-view=treeView]','текст':'nav button[data-view=textView]','помоћник':'nav button[data-view=aiView]','сачувај':'#saveBtn','поништи':'#undoBtn','претрага':'#search','нова_особа':'#newBtn','додај_дете':'#addDete','додај_брак':'#addBrak','штампај':null,'корен':'#rootBtn','уклопи':'#fitBtn','разговор':'#talkBtn','ворд':'#wordBtn','инсталирај':'#updInstall'};
+const BTN_SEL={'особе':'nav button[data-view=personsView]','стабло':'nav button[data-view=treeView]','текст':'nav button[data-view=textView]','помоћник':'nav button[data-view=aiView]','сачувај':'#saveBtn','поништи':'#undoBtn','претрага':'#search','нова_особа':'#newBtn','додај_дете':'#addDete','додај_брак':'#addBrak','штампај':null,'корен':'#rootBtn','уклопи':'#fitBtn','разговор':'#talkBtn','ворд':'#wordBtn','екран':'#shotBtn','инсталирај':'#updInstall'};
 function highlight(name){ let sel=BTN_SEL[name]; if(name==='штампај') sel=$('#textView').classList.contains('active')?'#printTextBtn':'#printTreeBtn';
   if(name==='корен'||name==='уклопи'||name==='штампај'&&sel==='#printTreeBtn'){ if(!$('#treeView').classList.contains('active')) showView('treeView'); }
   if(name==='додај_дете'||name==='додај_брак'){ if(!$('#personsView').classList.contains('active')) showView('personsView'); }
@@ -1610,7 +1630,7 @@ async function handleUtterance(text, voice){
     if(pend.box) pend.box.innerHTML='<i>Одбачено.</i>';
     if(NO.test(t) && words<=3){ logEv('одбијено',{n:pend.ops.length}); chatHist.push({role:'user',content:'[програм: корисник је одбио предложене измене]'}); if(pend.linked&&conv.uvod&&conv.uvod.korak==='dopisi'){ setTimeout(uvodPosleDopisa,0); const r='Добро, ништа нисам уписао.'; addMsg('ai',esc(r)); return r; } return 'Добро, ништа нисам мењао. Шта желите?'; } }
   if(!settings.claude){ const m='Помоћник још није укључен. У подешавањима треба уписати кључ — то ће урадити Борис.'; addMsg('ai',esc(m)); return m; }
-  chatHist.push({role:'user',content:text}); trimHist(); const tStart=performance.now();
+  if(conv.shot){ const d=conv.shot; conv.shot=null; chatHist.push({role:'user',content:[{type:'text',text:text},{type:'image',source:{type:'base64',media_type:'image/jpeg',data:d}}]}); } else chatHist.push({role:'user',content:text}); trimHist(); const tStart=performance.now();
   const sp = voice ? makeSpeaker() : null; conv.sp=sp; if(voice) talkState('think','Размишљам…'); const wait=addMsg('sys','Размишљам…');
   let roundPushes=0; const fillT = voice ? setTimeout(()=>{ if(conv.on&&sp.pushes===0) sp.say('Само тренутак.'); }, 1400) : null;
   let slowT = voice ? setInterval(()=>{ if(conv.on&&sp.pushes===roundPushes){ sp.say('Још само мало.'); roundPushes=sp.pushes; } else roundPushes=sp.pushes; }, 8000) : null;
@@ -1620,7 +1640,7 @@ async function handleUtterance(text, voice){
       out = voice ? await claudeStream(aiSystem(), chatHist, 1500, t=>{ if(tFirst===null) tFirst=Math.round(performance.now()-tStart); sp.feed(partialMsg(t)); }) : await claude(aiSystem(), chatHist, 1500);
       chatHist.push({role:'assistant',content:out}); trimHist();
       j=parseJson(out); if(!j) break; rawMsg=String(j['порука']||''); msg=sanitizeMsg(rawMsg); ops=Array.isArray(j['измене'])?j['измене']:[];
-      const look=ops.filter(o=>o['оп']==='погледај'||o['оп']==='провери');
+      const look=ops.filter(o=>o['оп']==='погледај'||o['оп']==='провери'||o['оп']==='снимак');
       if(look.length && rounds<2){ rounds++; after=after.concat(runImmediate(ops.filter(o=>IMMEDIATE.has(o['оп'])&&!look.includes(o))));
         if(msg){ addMsg('ai',esc(msg)); if(sp) sp.finish(rawMsg); }
         if(sp){ sp.newRound(); talkState('think','Гледам…'); }
@@ -2145,7 +2165,7 @@ function init(){
   bindForm(); bindTree(); bindText(); bindMics(); bindSettings(); setTimeout(bindWizard,0); $('#aiSend').onclick=aiSend; $('#wordBtn').onclick=()=>importWord(false);
   window.setTiho=function(on, tell){ settings.tiho=!!on; try{ localStorage.setItem(LS_SET,JSON.stringify(settings)); }catch(e){} document.body.classList.toggle('tiho',settings.tiho); const b=$('#tihoBtn'); b.classList.toggle('on',settings.tiho); b.textContent=settings.tiho?'🔊 Укључи глас':'🔇 Тихи рад'; logEv('тихо',{on:settings.tiho}); if(settings.tiho){ sayGen++; if(curAudio){ try{ curAudio.pause(); }catch(e){} } }
     if(tell){ const m=settings.tiho?'Тихи рад је укључен: од сада не говорим наглас, одговоре читате овде на екрану. Кликните „Даље“ кад сте погледали страну, „Да“ или „Не“ кад вас нешто питам. Кад хоћете нешто да исправите, слободно ми реците гласом — слушам вас и даље. Кад год пожелите да поново говорим, кликните „Укључи глас“.':'Глас је поново укључен.'; addMsg('ai',esc(m)); if(!settings.tiho) speak(m); } }
-  setTiho(!!settings.tiho,false); $('#tihoBtn').onclick=()=>setTiho(!settings.tiho,true);
+  setTiho(!!settings.tiho,false); $('#tihoBtn').onclick=()=>setTiho(!settings.tiho,true); $('#shotBtn').onclick=()=>shotAndTell(conv.on);
   $$('#quick button').forEach(b=>{ b.onclick=async()=>{ const q=b.dataset.q; addMsg('me',esc(q)); logEv('клик',{q}); if(conv.on){ conv.click=q; if(conv.stopListen) conv.stopListen(); } else { const r=await handleUtterance(q,false); if(r&&!settings.tiho) speak(r); } }; }); $('#wordPick').onclick=()=>pickWordFile().catch(()=>{}); $('#wordForget').onclick=async()=>{ try{ await idb.set('word',null); }catch(e){} fillWordUI(); }; $('#reportBtn').onclick=saveReport; $('#reportSend').onclick=async()=>{ D.izvPoslatiZelje=true; toast((await sendReport())?'Извештај је послат.':'Слање није успело (нема адресе или мреже).',4000); }; fillWordUI(); $('#talkBtn').onclick=()=>startConversation(); bindPreview();
   $('#updInstall').onclick=installUpdate; $('#updLater').onclick=()=>{ $('#updBanner').style.display='none'; };
   setTimeout(()=>{ if(navigator.onLine!==false) checkUpdate(false); },1500);
