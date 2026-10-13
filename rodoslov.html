@@ -629,7 +629,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.13.4';
+const APP_VERSION='2026.10.13.5';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -682,8 +682,8 @@ const POST_DEF={ stampa:{papir:'A4', raspored:'grane', velicina:'srednja', crnob
   sazeto:{nadimci:true, godine:true, supruznici:true, mesta:false, napomene:false},
   puno:{nadimci:true, godine:true, supruznici:true, mesta:true, napomene:true},
   stablo:{generacije:'2'}, razgovor:{pauza:'2.5'},
-  knjiga:{format:'A5', slova:'srednja', font:'segoe', sadrzaj:true, dubinaSadrzaja:'2', registar:true, novaStrana:true, naslovna:true, uvod:''} };
-const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo','plakat'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99'],'stampa.orijentacija':['polozeno','uspravno'],'stampa.poravnanje':['centar','levo'],'stampa.slova':['mala','srednja','velika'],'stampa.razmak':['zbijeno','normalno','siroko'],'stampa.generacije':['2','3','4','5','6','7','8','99'],'stampa.naslovVelicina':['mali','srednji','veliki'],'stampa.zaglavlje':'bool','stampa.brojStrana':'bool','stampa.okviri':'bool','stampa.plakatPapir':['auto','A2','A1','A0','rolna'],'razgovor.pauza':['1.5','2','2.5','3','3.5','4','5'],'knjiga.format':['A5','knjizica','A4'],'knjiga.slova':['najmanja','mala','srednja','velika','najveca'],'knjiga.font':['segoe','georgia','times','palatino','cambria','calibri'],'knjiga.sadrzaj':'bool','knjiga.dubinaSadrzaja':['1','2','3'],'knjiga.registar':'bool','knjiga.novaStrana':'bool','knjiga.naslovna':'bool','knjiga.uvod':'text'};
+  knjiga:{format:'A5', slova:'srednja', font:'segoe', uvlacenje:'plitko', sadrzaj:true, dubinaSadrzaja:'2', registar:true, novaStrana:true, naslovna:true, uvod:''} };
+const POST_SCHEMA={'stampa.papir':['A4','A3'],'stampa.raspored':['grane','celo','plakat'],'stampa.velicina':['mala','srednja','velika'],'stampa.crnobelo':'bool','stampa.naslov':'text','stampa.datum':'bool','stampa.oznake':'bool','stablo.generacije':['2','3','4','5','99'],'stampa.orijentacija':['polozeno','uspravno'],'stampa.poravnanje':['centar','levo'],'stampa.slova':['mala','srednja','velika'],'stampa.razmak':['zbijeno','normalno','siroko'],'stampa.generacije':['2','3','4','5','6','7','8','99'],'stampa.naslovVelicina':['mali','srednji','veliki'],'stampa.zaglavlje':'bool','stampa.brojStrana':'bool','stampa.okviri':'bool','stampa.plakatPapir':['auto','A2','A1','A0','rolna'],'razgovor.pauza':['1.5','2','2.5','3','3.5','4','5'],'knjiga.format':['A5','knjizica','A4'],'knjiga.slova':['najmanja','mala','srednja','velika','najveca'],'knjiga.font':['segoe','georgia','times','palatino','cambria','calibri'],'knjiga.uvlacenje':['plitko','puno'],'knjiga.sadrzaj':'bool','knjiga.dubinaSadrzaja':['1','2','3'],'knjiga.registar':'bool','knjiga.novaStrana':'bool','knjiga.naslovna':'bool','knjiga.uvod':'text'};
 for(const m of ['sazeto','puno']) for(const f of ['nadimci','godine','supruznici','mesta','napomene']) POST_SCHEMA[m+'.'+f]='bool';
 function post(){ if(!D.postavke) D.postavke={}; for(const k in POST_DEF) D.postavke[k]=Object.assign({},POST_DEF[k],D.postavke[k]||{}); return D.postavke; }
 function setPost(path,val){ const t=POST_SCHEMA[path]; if(!t) return false; if(t==='bool') val=(val===true||val==='true'||val==='да'||val===1); else if(t==='text') val=String(val??'').slice(0, path==='knjiga.uvod'?3000:200); else { val=String(val); if(!t.includes(val)) return false; } const [a,b]=path.split('.'); post()[a][b]=val; return true; }
@@ -1041,6 +1041,7 @@ function bookCss(F){ const bw=post().stampa.crnobelo;
 .bpage .bf{position:absolute;left:0;right:0;bottom:${Math.max(4,F.b-8)}mm;text-align:center;font-size:.85em;color:#444}
 .bpage .bb{padding:0 0 .8mm 0;margin:0}
 .bpage .bb.fam{padding-top:1.6mm}
+.bpage .bb.p.pl{border-left:0}.bpage .bb.pl.mg{padding-top:.9mm}
 .bpage .bb.mg{font-size:.92em;font-style:italic;color:#6b5a3e;padding-top:.9mm;padding-bottom:.5mm}
 .bpage.bscreen{width:auto!important;height:auto!important;padding:0 0 30px!important;overflow:visible!important;background:transparent!important}
 .bpage .bb.h2{font-size:1.28em;font-weight:700;padding-top:2.2mm;padding-bottom:1mm}
@@ -1102,7 +1103,7 @@ function bookBlocks(rootId, mode){ const f=fieldsFor(mode); const K=post().knjig
         g.kids.forEach((c,ci)=>{ const tc=tg.slice(); tc[depth+2]=ci===g.kids.length-1; walk(c.id, depth+2, tc, anc2); }); }); }
     else ch.forEach((c,ci)=>{ const tc=trail.slice(); tc[depth+1]=ci===ch.length-1; walk(c.id, depth+1, tc, anc2); }); };
   const rp=P.get(rootId); const anc0=[]; { let q=rp; const seen=new Set(); while(q&&!seen.has(q.id)){ seen.add(q.id); const par=P.get(q.otac)||P.get(q.majka); if(!par) break; anc0.unshift(par.id); q=par; } }
-  walk(rootId, 0, [], anc0); return out; }
+  walk(rootId, 0, [], anc0); let base=0; for(const b of out){ if(b.cls==='h2'||b.cls==='hf') base=b.depth; b.vd=Math.max(0,b.depth-base); } return out; }
 function bookConnectors(b, F){ const d=b.depth; if(d<1) return ''; const bw=post().stampa.crnobelo; const col=k=>bw?'#888':GEN_COL[k%GEN_COL.length];
   const st=F.step, x=k=>((k-1)*st+st*0.3).toFixed(2), w='.32mm'; const tr=b.trail||[]; const g=[];
   for(let k=1;k<d;k++) if(!tr[k]) g.push(`linear-gradient(${col(k)},${col(k)}) ${x(k)}mm 0/${w} 100% no-repeat`);
@@ -1112,7 +1113,7 @@ function bookConnectors(b, F){ const d=b.depth; if(d<1) return ''; const bw=post
     g.push(`linear-gradient(${col(d)},${col(d)}) ${x(d)}mm 0/${w} ${last?y1.toFixed(2)+'mm':'100%'} no-repeat`);
     g.push(`linear-gradient(${col(d)},${col(d)}) ${x(d)}mm ${(y1-0.16).toFixed(2)}mm/${(st*0.7-0.5).toFixed(2)}mm ${w} no-repeat`); }
   return `background:${g.join(',')};`; }
-function bookBlockEl(b, F){ const d=document.createElement('div'); d.className='bb '+b.cls+(b.fam?' fam':''); d.style.cssText=`padding-left:${(b.depth*F.step).toFixed(2)}mm;`+bookConnectors(b, F); d.innerHTML=b.html; if(b.cls==='p'&&b.pid) d.dataset.pid=b.pid; return d; }
+function bookBlockEl(b, F){ const d=document.createElement('div'); const pl=(post().knjiga.uvlacenje||'plitko')==='plitko'; const vd=pl?(b.vd!=null?b.vd:0):b.depth; d.className='bb '+b.cls+(b.fam?' fam':'')+(pl?' pl':''); d.style.cssText=`padding-left:${(vd*F.step*(pl?1.6:1)).toFixed(2)}mm;`+(pl?'':bookConnectors(b, F)); d.innerHTML=b.html; if(b.cls==='p'&&b.pid) d.dataset.pid=b.pid; return d; }
 function bookPack(F, blocks){ const host=bookHost(); const pages=[]; let cur=null;
   const start=()=>{ host.innerHTML='<div class="bpage"><div class="bh"></div><div class="bc"></div></div>'; cur={items:[], bc:host.querySelector('.bc')}; pages.push(cur); };
   const over=()=>cur.bc.scrollHeight>cur.bc.clientHeight+1;
@@ -1884,7 +1885,8 @@ function uvodHear(text){ const u=conv.uvod; if(!u||!u.korak||conv.pending) retur
   else if(u.korak==='jos'){ if(/^(има|остало|јесте|да|хоћу|желим|имам)/.test(t)&&words<=6){ u.korak='rad'; m='Добро. Реците име особе.'; }
     else if(no||/^(нема|није|ништа|све сам|све је)/.test(t)&&words<=8) m=uvodStampaKorak('Добро. ');
     else { u.korak='rad'; return null; } }
-  else if(u.korak==='tura'){ if(/^(даље|јасно|да|разумем|разумео|јесте|добро|може|у реду|ок|океј|следеће|настави|хајде|ајде|видим|одлично)/.test(t)&&words<=4){ m=turaDalje(); } else return null; }
+  else if(u.korak==='tura'){ const st=TURA[u.i]; if(st&&st.proba&&!u.probaDone){ if(yes||/^(штампај|одштампај|може|хоћу)/.test(t)){ u.probaDone=true; const pg=PV.page+1; printBookPages(D.koren, PV.mode||'s', pg, pg); logEv('увод',{korak:'тура-проба',str:pg}); m='Штампам страну '+pg+'. Проверите да је штампач укључен; у прозору који се отвори, горе код „Odredište“ треба да стоји име штампача, па кликните плаво дугме „Štampaj“. Ја чекам — кад погледате папир, реците ми да ли је сада добро, па идемо даље.'; } else if(no||/^(не треба|касније|прескочи)/.test(t)){ u.probaDone=true; m=turaDalje(); } else return null; }
+    else if(/^(даље|јасно|да|разумем|разумео|јесте|добро|може|у реду|ок|океј|следеће|настави|хајде|ајде|видим|одлично|сада је добро|добро је)/.test(t)&&words<=5){ m=turaDalje(); } else return null; }
   else if(u.korak==='tura-kraj'){ if(/^(да|свиђа|допада|добро|одлично|лепо|може|супер|јесте|баш|красно|дивно|у реду)/.test(t)&&words<=6&&!/(али|само|не |ипак|међутим)/.test(t)){ conv.uvod=null; logEv('увод',{korak:'тура-крај-да'}); kPopHide(); m='Драго ми је. Онда вас остављам да радите на миру — кликните на особу у књизи кад треба нешто да исправите, а ја сам ту кад ме позовете. Пријатно!'; } else return null; }
   else if(u.korak==='tiho'){
     if(yes||/^(проба|пробај|пробамо|хајде|може|важи)/.test(t)){ conv.uvod=null; logEv('увод',{korak:'тихо-да'}); setTiho(true,false); m='Одлично. Тихи рад је укључен — од сада не говорим наглас, него читате овде. Испод су дугмад: „Даље“, „Назад“, „Да“, „Не“. Кад хоћете нешто да исправите, само реците гласом. Наставимо: кликните „Даље“ за двадесет девету страну, или реците коју страну желите.'; }
@@ -2275,7 +2277,8 @@ function kHl(sel, ms=9000){ $$('.kHl').forEach(e=>e.classList.remove('kHl')); co
 const TURA_PIT=' Да ли је ово јасно? Ако јесте, реците „даље“. Ако имате питање, слободно питајте.';
 function turaObren(){ return D.persons.find(x=>x.ime==='Обрен'&&x.rodj==='1914')||D.persons.find(x=>children(x.id).length)||D.persons[0]; }
 const TURA=[
- {say:()=>'Хвала вам. Ево, кренимо. Ово на средини је ваша књига, страна по страна, онако како ће се одштампати. Листате је дугмадима „Претходна“ и „Следећа“, а можете и уписати број стране у оно мало поље „иди на страну“. Сада је отворена трећа страна, где почиње Маринков род.'+TURA_PIT, do:()=>{ kPopHide(); kOpenBook(3,'s',D.koren); kHl('#prevBar'); }},
+ {proba:true, say:()=>'Хвала вам. Прво оно што сте приметили на одштампаним странама: празнина са леве стране, јер је текст био увучен ка средини. Поправио сам то — сада на свакој страни текст почиње уз леву ивицу, као на двадесет деветој страни која вам се допала. Ево, на екрану је четврта страна, баш она коју сте одштампали — погледајте. Да ли желите да је одмах одштампамо за пробу, да видите на папиру? Реците да или не.', do:()=>{ kPopHide(); kOpenBook(4,'s',D.koren); kHl('#prevStage'); }},
+ {say:()=>'Ево, кренимо даље. Ово на средини је ваша књига, страна по страна, онако како ће се одштампати. Листате је дугмадима „Претходна“ и „Следећа“, а можете и уписати број стране у оно мало поље „иди на страну“. Сада је отворена трећа страна, где почиње Маринков род.'+TURA_PIT, do:()=>{ kPopHide(); kOpenBook(3,'s',D.koren); kHl('#prevBar'); }},
  {say:()=>'Друго: горе лево је поље „Нађите особу“. Упишете име, или кликнете на микрофон поред њега и изговорите га, и књига се сама отвори на тој особи. Ево, пробао сам за вас: уписао сам Обрен Лакетић, и отворила се његова страна — видите да је означен жутом бојом.'+TURA_PIT, do:()=>{ $('#kSearchIn').value='Обрен Лакетић'; kHl('#kSearch'); kGoPerson(turaObren().id); }},
  {say:()=>'Треће, и најважније: кад у књизи видите грешку, кликнете на ту особу. Ево, кликнуо сам на Обрена. Отворе се три дугмета. Прво, „Исправи ручно“: отвори се прозорчић са његовим подацима — име, године, место, напомена — ви их исправите и кликнете „Упиши“, и књига се одмах поправи. Друго, зелено „Издиктирај измену“: тада се ја укључим и питам вас шта да изменимо код Обрена, а ви ми кажете. Треће, „Додај дете или брак“ — то такође радимо заједно, гласом.'+TURA_PIT, do:()=>{ $('#kSearchIn').value=''; const z=turaObren(); kGoPerson(z.id); setTimeout(()=>{ const el=$(`#prevStage .bb.p[data-pid="${z.id}"]`); kPersonPop(z.id, el); },300); }},
  {say:()=>'Четврто: са леве стране су „Гране“ — кликнете на грану, на пример Милошев син Јово, и књига скочи на њен почетак. Испод тога је „Шта сам данас мењао“: ту се сам скупља списак особа које сте тога дана исправљали, па кликом одмах одете на ту страну. А испод је „Недавно гледано“.'+TURA_PIT, do:()=>{ kPopHide(); kHl('#kLeft'); }},
