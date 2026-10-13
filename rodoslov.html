@@ -641,7 +641,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.13.14';
+const APP_VERSION='2026.10.13.15';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -2066,6 +2066,7 @@ async function startConversation(firstSay){
   if(nast && posle && Date.now()-nast.t<40*60000){ if(Array.isArray(nast.hist)) chatHist.splice(0,chatHist.length,...nast.hist); if(nast.fokus&&P.has(nast.fokus)) conv.fokus=nast.fokus; if(nast.uvod&&!conv.uvod) conv.uvod=nast.uvod; logEv('наставак',{n:(nast.hist||[]).length}); if(greet==='Реците име особе.') greet='Настављамо где смо стали. Шта желите?'; }
   if(posle && settings.claude && !najava && !firstSay && !(conv.uvod&&conv.uvod.korak==='sansa')){ greet=(posle.govor||('Инсталирана је нова верзија програма. '+(posle.novo||'')))+' '+greet; logEv('после-ажурирања',{v:APP_VERSION}); if(!Array.isArray(D.izmenePrograma)) D.izmenePrograma=[]; D.izmenePrograma.push({v:APP_VERSION, datum:stamp(), tekst:String(posle.govor||posle.novo||'')}); D.izmenePrograma=D.izmenePrograma.slice(-6); commit(); saveQuiet(); }
   if(updInfo){ updInfo.rekao=true; greet='Стигла је нова верзија програма. Кад будете хтели, кликните зелено дугме Инсталирај, горе. '+greet; }
+  if(KV.on && greet==='Реците име особе.') greet='Изволите, слушам вас. Шта вас занима?'; if(KV.on && /Реците име особе\.$/.test(greet)) greet=greet.replace(/Реците име особе\.$/,'Изволите, слушам вас.');
   if(!settings.claude) greet='Помоћник још није укључен. У подешавањима треба уписати кључ — то ће урадити Борис.';
   addMsg('ai',esc(greet)); talkState('speak','Говорим…'); await say(greet);
   if(najava && conv.on){ D.najave.push(NAJAVA_ID); if(!D.najave.includes(NAJAVA_STARA)) D.najave.push(NAJAVA_STARA); logEv('најава',{id:NAJAVA_ID}); commit(); saveQuiet(); }
@@ -2330,7 +2331,7 @@ function kInit(){ KV.on=true; document.body.classList.add('knjiga');
   $('#kWord').onclick=()=>importWord(false); $('#kPrintAll').onclick=()=>printAllOpen(false);
   $('#kToc').onclick=()=>{ kOpenBook(2); kRenderLeft(); }; $('#kIx').onclick=()=>{ const B=PV.B; if(B&&B.kind==='book'&&B.ixLen){ PV.page=B.pages.length-B.ixLen; renderPreview(false); kRenderLeft(); } };
   $('#kSearchIn').addEventListener('keydown',e=>{ if(e.key==='Enter') kSearch(e.target.value); }); $('#kSearchIn').addEventListener('change',()=>{ if($('#kSearchIn').value.trim().length>2) kSearch($('#kSearchIn').value); });
-  $('#kPopX').onclick=kPopHide; $('#aiDrawerX').onclick=aiDrawerClose; $('#hdrAiBtn').onclick=()=>{ aiDrawerOpen(); if(!conv.on) startConversation('Изволите, слушам вас. Шта вас занима?'); };
+  $('#kPopX').onclick=kPopHide; $('#aiDrawerX').onclick=aiDrawerClose; $('#hdrAiBtn').onclick=()=>{ aiDrawerOpen(); if(!conv.on) startConversation(); };
   $('#kDiktat').onclick=()=>{ aiDrawerOpen(); const m=diktatStart(); if(conv.on){ addMsg('ai',esc(m)); conv.inject=m; if(conv.stopListen) conv.stopListen(); } else startConversation(m); };
   $('#prevFirst').onclick=()=>{ if(PV.B){ PV.page=0; renderPreview(false); kRenderLeft(); } };
   $('#kPagePrint').onclick=()=>{ if(PV.B&&PV.kind==='book'){ const pg=PV.page+1; logEv('штампа',{sta:'страна-дугме',str:pg}); toast('Штампам страну '+pg+'. У прозору који се отвори кликните плаво дугме „Štampaj“.',6000); printBookPages(PV.root, PV.mode, pg, pg); } };
