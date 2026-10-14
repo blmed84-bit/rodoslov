@@ -1,5 +1,22 @@
+// Огледало извештаја у GitHub репозиторијуму (приватном): izvestaji/<дан>/<id>.json
+async function ghPut(env, id, body) {
+  const day = id.slice(0, 10);
+  const path = "izvestaji/" + day + "/" + id + ".json";
+  const b64 = btoa(unescape(encodeURIComponent(body)));
+  return fetch("https://api.github.com/repos/" + env.GH_REPO + "/contents/" + path, {
+    method: "PUT",
+    headers: {
+      "Authorization": "Bearer " + env.GH_TOKEN,
+      "Accept": "application/vnd.github+json",
+      "User-Agent": "rodoslov-izvestaji",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ message: "izvestaj " + id, content: b64 })
+  });
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const cors = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
@@ -20,6 +37,7 @@ export default {
       if (body.length > 2000000) return text("preveliko", 413);
       const id = new Date().toISOString().replace(/[:.]/g, "-") + "-" + Math.random().toString(36).slice(2, 6);
       await env.IZVESTAJI.put(id, body, { expirationTtl: 15552000 });
+      if (env.GH_TOKEN && env.GH_REPO) ctx.waitUntil(ghPut(env, id, body).catch(() => {}));
       return json({ ok: true, id: id });
     }
 
@@ -60,6 +78,11 @@ export default {
     if (url.pathname === "/glas/stanje") {
       const day = new Date().toISOString().slice(0, 10);
       return json({ dan: day, znakova: parseInt((await env.IZVESTAJI.get("glas:" + day)) || "0", 10) });
+    }
+    if (url.pathname === "/gh/proba") {
+      if (!env.GH_TOKEN || !env.GH_REPO) return json({ ok: false, razlog: "nema GH_TOKEN ili GH_REPO" });
+      try { const r = await ghPut(env, "proba-" + Date.now(), JSON.stringify({ proba: true, kada: new Date().toISOString() })); return json({ ok: r.ok, status: r.status, tekst: r.ok ? "" : (await r.text()).slice(0, 300) }); }
+      catch (e) { return json({ ok: false, razlog: String(e) }); }
     }
     if (url.pathname === "/spisak") {
       const l = await env.IZVESTAJI.list({ limit: 1000 });
