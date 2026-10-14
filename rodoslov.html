@@ -601,6 +601,11 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
     <p style="margin:0;color:var(--muted);font-size:.95em">Кад кликнете „Да, покажите ми“, укључиће се разговор гласом.</p>
   </div>
   <div class="df"><button id="nvKasnije">Касније</button><button id="nvNe">Не треба, сналазим се</button><button id="nvDa" class="primary">Да, покажите ми</button></div></dialog>
+<dialog id="updDlg" style="max-width:620px">
+  <h2 style="margin-top:0">Стигла је нова верзија програма</h2>
+  <div id="updDlgText" style="font-size:1.1em;line-height:1.5;margin-bottom:12px"></div>
+  <p style="margin:0 0 10px;color:var(--muted)">Инсталација траје око минут; ништа од ваших података се не губи. Програм се после сам поново отвори.</p>
+  <div class="df"><button id="updDlgLater">Касније</button><button id="updDlgGo" class="primary" style="background:#2f6b3a;border-color:#2f6b3a;font-size:1.15em;padding:12px 26px">⬇ Инсталирај сада</button></div></dialog>
 <dialog id="novi2Dlg" style="max-width:640px">
   <h2 style="margin-top:0">Шта је ново у програму</h2>
   <div style="font-size:1.08em;line-height:1.5">
@@ -641,7 +646,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.14.3';
+const APP_VERSION='2026.10.14.4';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -756,7 +761,7 @@ async function checkPoruka(){ try{ const r=await fetch('https://api.github.com/r
   if(conv.on){ conv.inject=j.tekst; conv.injectMsg=true; } else { addMsg('ai',esc(j.tekst)); speak(j.tekst); } sendReportSoon(); }catch(e){} }
 async function checkUpdate(manual=false){
   try{ const r=await fetch(UPDATE_BASE+'verzija.json?t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); const j=await r.json();
-    if(j.verzija && verCmp(j.verzija,APP_VERSION)>0){ if(updInfo&&updInfo.verzija===j.verzija) return true; updInfo=j; $('#updText').innerHTML=`<b>Стигла је нова верзија програма.</b> ${esc(j.novo||'')}`; $('#updBanner').style.display='flex'; return true; }
+    if(j.verzija && verCmp(j.verzija,APP_VERSION)>0){ if(updInfo&&updInfo.verzija===j.verzija) return true; updInfo=j; $('#updText').innerHTML=`<b>Стигла је нова верзија програма.</b> ${esc(j.novo||'')}`; $('#updBanner').style.display='flex'; try{ if(!conv.on && !document.querySelector('dialog[open]') && !updInfo.dlg){ updInfo.dlg=true; $('#updDlgText').innerHTML=esc(j.zasto||j.novo||''); $('#updDlg').showModal(); logEv('ажурирање-прозор',{v:j.verzija}); } }catch(e){} return true; }
     if(manual) toast('Имате најновију верзију програма ('+APP_VERSION+').',4000);
   }catch(e){ console.info('провера верзије:',e); if(manual) toast('Провера није успела (нема интернета или адреса није доступна).',5000); }
   return false; }
@@ -1877,7 +1882,7 @@ const UVOD_DONE=/(то је све|то је то|нема више|ништа �
 const UVOD_NEXT=/^(даље|да|добро|може|видим|следећ|важи|ок|океј|у реду|јесте|хајде|ајде|идемо|разумем|јасно|видео сам|погледао сам|пређи|настави)/;
 /* ---- диктат нових података */
 function redPl(n){ const d=n%10,h=n%100; return d===1&&h!==11?' ред':(d>=2&&d<=4&&(h<12||h>14))?' реда':' редова'; }
-function diktatPonudaTekst(bezPozdrava){ let n=0; try{ n=PV.B&&PV.B.kind==='book'?PV.B.pages.length:0; }catch(e){} return (bezPozdrava?'':'Добар дан. ')+'Борис ми је рекао да сте одштампали првих девет страна и да је добро — то ме радује. Рекао је и да ће на десетој и једанаестој страни бити доста измена, па сам отворио десету страну да на њој објасним. Имате две могућности. За мање исправке — погрешно име или година — кликнете на ту особу у књизи, па на „Исправи ручно“ или „Издиктирај измену“. За веће допуне, нове податке које сте прикупили, најлакше је да ми све издиктирате: ја записујем ред по ред, на крају то сачувамо као фајл за Дописе — по жељи и лекторисано по правопису — а онда ја сам унесем у родослов, а ви проверите. Шта желите: да одмах почнемо диктат, или да вам прво покажем једну исправку кликом на особу?'; }
+function diktatPonudaTekst(bezPozdrava){ let n=0; try{ n=PV.B&&PV.B.kind==='book'?PV.B.pages.length:0; }catch(e){} return (bezPozdrava?'':'Добар дан. ')+'Видим да сте одштампали првих девет страна и да је испало добро — то ме радује. Пошто ће на десетој и једанаестој страни бити доста измена, отворио сам десету страну да на њој објасним. Имате две могућности. За мање исправке — погрешно име или година — кликнете на ту особу у књизи, па на „Исправи ручно“ или „Издиктирај измену“. За веће допуне, нове податке које сте прикупили, најлакше је да ми све издиктирате: ја записујем ред по ред, на крају то сачувамо као фајл за Дописе — по жељи и лекторисано по правопису — а онда ја сам унесем у родослов, а ви проверите. Шта желите: да одмах почнемо диктат, или да вам прво покажем једну исправку кликом на особу?'; }
 function diktatStart(){ conv.diktat={on:true, redovi:[]}; logEv('диктат',{faza:'почетак'}); return 'Добро, издиктирајте ми нове податке. Говорите полако, реченицу по реченицу — име и презиме, чији је син или кћерка, година, брак, деца. После сваке реченице ја кажем „записано“ и чекам следећу. Ако погрешите, реците „обриши последње“; ако хоћете да чујете шта сам записао, реците „прочитај“. Кад завршите, реците „крај диктата“. Изволите.'; }
 function diktatHear(text){ const d=conv.diktat; if(!d||!d.on) return null; const t=norm(text).replace(/[.,!?…;:"„“]/g,' ').replace(/\s+/g,' ').trim(); const words=t?t.split(' ').length:0; if(!t) return 'Нисам чуо. Поновите, молим вас.';
   if(/^(крај|готово|завршио сам|завршили смо|то је све|крај диктата|доста|то би било све)/.test(t)&&words<=4) return diktatKraj();
@@ -2440,6 +2445,7 @@ function init(){
   $('#paSa').onclick=()=>paGo(true); $('#paBez').onclick=()=>paGo(false); $('#paCancel').onclick=()=>$('#printAllDlg').close(); $('#paOk').onclick=()=>{ $('#printAllDlg').close(); D.najave.push('2026-10-13-stampa-dugme'); commit(); saveQuiet(); logEv('обавештење',{id:'штампа-дугме',razumem:true}); setTimeout(()=>{ if(!D.najave.includes('2026-10-13-ispravi')){ const z=D.persons.find(x=>x.ime==='Обрен'&&x.rodj==='1914')||D.persons[0]; fixOpen(z.id,true); } },400); };
   $('#printAllBtn').onclick=()=>{ printAllOpen(false); return; logEv('штампа-дугме',{format:post().knjiga.format, slova:post().knjiga.slova}); const m='Штампам целу књигу: '+({A5:'мала књига A5',knjizica:'књижица (листови савијени на пола)',A4:'велики лист A4'}[post().knjiga.format]||post().knjiga.format)+'. Укључите штампач и проверите папир. У прозору који се отвори, горе код „Odredište“ треба да стоји име штампача, па кликните плаво дугме „Štampaj“.'; addMsg('ai',esc(m)); if(!conv.on&&!settings.tiho) speak(m); showView('textView'); setTimeout(()=>printBook(D.koren, textMode||'s'), conv.on?200:1800); };
   $$('#quick button').forEach(b=>{ b.onclick=async()=>{ const q=b.dataset.q; addMsg('me',esc(q)); logEv('клик',{q}); if(conv.on){ conv.click=q; if(conv.stopListen) conv.stopListen(); } else { const r=await handleUtterance(q,false); if(r&&!settings.tiho) speak(r); } }; }); $('#wordPick').onclick=()=>pickWordFile().catch(()=>{}); $('#wordForget').onclick=async()=>{ try{ await idb.set('word',null); }catch(e){} fillWordUI(); }; $('#reportBtn').onclick=saveReport; $('#reportSend').onclick=async()=>{ D.izvPoslatiZelje=true; toast((await sendReport())?'Извештај је послат.':'Слање није успело (нема адресе или мреже).',4000); }; fillWordUI(); $('#talkBtn').onclick=()=>startConversation(); bindPreview();
+  $('#updDlgGo').onclick=()=>{ $('#updDlg').close(); installUpdate(); }; $('#updDlgLater').onclick=()=>{ $('#updDlg').close(); logEv('ажурирање-касније',{}); };
   $('#updInstall').onclick=installUpdate; $('#updLater').onclick=()=>{ $('#updBanner').style.display='none'; };
   if(knjigaMode()){ try{ kInit(); showView('knjigaView'); }catch(e){ console.warn('knjiga',e); } }
   setTimeout(()=>{ if(navigator.onLine!==false) checkUpdate(false); },1500);
