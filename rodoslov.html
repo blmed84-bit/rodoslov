@@ -653,7 +653,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.16.5';
+const APP_VERSION='2026.10.16.6';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -1863,7 +1863,7 @@ async function handleUtterance(text, voice){
   if(!j){ let pm=''; try{ pm=partialMsg(out)||''; }catch(e){} if(!pm&&/^\s*\{/.test(out)) pm='Извините, нисам добро завршио одговор. Реците ми још једном, молим вас.'; const o2=pm||out; addMsg('ai',esc(o2)); if(sp) sp.finish(o2); return o2; }
   if(sp) sp.finish(rawMsg);
   const now=ops.filter(o=>IMMEDIATE.has(o['оп'])&&o['оп']!=='погледај'&&o['оп']!=='провери'); let conf=ops.filter(o=>!IMMEDIATE.has(o['оп'])); const veze=conf.some(o=>o['оп']==='додај'); if(veze) conf=convLink(conf);
-  const pitam=/\?/.test(msg) || conf.some(o=>o['оп']==='обриши'); const odmah=conf.length && !pitam && conf.every(o=>['додај','измени','брак','уклони_реченицу'].includes(o['оп'])) && conf.length<=40;
+  const pitam=/(да ли (да|то|га|је|их|сад|одмах)|хоћете ли|желите ли|може ли да|да (упишем|додам|обришем|променим|уписујем)\?|на ко(га|ју) мислите|кој[аиуе]г?\s[^.?]*\?|или [^.?]*\?)/i.test(msg) || conf.some(o=>o['оп']==='обриши'); const vecDa=YES.test(norm(text))&&text.trim().split(/\s+/).length<=4; const odmah=conf.length && (!pitam||vecDa) && conf.every(o=>['додај','измени','брак','уклони_реченицу'].includes(o['оп'])||(vecDa&&o['оп']==='обриши')) && conf.length<=40;
   const d=addMsg('ai',esc(msg));
   after=after.concat(runImmediate(now));
   if(conf.length && (simpleOps(conf)||odmah)){ if(veze) describeOpW.cur=conf; const box=document.createElement('div'); box.className='ops'; box.innerHTML=`<div><b>Уписано:</b></div><ul>${conf.map(o=>`<li>${veze?describeOpW(o):describeOp(o)}</li>`).join('')}</ul>`; d.appendChild(box); const pend={ops:conf, box:null, linked:veze}; after.push(async()=>{ const rr=await confirmPending(pend); logEv('ауто-упис',{n:conf.length}); try{ const extra=String(rr).split(/(?<=[.!?])\s+/).filter(x=>/^(Напомена:|Нисам обрисао:)|(је већ био|су већ били) у родослову/.test(x)).join(' '); if(extra){ addMsg('ai',esc(extra)); if(conv.on){ talkState('speak','Говорим…'); await say(extra); } } }catch(e){} if(/да ли да упишем|да ли да то упишем|да упишем/i.test(msg)){ const m2='Уписао сам одмах. Ако нисам добро разумео, реците „врати“.'; addMsg('ai',esc(m2)); if(conv.on){ talkState('speak','Говорим…'); await say(m2); } } }); }
