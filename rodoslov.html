@@ -653,7 +653,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.16.7';
+const APP_VERSION='2026.10.16.8';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -1732,7 +1732,7 @@ function describeOp(op){ const nm=id=>{ const p=P.get(id); return p?fullName(p):
   return esc(JSON.stringify(op)); }
 function cistaGodina(v){ let t=latToCyr(String(v??'')).trim(); t=t.replace(/\s*(год\.|године|godine)\s*$/i,'').replace(/^(\d{4})\.$/,'$1').replace(/^(\d{4})\.\s*[–-]\s*(\d{4})\.?$/,'$1–$2').trim(); return t; }
 function applyOps(ops){ pushHistory(); const made=[]; if(ops.length) logEv('измена',{ops:ops.map(o=>o['оп']+(o.ime?':'+o.ime+' '+(o.prezime||''):o.id?':'+o.id:'')).join(', ').slice(0,300)});
-  for(const op of ops){ if(op['оп']==='додај'){ const dupl=D.persons.find(x=>norm(x.ime||'')===norm(latToCyr(op.ime||''))&&norm(x.prezime||'')===norm(latToCyr(op.prezime||''))&&((op.otac&&P.has(op.otac)&&x.otac===op.otac)||(op.majka&&P.has(op.majka)&&x.majka===op.majka)||(op.brak&&P.has(op.brak.sa)&&spouses(x.id).some(q=>q.s.id===op.brak.sa)))); if(dupl){ applyOps.dupli=(applyOps.dupli||[]).concat(fullName(dupl)); logEv('дупло-одбијено',{id:dupl.id}); for(const [k,v] of Object.entries(op)){ if(['rodj','smrt','nadimak','mesto','nap'].includes(k)&&v&&!dupl[k]) dupl[k]=latToCyr(String(v)).trim(); } made.push(dupl.id); continue; }
+  for(const op of ops){ if(op['оп']==='додај'){ const dupl=D.persons.find(x=>norm(x.ime||'')===norm(latToCyr(op.ime||''))&&norm(x.prezime||'')===norm(latToCyr(op.prezime||''))&&(((op.otac&&P.has(op.otac)&&x.otac===op.otac)||(op.majka&&P.has(op.majka)&&x.majka===op.majka))&&!(op.otac&&P.has(op.otac)&&x.otac&&x.otac!==op.otac)&&!(op.majka&&P.has(op.majka)&&x.majka&&x.majka!==op.majka)||(op.brak&&P.has(op.brak.sa)&&spouses(x.id).some(q=>q.s.id===op.brak.sa)))); if(dupl){ applyOps.dupli=(applyOps.dupli||[]).concat(fullName(dupl)); logEv('дупло-одбијено',{id:dupl.id}); for(const [k,v] of Object.entries(op)){ if(['rodj','smrt','nadimak','mesto','nap'].includes(k)&&v&&!dupl[k]) dupl[k]=latToCyr(String(v)).trim(); } made.push(dupl.id); continue; }
       const c={id:newId('p'), ime:latToCyr(op.ime||''), prezime:latToCyr(op.prezime||''), pol:op.pol==='ж'?'ж':'м', rodj:cistaGodina(op.rodj||''), smrt:cistaGodina(op.smrt||''), nadimak:op.nadimak||'', mesto:op.mesto||'', nap:op.nap||'', otac:P.has(op.otac)?op.otac:null, majka:P.has(op.majka)?op.majka:null}; D.persons.push(c); index(); made.push(c.id);
       if(op.brak&&P.has(op.brak.sa)) { D.marriages.push({id:newId('b'), a:op.brak.sa, b:c.id, red:+op.brak.red||((MAR.get(op.brak.sa)||[]).length+1), nap:''}); index(); } }
     else if(op['оп']==='измени'&&P.has(op.id)){ const p=P.get(op.id); for(const [k,v] of Object.entries(op.polja||{})){ if(['ime','prezime','nadimak','pol','rodj','smrt','mesto','nap','gen','pos','brakTekst'].includes(k)) p[k]=(k==='rodj'||k==='smrt')?cistaGodina(v):latToCyr(String(v??'')).trim(); else if((k==='otac'||k==='majka')) p[k]=P.has(v)?v:null; else if(k==='prov') p.prov=!!v; } }
