@@ -653,7 +653,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.14.6';
+const APP_VERSION='2026.10.16.1';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -1520,21 +1520,38 @@ async function saveReport(){ const r={verzija:APP_VERSION, kada:stamp(), podesav
 
 /* ============================================================ Claude */
 function modelFallback(model, status, t){ const m=model||settings.claudeModel; if(/fable/.test(m) && (status===404||status===400||status===403) && /model|not found|permission|access/i.test(t||'')){ logEv('модел-повратак',{sa:m, x:String(t||'').slice(0,120)}); settings.claudeModel='claude-opus-5-5'; try{ localStorage.setItem(LS_SET,JSON.stringify(settings)); }catch(e){} return 'claude-opus-5-5'; } return null; }
+function cachePrep(system, messages){ const mode=settings.cacheMode||'ttl';
+  let sys=Array.isArray(system)?system.map(b=>Object.assign({},b)):system; let dyn=null;
+  if(Array.isArray(sys)){ const i=sys.findIndex(b=>b._dyn); const last=messages[messages.length-1];
+    if(i>=0 && last && last.role==='user' && mode!=='plain'){ dyn=sys[i].text; sys.splice(i,1); }
+    sys=sys.map((b,k)=>{ const o={type:b.type,text:b.text}; if(b.cache_control){ o.cache_control={type:'ephemeral'}; if(mode!=='plain' && k<2) o.cache_control.ttl='1h'; } return o; }).filter(b=>b.text); }
+  let msgs=messages;
+  if(mode!=='plain' && messages.length>=3){ msgs=messages.map(m=>({role:m.role, content:m.content}));
+    // кеш на последњем одговору помоћника пре нове поруке (префикс остаје исти и у следећем кругу)
+    let j=msgs.length-2; while(j>=0 && msgs[j].role!=='assistant') j--;
+    if(j>=0){ const m=msgs[j]; const arr=typeof m.content==='string'?[{type:'text',text:m.content}]:m.content.map(c=>Object.assign({},c)); if(arr.length&&arr[arr.length-1].text!==''){ arr[arr.length-1]=Object.assign({},arr[arr.length-1],{cache_control:{type:'ephemeral'}}); m.content=arr; } } }
+  if(dyn){ if(msgs===messages) msgs=messages.map(m=>({role:m.role, content:m.content})); const L=msgs[msgs.length-1]; const parts=typeof L.content==='string'?[{type:'text',text:L.content}]:L.content.slice(); parts.unshift({type:'text',text:'[КОНТЕКСТ ПРОГРАМА ЗА ОВАЈ КРУГ — није реч корисника]\n'+dyn}); L.content=parts; }
+  else if(Array.isArray(sys)) sys=sys; 
+  return {sys, msgs}; }
+function cacheHeaders(){ const h={'Content-Type':'application/json','x-api-key':settings.claude,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}; if(settings.cacheMode==='ttlbeta') h['anthropic-beta']='extended-cache-ttl-2025-04-11'; return h; }
+function cacheDowngrade(status, t){ if(status!==400) return false; if(!/ttl|cache_control|cache control|extra inputs|beta/i.test(t||'')) return false; const m=settings.cacheMode||'ttl'; settings.cacheMode=m==='ttl'?'ttlbeta':'plain'; try{ localStorage.setItem(LS_SET,JSON.stringify(settings)); }catch(e){} logEv('кеш-режим',{sa:m, na:settings.cacheMode, x:String(t||'').slice(0,120)}); return true; }
+function cacheStat(u){ if(!u) return; try{ logEv('кеш',{i:u.input_tokens||0, r:u.cache_read_input_tokens||0, w:u.cache_creation_input_tokens||0}); }catch(e){} }
 async function claude(system, messages, maxTokens=2000, model){
   if(!settings.claude) throw new Error('Није уписан Claude API кључ (⚙ Подешавања).'); if(model&&/fable/.test(model)&&!/fable/.test(settings.claudeModel)) model=settings.claudeModel;
-  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':settings.claude,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:model||settings.claudeModel, max_tokens:maxTokens, system, messages})});
-  if(!r.ok){ let t=''; try{ t=(await r.json()).error?.message||''; }catch(e){} const fb=modelFallback(model, r.status, t); if(fb) return claude(system, messages, maxTokens, fb); throw new Error('Claude '+r.status+' '+t); }
-  const j=await r.json(); return (j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join(''); }
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:cacheHeaders(),
+    body:(()=>{ const P_=cachePrep(system, messages); return JSON.stringify({model:model||settings.claudeModel, max_tokens:maxTokens, system:P_.sys, messages:P_.msgs}); })()});
+  if(!r.ok){ let t=''; try{ t=(await r.json()).error?.message||''; }catch(e){} if(cacheDowngrade(r.status,t)) return claude(system, messages, maxTokens, model); const fb=modelFallback(model, r.status, t); if(fb) return claude(system, messages, maxTokens, fb); throw new Error('Claude '+r.status+' '+t); }
+  const j=await r.json(); cacheStat(j.usage); return (j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join(''); }
 async function claudeStream(system, messages, maxTokens, onText, model){
   if(!settings.claude) throw new Error('Није уписан Claude API кључ (⚙ Подешавања).'); if(model&&/fable/.test(model)&&!/fable/.test(settings.claudeModel)) model=settings.claudeModel;
-  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':settings.claude,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:model||settings.claudeModel, max_tokens:maxTokens, system, messages, stream:true})});
-  if(!r.ok){ let t=''; try{ t=(await r.json()).error?.message||''; }catch(e){} const fb=modelFallback(model, r.status, t); if(fb) return claudeStream(system, messages, maxTokens, onText, fb); throw new Error('Claude '+r.status+' '+t); }
-  const ct=(r.headers.get('content-type')||''); if(!/event-stream/.test(ct)||!r.body){ const j=await r.json(); const out=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join(''); try{ onText&&onText(out); }catch(e){} return out; }
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:cacheHeaders(),
+    body:(()=>{ const P_=cachePrep(system, messages); return JSON.stringify({model:model||settings.claudeModel, max_tokens:maxTokens, system:P_.sys, messages:P_.msgs, stream:true}); })()});
+  if(!r.ok){ let t=''; try{ t=(await r.json()).error?.message||''; }catch(e){} if(cacheDowngrade(r.status,t)) return claudeStream(system, messages, maxTokens, onText, model); const fb=modelFallback(model, r.status, t); if(fb) return claudeStream(system, messages, maxTokens, onText, fb); throw new Error('Claude '+r.status+' '+t); }
+  const ct=(r.headers.get('content-type')||''); if(!/event-stream/.test(ct)||!r.body){ const j=await r.json(); cacheStat(j.usage); const out=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join(''); try{ onText&&onText(out); }catch(e){} return out; }
   const rd=r.body.getReader(); const dec=new TextDecoder(); let buf='', out='';
   while(true){ const {done,value}=await rd.read(); if(done) break; buf+=dec.decode(value,{stream:true}); let i;
     while((i=buf.indexOf('\n'))>=0){ const line=buf.slice(0,i).trim(); buf=buf.slice(i+1); if(!line.startsWith('data:')) continue; let ev; try{ ev=JSON.parse(line.slice(5)); }catch(e){ continue; }
+      if(ev.type==='message_start'&&ev.message) cacheStat(ev.message.usage);
       if(ev.type==='content_block_delta'&&ev.delta&&ev.delta.type==='text_delta'){ out+=ev.delta.text; try{ onText&&onText(out); }catch(e){ console.warn(e); } }
       else if(ev.type==='error') throw new Error('Claude '+((ev.error&&ev.error.message)||'')); } }
   return out; }
@@ -1662,7 +1679,8 @@ function aiSystem(){ const DB=dataBlocks(); return [
 
 ${UPUTSTVO}`},
  {type:'text', text:`ПОДАЦИ РОДОСЛОВА (ред: id|име „надимак“ презиме|пол|године|о:отац|м:мајка|бр:бракови(редни)|место|напомена):\n${DB.snap}`, cache_control:{type:'ephemeral'}},
- {type:'text', text:`${DB.delta}${conv.fokus&&P.has(conv.fokus)?'ИЗАБРАНА ОСОБА (о њој корисник говори кад не каже друго име; „стави годину рођења“ итд. односи се на њу): '+personLine(P.get(conv.fokus))+'. Деца: '+children(conv.fokus).map(c=>c.id+' '+c.ime).join(', ')+'. ':''}${conv.nova&&conv.nova.faza==='roditelj'?'КОРИСНИК ДОДАЈЕ НОВУ ОСОБУ „'+conv.nova.ime+'“ (нема је у родослову). Из онога што сада каже (чији је син/кћи, или чија супруга) предложи измену „додај“ са тачним родитељима или браком и питај „Да ли да упишем?“. Ако није јасно ко је родитељ (више особа истог имена), питај. ':''}${bookMapText()}${uvodContext()}${(Array.isArray(D.izmenePrograma)&&D.izmenePrograma.length)?'ИЗМЕНЕ ПРОГРАМА УРАЂЕНЕ ПО ЖЕЉАМА КОРИСНИКА (ажурирање програма — то нису измене података; ако корисник пита где су измене, објасни ово и понуди да отвориш преглед књиге на одговарајућој страни, нпр. трећа страна): '+D.izmenePrograma.map(x=>x.datum.slice(0,16).replace('T',' ')+' — '+x.tekst).join(' | ')+'. ':''}${wzContext()} ТРЕНУТНА ПОДЕШАВАЊА: ${JSON.stringify(post())}; tiho=${!!settings.tiho}${settings.tiho?' (ТИХИ РАД ЈЕ УКЉУЧЕН — кратко, за читање)':''}. ${previewInfo()} НЕПОВЕЗАНЕ ОСОБЕ (нису у стаблу): ${(u=>u.length?u.slice(0,40).map(p=>p.id+' '+shortName(p)+(yrs(p)?' ('+yrs(p)+')':'')).join('; ')+(u.length>40?' …и још '+(u.length-40):''):'нема')(unconnected())}. Величина слова у програму: ${({'17':'mala','19':'obicna','22':'velika'})[String(settings.fs)]||'obicna'}. Сада је отворен део: ${({personsView:'Особе',treeView:'Стабло',textView:'Текст',aiView:'Помоћник'})[($$('.view.active')[0]||{}).id]||''}.`} ]; }
+ {type:'text', cache_control:{type:'ephemeral'}, text:(bookMapText()||'(мапа страна још није спремна)')},
+ {type:'text', _dyn:true, text:`${DB.delta}${conv.fokus&&P.has(conv.fokus)?'ИЗАБРАНА ОСОБА (о њој корисник говори кад не каже друго име; „стави годину рођења“ итд. односи се на њу): '+personLine(P.get(conv.fokus))+'. Деца: '+children(conv.fokus).map(c=>c.id+' '+c.ime).join(', ')+'. ':''}${conv.nova&&conv.nova.faza==='roditelj'?'КОРИСНИК ДОДАЈЕ НОВУ ОСОБУ „'+conv.nova.ime+'“ (нема је у родослову). Из онога што сада каже (чији је син/кћи, или чија супруга) предложи измену „додај“ са тачним родитељима или браком и питај „Да ли да упишем?“. Ако није јасно ко је родитељ (више особа истог имена), питај. ':''}${uvodContext()}${(Array.isArray(D.izmenePrograma)&&D.izmenePrograma.length)?'ИЗМЕНЕ ПРОГРАМА УРАЂЕНЕ ПО ЖЕЉАМА КОРИСНИКА (ажурирање програма — то нису измене података; ако корисник пита где су измене, објасни ово и понуди да отвориш преглед књиге на одговарајућој страни, нпр. трећа страна): '+D.izmenePrograma.map(x=>x.datum.slice(0,16).replace('T',' ')+' — '+x.tekst).join(' | ')+'. ':''}${wzContext()} ТРЕНУТНА ПОДЕШАВАЊА: ${JSON.stringify(post())}; tiho=${!!settings.tiho}${settings.tiho?' (ТИХИ РАД ЈЕ УКЉУЧЕН — кратко, за читање)':''}. ${previewInfo()} НЕПОВЕЗАНЕ ОСОБЕ (нису у стаблу): ${(u=>u.length?u.slice(0,40).map(p=>p.id+' '+shortName(p)+(yrs(p)?' ('+yrs(p)+')':'')).join('; ')+(u.length>40?' …и још '+(u.length-40):''):'нема')(unconnected())}. Величина слова у програму: ${({'17':'mala','19':'obicna','22':'velika'})[String(settings.fs)]||'obicna'}. Сада је отворен део: ${({personsView:'Особе',treeView:'Стабло',textView:'Текст',aiView:'Помоћник'})[($$('.view.active')[0]||{}).id]||''}.`} ]; }
 let lastLat=0;
 function logConv(k, html){ if(!Array.isArray(D.dnevnik)) D.dnevnik=[]; const x=String(html).replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').trim(); if(!x) return; const e={t:stamp(), k, x:x.slice(0,1500)}; if(k==='п'&&lastLat){ e.ms=lastLat; lastLat=0; } if(k==='п'||['штампа','ажурирање','обавештење','уписано','измена','диктат','ворд','грешка','старт','крај','после-ажурирања','инсталација-гласом'].includes(k)) sendReportSoon(); if(k==='о'&&conv.on&&conv.slus){ e.slus=conv.slus; conv.slus=0; if(conv.stt){ e.stt=conv.stt; conv.stt=0; } } D.dnevnik.push(e); if(D.dnevnik.length>3000) D.dnevnik=D.dnevnik.slice(-2500); dnevnikNew=true; try{ localStorage.setItem(LS_DATA, JSON.stringify(D)); }catch(err){} }
 let dnevnikNew=false;
@@ -2360,7 +2378,8 @@ function kInit(){ KV.on=true; document.body.classList.add('knjiga');
   $('#kSearchIn').addEventListener('keydown',e=>{ if(e.key==='Enter') kSearch(e.target.value); }); $('#kSearchIn').addEventListener('change',()=>{ if($('#kSearchIn').value.trim().length>2) kSearch($('#kSearchIn').value); });
   $('#kPopX').onclick=kPopHide; $('#aiDrawerX').onclick=aiDrawerClose; $('#hdrAiBtn').onclick=()=>{ aiDrawerOpen(); if(!conv.on) startConversation(); };
   $('#kDiktat').onclick=()=>{ aiDrawerOpen(); const m=diktatStart(); if(conv.on){ addMsg('ai',esc(m)); conv.inject=m; if(conv.stopListen) conv.stopListen(); } else startConversation(m); };
-  window.kZoom=function(d){ PV.zoom=Math.max(1, Math.min(4, +((PV.zoom||1)+d).toFixed(2))); if(d===0) PV.zoom=1; renderPreview(false); logEv('увећање',{z:PV.zoom}); return PV.zoom; };
+  window.kZoom=function(d){ PV.zoom=Math.max(1, Math.min(4, +((PV.zoom||1)+d).toFixed(2))); if(d===0) PV.zoom=1; try{ localStorage.setItem('rodoslov.zoom', String(PV.zoom)); }catch(e){} renderPreview(false); logEv('увећање',{z:PV.zoom}); return PV.zoom; };
+  try{ const z0=+localStorage.getItem('rodoslov.zoom'); if(z0>1&&z0<=4) PV.zoom=z0; }catch(e){}
   $('#kZoomIn').onclick=()=>kZoom(0.5); $('#kZoomOut').onclick=()=>kZoom(-0.5);
   $('#prevFirst').onclick=()=>{ if(PV.B){ PV.page=0; renderPreview(false); kRenderLeft(); } };
   $('#kPagePrint').onclick=()=>{ if(PV.B&&PV.kind==='book'){ const pg=PV.page+1; logEv('штампа',{sta:'страна-дугме',str:pg}); toast('Штампам страну '+pg+'. У прозору који се отвори кликните плаво дугме „Štampaj“.',6000); printBookPages(PV.root, PV.mode, pg, pg); } };
