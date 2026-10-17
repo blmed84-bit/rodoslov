@@ -654,7 +654,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.17.1';
+const APP_VERSION='2026.10.17.2';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -1855,7 +1855,7 @@ async function handleUtterance(text, voice){
       j=parseJson(out); if(!j) break; rawMsg=String(j['порука']||''); msg=sanitizeMsg(rawMsg); ops=Array.isArray(j['измене'])?j['измене']:[];
       const look=ops.filter(o=>o['оп']==='погледај'||o['оп']==='провери'||o['оп']==='снимак');
       { const pis=ops.filter(o=>!IMMEDIATE.has(o['оп'])); const tvrdi=/(уписао сам|додао сам|исправио сам|обрисао сам|променио сам|уписано је|^\s*(уписујем|додајем|мењам|исправљам|бележим|уносим)\b)/i.test(rawMsg)&&!/(већ уписао|сам већ|већ сам|већ пише|већ стоји|да ли|реците|кажите|шта да|код кога|кога |коју |како се зове|па уписујем|па ћу|уписаћу|ништа нисам|нисам мењао|није мењано|није ништа|чим)/i.test(rawMsg);
-        if(tvrdi && !pis.length && !conv.pending && (conv.obecao||0)<2){ conv.obecao=(conv.obecao||0)+1; logEv('обећао-без-уписа',{x:rawMsg.slice(0,160)}); if(msg){ addMsg('ai',esc(msg)); if(sp) sp.finish(rawMsg); } if(sp){ sp.newRound(); talkState('think','Уписујем…'); }
+        if(tvrdi && rounds===0 && !pis.length && !conv.pending && (conv.obecao||0)<2){ conv.obecao=(conv.obecao||0)+1; logEv('обећао-без-уписа',{x:rawMsg.slice(0,160)}); if(msg){ addMsg('ai',esc(msg)); if(sp) sp.finish(rawMsg); } if(sp){ sp.newRound(); talkState('think','Уписујем…'); }
           chatHist.push({role:'user',content:'[програм: у поруци кажеш да уписујеш, али у „измене“ НЕМА ниједне измене — НИШТА није уписано. Пошаљи САДА у „измене“ све што си обећао, одједном: нове особе са привременим "id":"n1","n2"… и везама (otac/majka/brak.sa могу бити и n1, n2…), измене постојећих са правим id. „порука“ нека буде само кратко: „Уписао сам.“ и шта се где види у књизи. Не питај ништа.]'}); continue; }
         if(pis.length) conv.obecao=0; }
       if(look.length && rounds<2){ rounds++; after=after.concat(runImmediate(ops.filter(o=>IMMEDIATE.has(o['оп'])&&!look.includes(o)))); { const pis=ops.filter(o=>!IMMEDIATE.has(o['оп'])&&o['оп']!=='обриши'); if(pis.length){ try{ const pend={ops:convLink(pis), box:null, linked:true}; const rr=await confirmPending(pend); logEv('ауто-упис',{n:pis.length, razlog:'пре-провере'}); chatHist.push({role:'user',content:'[програм: измене из овог одговора су ИЗВЕДЕНЕ пре провере: '+String(rr).slice(0,300)+']'}); }catch(e){ logEv('грешка',{gde:'упис-пре-провере',x:String(e&&e.message||e)}); } } }
