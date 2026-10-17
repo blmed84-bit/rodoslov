@@ -654,7 +654,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.17.2';
+const APP_VERSION='2026.10.17.3';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -1670,7 +1670,7 @@ function aiSystem(){ const DB=dataBlocks(); return [
   (за дете упиши оба родитеља ако су позната; презиме детета = очево; за супругу девојачко презиме и „brak“ са мужем)
   ЦЕЛА ПОРОДИЦА ОДЈЕДНОМ: свака нова особа добија привремени "id":"n1","n2"…, и на њу се у ИСТОМ одговору могу везати други: нпр. син Сретко {"id":"n1",…,"otac":"p620","majka":"p986"}, његова супруга {"id":"n2",…,"brak":{"sa":"n1","red":1}}, њихова деца {"id":"n3",…,"otac":"n1","majka":"n2"}. Зато НИКАД не одлажи упис („кад се Сретко појави у родослову…“) — упиши све одмах. Супружници и деца се уписују као особе повезане браком и родитељима (тако се у књизи појаве као породица), а не само као напомена. Кориснику не говори о „посебним особама“.
 - {"оп":"измени","id":"...","polja":{"rodj":"1950","nap":"...", ...}}  (само поља која се мењају; могу и "prov": true/false = ознака „треба проверити“; "brakTekst": сопствена реченица која у књизи замењује „супруга X. Деца: Y“ — нпр. „из брака са Невеном Радовановић има сина Давида“ — користи кад корисник тражи да баш тако пише код одређене особе; празно = поново по правилу)
-- {"оп":"брак","a":"id","b":"id","red":1}
+- {"оп":"брак","a":"id","b":"id","red":1}  (ако брак између њих већ постоји, само му мења редни број — користи то кад треба да „први брак“ постане „други“)
 - {"оп":"обриши","id":"..."} (програм НЕ брише особу која има децу — тада питај корисника шта са децом)
 - {"оп":"уклони_реченицу","id":"...","sadrzi":"део реченице"} — из напомене уклања реченицу која садржи тај текст (кад корисник каже „избришите то што пише о…“)
 — одмах (без потврде):
@@ -1743,7 +1743,7 @@ function applyOps(ops){ pushHistory(); const made=[]; if(ops.length) logEv('из
       if(op.brak&&P.has(op.brak.sa)) { D.marriages.push({id:newId('b'), a:op.brak.sa, b:c.id, red:+op.brak.red||((MAR.get(op.brak.sa)||[]).length+1), nap:''}); index(); } }
     else if(op['оп']==='измени'&&P.has(op.id)){ const p=P.get(op.id); for(const [k,v] of Object.entries(op.polja||{})){ if(['ime','prezime','nadimak','pol','rodj','smrt','mesto','nap','gen','pos','brakTekst'].includes(k)) p[k]=(k==='rodj'||k==='smrt')?cistaGodina(v):latToCyr(String(v??'')).trim(); else if((k==='otac'||k==='majka')) p[k]=P.has(v)?v:null; else if(k==='prov') p.prov=!!v; } }
     else if(op['оп']==='уклони_реченицу'&&P.has(op.id)&&op.sadrzi){ const p=P.get(op.id); const k=op.polje||'nap'; p[k]=String(p[k]||'').split(/(?<=[.!?])\s+/).filter(x=>!x.includes(op.sadrzi)).join(' ').trim(); }
-    else if(op['оп']==='брак'&&P.has(op.a)&&P.has(op.b)){ D.marriages.push({id:newId('b'), a:op.a, b:op.b, red:+op.red||1, nap:op.nap||''}); index(); }
+    else if(op['оп']==='брак'&&P.has(op.a)&&P.has(op.b)){ const ex=D.marriages.filter(m=>(m.a===op.a&&m.b===op.b)||(m.a===op.b&&m.b===op.a)); if(ex.length){ const k=ex[0]; if(op.red) k.red=+op.red||k.red; if(op.nap) k.nap=op.nap; D.marriages=D.marriages.filter(m=>m===k||!ex.includes(m)); logEv('брак-измењен',{a:op.a,b:op.b,red:k.red,spojeno:ex.length}); } else D.marriages.push({id:newId('b'), a:op.a, b:op.b, red:+op.red||1, nap:op.nap||''}); index(); }
     else if(op['оп']==='обриши'&&P.has(op.id)&&(children(op.id).length||(isDescendant(op.id,D.koren)&&spouses(op.id).some(x=>children(x.s.id).length)))){ const nm=fullName(P.get(op.id)); logEv('брисање-одбијено',{id:op.id, deca:children(op.id).length}); toast('Нисам обрисао '+nm+' — има децу у родослову.',6000); applyOps.odbijeno=(applyOps.odbijeno||[]).concat(nm); }
     else if(op['оп']==='обриши'&&P.has(op.id)){ const id=op.id; D.persons=D.persons.filter(x=>x.id!==id); D.marriages=D.marriages.filter(m=>m.a!==id&&m.b!==id); for(const x of D.persons){ if(x.otac===id) x.otac=null; if(x.majka===id) x.majka=null; } index(); } }
   commit('Измене изведене'); renderList(); if(made.length) select(made[0]); return made; }
