@@ -654,7 +654,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.18.2';
+const APP_VERSION='2026.10.18.3';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -1317,7 +1317,7 @@ let BMAP=null;
 function bookMap(){ const key=(history.length)+'|'+(D.persons.length)+'|'+JSON.stringify(post().knjiga)+'|'+(D.koren||'')+'|'+(PV.on&&PV.kind==='book'&&PV.B?PV.mode+PV.root:'');
   if(BMAP&&BMAP.key===key) return BMAP; const B=(PV.on&&PV.kind==='book'&&PV.B&&PV.B.kind==='book')?PV.B:buildBook(D.koren,'s'); const list=[]; const seen=new Set();
   B.pages.forEach((pg,i)=>{ for(const ln of String(pg.text||'').split('\n')){ const m=ln.match(/^\s*\[наслов\]\s*(.+?)\s*$/); if(m){ const t=m[1].replace(/\s+/g,' '); if(/^(деца из|остала деца)/.test(t)) continue; if(!seen.has(t+'|'+(i+1))){ seen.add(t+'|'+(i+1)); list.push({t, str:i+1}); } } } });
-  BMAP={key, list, n:B.pages.length, ix:B.ixLen||0, toc:B.tocLen||0, pageOf:(pid)=>{ const q=P.get(pid); if(!q) return null; const nm=shortName(q); const i=B.pages.findIndex((pg,k)=>k>=2&&(pg.names||[]).includes(nm)); return i<0?null:i+1; }}; return BMAP; }
+  BMAP={key, list, n:B.pages.length, ix:B.ixLen||0, toc:B.tocLen||0, pageOf:(pid)=>{ const q=P.get(pid); if(!q) return null; let i=B.pages.findIndex((pg,k)=>k>=2&&(pg.pids||[]).includes(pid)); if(i<0){ const nm=shortName(q); i=B.pages.findIndex((pg,k)=>k>=2&&(pg.names||[]).includes(nm)); } return i<0?null:i+1; }}; return BMAP; }
 function pageByTitle(naslov){ if(!naslov) return null; const M=bookMap(); const n=norm(latToCyr(String(naslov))).replace(/[„“".,()]/g,'').replace(/\s+/g,' ').trim(); if(!n) return null;
   let best=null, bs=0; for(const e of M.list){ const et=norm(e.t).replace(/[„“".,()]/g,'').replace(/\s+/g,' ').trim(); let sc=0; if(et===n) sc=100; else { const w=n.split(' ').filter(x=>x.length>2); const hit=w.filter(x=>et.includes(x)).length; if(w.length&&hit>=Math.max(1,w.length-1)) sc=hit*10-Math.min(5,Math.abs(et.length-n.length)/4); } if(sc>bs){ bs=sc; best=e; } }
   return best?best.str:null; }
@@ -1808,7 +1808,7 @@ function runImmediate(ops){ let changed=false; const after=[];
     else if(k==='прикажи') showPerson(o.id, o['где']);
     else if(k==='покажи_дугме') highlight(o['дугме']);
     else if(k==='pdf') after.push(()=>makePdf(o));
-    else if(k==='преглед'){ const mode=o['приказ']==='пуно'?'p':(o['приказ']==='сажето'?'s':null); let pg=o['страна']||1; if(o['наслов']&&o['врста']!=='стабло'){ const q=pageByTitle(o['наслов']); if(q){ pg=q; logEv('страна-по-наслову',{naslov:String(o['наслов']),str:q}); } else logEv('страна-по-наслову',{naslov:String(o['наслов']),str:null}); } else if(o['id']&&P.has(o['id'])&&o['врста']!=='стабло'){ const q=bookMap().pageOf(o['id']); if(q) pg=q; } openPreview(pg, mode, o['корен'], o['врста']==='стабло'?'tree':'book'); }
+    else if(k==='преглед'){ const mode=o['приказ']==='пуно'?'p':(o['приказ']==='сажето'?'s':null); let pg=o['страна']||((PV.on&&PV.kind==='book'&&o['врста']!=='стабло')?PV.page+1:1); if(o['наслов']&&o['врста']!=='стабло'){ const q=pageByTitle(o['наслов']); if(q){ pg=q; logEv('страна-по-наслову',{naslov:String(o['наслов']),str:q}); } else logEv('страна-по-наслову',{naslov:String(o['наслов']),str:null}); } else if(o['id']&&P.has(o['id'])&&o['врста']!=='стабло'){ const q=bookMap().pageOf(o['id']); if(q) pg=q; } openPreview(pg, mode, o['корен'], o['врста']==='стабло'?'tree':'book'); }
     else if(k==='затвори_преглед') closePreview();
     else if(k==='научи_изговор') after.push(()=>learnPron(o['реч'], o['слог']));
     else if(k==='ворд') after.push(async()=>{ if(conv.uvod&&conv.uvod.korak==='provera'){ conv.uvod.faza='cita'; conv.uvod.ceka=true; } await sleep(1500); await importWord(true, !!o['цео']); });
@@ -2528,8 +2528,8 @@ function init(){
   document.addEventListener('click',()=>{ if(!wakeLock) keepAwake(); });
   setTimeout(sendReport, 4000);
   if(!settings.fableMigr){ settings.claudeModel='claude-fable-5-1'; settings.fableMigr=true; settings.opusMigr=true; settings.speedMigr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
-  if(!settings.opus55Migr){ if(/fable/.test(settings.claudeModel||'')) settings.claudeModel='claude-opus-5-5'; settings.opus55Migr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(!settings.speedMigr){ if(settings.claudeModel==='claude-sonnet-5-5') settings.claudeModel='claude-haiku-5-5'; settings.speedMigr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
+  if(!settings.opus55Migr){ if(/fable/.test(settings.claudeModel||'')) settings.claudeModel='claude-opus-5-5'; settings.opus55Migr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(!settings.nikolaMigr){ settings.voice='LmECtQKlHFHPX4psgBT1'; settings.ttsEngine='eleven'; settings.nikolaMigr=true; if(Array.isArray(settings.voices)&&!settings.voices.some(v=>v[1]==='LmECtQKlHFHPX4psgBT1')) settings.voices.unshift(['Никола (српски, мушки)','LmECtQKlHFHPX4psgBT1']); localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(settings.ttsModel==='eleven_multilingual_v2' && !settings.ttsMigrated){ settings.ttsModel='eleven_v3'; settings.ttsMigrated=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   loadData(); document.documentElement.style.setProperty('--fs',(settings.fs||19)+'px');
@@ -2562,7 +2562,7 @@ function init(){
   $('#fxOk').onclick=()=>{ const pid=$('#fixDlg').dataset.pid; const q=P.get(pid); if(!q) return; const nv={}; let ch=0; for(const k of ['ime','nadimak','prezime','mesto','rodj','smrt','nap']){ const v=latToCyr($('#fx_'+k).value.trim()); if((q[k]||'')!==v){ nv[k]=v; ch++; } }
     $('#fixDlg').close(); if(!ch){ toast('Ништа није промењено.'); return; } const pg0=PV.page; pushHistory(); Object.assign(q,nv); commit('Измене изведене'); renderList(); logEv('измена',{ops:'исправи-страна:'+pid+':'+Object.keys(nv).join(',')}); saveQuiet(); setTimeout(()=>{ if(PV.on&&PV.B&&PV.page!==pg0){ logEv('страна-скочила',{sa:pg0+1,na:PV.page+1}); PV.page=Math.min(pg0,PV.B.pages.length-1); renderPreview(false); kRenderLeft(); } },600);
     const m='Уписано: '+Object.entries(nv).map(([k,v])=>({ime:'име',nadimak:'надимак',prezime:'презиме',mesto:'место',rodj:'рођење',smrt:'смрт',nap:'напомена'})[k]+' → '+(v||'(обрисано)')).join('; ')+'. Књига је освежена.'; toast(m,5000); addMsg('ai',esc(m)); try{ chatHist.push({role:'user',content:'[програм: корисник је сам, кликом на особу у књизи, исправио '+fullName(q)+': '+JSON.stringify(nv)+']'},{role:'assistant',content:JSON.stringify({"порука":"Уписано.","измене":[]})}); }catch(e){}
-    if(PV.on&&PV.kind==='book'){ renderPreview(true); const pg=bookMap().pageOf(pid); if(pg){ PV.page=pg-1; renderPreview(false); } } if(KV.on) kRenderLeft(); };
+    if(PV.on&&PV.kind==='book'){ renderPreview(true); } if(KV.on) kRenderLeft(); };
   $('#prevStage').addEventListener('click', e=>{ if(KV.on) return; const el=e.target.closest('.bb.p[data-pid]'); if(el&&PV.on&&PV.kind==='book'){ fixOpen(el.dataset.pid,false); } });
   $('#paSa').onclick=()=>paGo(true); $('#paBez').onclick=()=>paGo(false); $('#paCancel').onclick=()=>$('#printAllDlg').close(); $('#paOk').onclick=()=>{ $('#printAllDlg').close(); D.najave.push('2026-10-13-stampa-dugme'); commit(); saveQuiet(); logEv('обавештење',{id:'штампа-дугме',razumem:true}); setTimeout(()=>{ if(!D.najave.includes('2026-10-13-ispravi')){ const z=D.persons.find(x=>x.ime==='Обрен'&&x.rodj==='1914')||D.persons[0]; fixOpen(z.id,true); } },400); };
   $('#printAllBtn').onclick=()=>{ printAllOpen(false); return; logEv('штампа-дугме',{format:post().knjiga.format, slova:post().knjiga.slova}); const m='Штампам целу књигу: '+({A5:'мала књига A5',knjizica:'књижица (листови савијени на пола)',A4:'велики лист A4'}[post().knjiga.format]||post().knjiga.format)+'. Укључите штампач и проверите папир. У прозору који се отвори, горе код „Odredište“ треба да стоји име штампача, па кликните плаво дугме „Štampaj“.'; addMsg('ai',esc(m)); if(!conv.on&&!settings.tiho) speak(m); showView('textView'); setTimeout(()=>printBook(D.koren, textMode||'s'), conv.on?200:1800); };
