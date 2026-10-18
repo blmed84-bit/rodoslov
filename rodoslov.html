@@ -535,7 +535,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
     <hr>
     <div class="setting"><label class="f">Диктирање (мотор за препознавање говора)</label>
       <select id="s_stt"><option value="chrome">Chrome (бесплатно, без кључа)</option><option value="scribe">ElevenLabs Scribe</option><option value="gemini">Google Gemini</option></select></div>
-    <div class="setting"><label class="f">Изглед</label><div class="help"><label><input type="checkbox" id="s_stariPrikaz" style="width:auto;transform:scale(1.4);margin-right:8px">Стари приказ (Особе, Стабло, Текст, Помоћник као странице)</label></div></div><div class="setting"><label class="f">Claude API кључ (лектура и помоћник)</label><input id="s_claude" type="password" placeholder="sk-ant-…"><div class="help">Модел: <input id="s_claudeModel" style="width:260px;display:inline-block" value="claude-fable-5-1"> <span class="help">(claude-fable-5-1 — најпаметнији, ако не ради програм сам пређе на claude-opus-5-5; claude-haiku-5-5 је најбржи; claude-sonnet-5-5 је пажљивији, али спорији)</span></div></div>
+    <div class="setting"><label class="f">Изглед</label><div class="help"><label><input type="checkbox" id="s_stariPrikaz" style="width:auto;transform:scale(1.4);margin-right:8px">Стари приказ (Особе, Стабло, Текст, Помоћник као странице)</label></div></div><div class="setting"><label class="f">Claude API кључ (лектура и помоћник)</label><input id="s_claude" type="password" placeholder="sk-ant-…"><div class="help">Модел: <input id="s_claudeModel" style="width:260px;display:inline-block" value="claude-opus-5-5"> <span class="help">(claude-opus-5-5 — подразумеван, одличан и знатно штедљивији; claude-fable-5-1 — најпаметнији, али најскупљи; claude-haiku-5-5 је најбржи; claude-sonnet-5-5 је пажљивији, али спорији)</span></div></div>
     <div class="setting"><label class="f">ElevenLabs API кључ (диктат Scribe и глас)</label><input id="s_eleven" type="password"></div>
     <div class="setting"><label class="f">Сервис за глас помоћнице</label>
       <select id="s_ttsEngine"><option value="eleven">ElevenLabs</option><option value="azure">Microsoft Azure Speech (српски гласови)</option></select></div>
@@ -654,7 +654,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.18.1';
+const APP_VERSION='2026.10.18.2';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -664,7 +664,7 @@ let P = new Map();     // id -> особа
 let KIDS = new Map();  // id -> [деца]
 let MAR = new Map();   // id -> [бракови]
 let selId = null, dirty = false, history = [];
-let settings = Object.assign({stt:'chrome', claude:'', claudeModel:'claude-fable-5-1', eleven:'', voice:'LmECtQKlHFHPX4psgBT1', ttsModel:'eleven_v3', speed:0.9, stab:0.5, voices:null, pron:'', ttsEngine:'eleven', azureKey:'', azureRegion:'westeurope', azureVoice:'sr-RS-SophieNeural', azSpeed:0.95, azPron:'', gemini:'', geminiModel:'gemini-2.5-flash', tts:true, autolekt:true, fs:'19'},
+let settings = Object.assign({stt:'chrome', claude:'', claudeModel:'claude-opus-5-5', eleven:'', voice:'LmECtQKlHFHPX4psgBT1', ttsModel:'eleven_v3', speed:0.9, stab:0.5, voices:null, pron:'', ttsEngine:'eleven', azureKey:'', azureRegion:'westeurope', azureVoice:'sr-RS-SophieNeural', azSpeed:0.95, azPron:'', gemini:'', geminiModel:'gemini-2.5-flash', tts:true, autolekt:true, fs:'19'},
   JSON.parse(localStorage.getItem(LS_SET) || '{}'));
 
 function toast(t, ms=2600){ const e=$('#toast'); e.textContent=t; e.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>e.classList.remove('show'), ms); }
@@ -2528,6 +2528,7 @@ function init(){
   document.addEventListener('click',()=>{ if(!wakeLock) keepAwake(); });
   setTimeout(sendReport, 4000);
   if(!settings.fableMigr){ settings.claudeModel='claude-fable-5-1'; settings.fableMigr=true; settings.opusMigr=true; settings.speedMigr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
+  if(!settings.opus55Migr){ if(/fable/.test(settings.claudeModel||'')) settings.claudeModel='claude-opus-5-5'; settings.opus55Migr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(!settings.speedMigr){ if(settings.claudeModel==='claude-sonnet-5-5') settings.claudeModel='claude-haiku-5-5'; settings.speedMigr=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(!settings.nikolaMigr){ settings.voice='LmECtQKlHFHPX4psgBT1'; settings.ttsEngine='eleven'; settings.nikolaMigr=true; if(Array.isArray(settings.voices)&&!settings.voices.some(v=>v[1]==='LmECtQKlHFHPX4psgBT1')) settings.voices.unshift(['Никола (српски, мушки)','LmECtQKlHFHPX4psgBT1']); localStorage.setItem(LS_SET,JSON.stringify(settings)); }
   if(settings.ttsModel==='eleven_multilingual_v2' && !settings.ttsMigrated){ settings.ttsModel='eleven_v3'; settings.ttsMigrated=true; localStorage.setItem(LS_SET,JSON.stringify(settings)); }
