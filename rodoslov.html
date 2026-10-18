@@ -398,6 +398,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
     <button class="big" id="kToc">📖 Садржај</button>
     <button class="big" id="kIx">📇 Списак имена</button>
     <button class="big go" id="kPrintAll">🖨 Одштампај целу књигу</button>
+    <button class="big" id="kPlakat" title="Цело стабло на једном великом листу (А0) за копирницу">🗺 Плакат за зид</button>
     <button class="big" id="kWord">📥 Преузми из дописа</button><button class="big" id="kDiktat" title="Издиктирајте нове податке: записујем ред по ред, сачувамо као фајл за Дописе и унесемо у родослов">🎤 Издиктирај нове податке</button>
   </div>
   <div id="kMain">
@@ -654,7 +655,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <script>
 /* ============================================================ основа */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-const APP_VERSION='2026.10.18.3';
+const APP_VERSION='2026.10.18.4';
 const UPDATE_BASE='https://raw.githubusercontent.com/blmed84-bit/rodoslov/main/';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -1236,10 +1237,10 @@ let _pmc=null; function pMeasure(txt, size, bold){ if(!_pmc) _pmc=document.creat
 function posterLayout(rootId, mode, B, Ht){ const f=fieldsFor(mode);
   const S={box:3.7, boxSm:2.7, col:3.0, list:2.35, lh:2.95, ind:3.0, pad:1.5, hgap:4, vgap:10, gap:2.4, spine:2.2};
   const nm=p=>nmF(p,f)+((f.godine&&yrs(p))?` (${yrs(p)})`:'');
-  const spT=p=>f.supruznici?spouses(p.id).map(({s:q})=>'∞ '+nmF(q,f)+((f.godine&&yrs(q))?` (${yrs(q)})`:'')):[];
+  const spT=p=>f.supruznici?spouses(p.id).map(({s:q})=>(p.pol==='ж'?'супруг ':'супруга ')+nmF(q,f)+((f.godine&&yrs(q))?` (${yrs(q)})`:'')):[];
   const nodes=[], cols=[], edges=[], stacks=[];
   const mkCol=(id, br)=>{ const p=P.get(id); const head=[{t:nm(p),b:true,s:S.col}, ...spT(p).map(t=>({t,s:S.list*0.95}))]; const lines=[];
-    const walk=(x,d)=>{ for(const c of children(x)){ const sp=spT(c); lines.push({t:nm(c)+(sp.length?'  '+sp.join('; '):''), d, has:children(c.id).length>0}); walk(c.id,d+1); } }; walk(id,0);
+    const walk=(x,d)=>{ for(const c of children(x)){ const sp=spT(c); const has=children(c.id).length>0; lines.push({t:nm(c)+(sp.length?', '+sp.join('; '):''), d, has}); if(has) lines.push({t:'деца:', d:d+1, has:false, lab:true}); walk(c.id,d+1); } }; walk(id,0);
     const hh=head.length*S.lh*1.12+S.pad*2; const per0=Math.max(4,Math.floor((Ht-hh-S.pad)/S.lh)), perN=Math.max(4,Math.floor((Ht-S.lh-2*S.pad)/S.lh));
     const chunks=[]; let cur=[], lim=per0; for(const l of lines){ if(cur.length>=lim){ chunks.push(cur); cur=[]; lim=perN; } cur.push(l); } chunks.push(cur);
     const hw=Math.max(...head.map(h=>pMeasure(h.t,h.s,h.b)));
@@ -1287,11 +1288,11 @@ function posterSvg(L, scale, paperW, paperH, margin){ const {S}=L; const bw=post
       if(i===0){ o.push(`<rect x="${x.toFixed(2)}" y="${c.y.toFixed(2)}" width="${w.toFixed(2)}" height="${(c.hh-S.pad*0.4).toFixed(2)}" rx="1" fill="${tint(c.br)}"/>`); for(const hl of c.head){ ty+=hl.s*1.02; o.push(`<text x="${(x+S.pad).toFixed(2)}" y="${ty.toFixed(2)}" font-size="${hl.s}"${hl.b?' font-weight="700"':' fill="#4a4030"'}>${e(hl.t)}</text>`); ty+=hl.s*0.1; } ty=c.y+c.hh; }
       else { ty+=S.lh; o.push(`<text x="${(x+S.pad).toFixed(2)}" y="${ty.toFixed(2)}" font-size="${S.list}" font-style="italic" fill="#6b604c">(наставак)</text>`); ty+=S.pad; }
       for(const l of ch){ ty+=S.lh; const lx=x+S.pad+l.d*S.ind; for(let k=0;k<l.d;k++){ const gx=x+S.pad+k*S.ind+S.ind*0.3; o.push(`<line x1="${gx.toFixed(2)}" x2="${gx.toFixed(2)}" y1="${(ty-S.lh*0.85).toFixed(2)}" y2="${(ty+S.lh*0.15).toFixed(2)}" stroke="${bw?'#999':'#d9cfbb'}" stroke-width=".18"/>`); }
-        o.push(`<text x="${lx.toFixed(2)}" y="${ty.toFixed(2)}" font-size="${S.list}"${l.has?' font-weight="700"':''}>${e(l.t)}</text>`); }
+        o.push(`<text x="${lx.toFixed(2)}" y="${ty.toFixed(2)}" font-size="${S.list}"${l.has?' font-weight="700"':''}${l.lab?' font-style="italic" fill="#6b604c"':''}>${e(l.t)}</text>`); }
       x+=w+S.gap; }); }
-  o.push(`<text x="${L.W/2}" y="${(L.H+1).toFixed(2)}" font-size="2.3" text-anchor="middle" fill="#6b604c">Кућице: први нараштаји. Испод њих, у оквирима, сви потомци — увучени испод родитеља; масно = има потомке. ∞ брак. Боје означавају гране Милошевих синова.</text>`);
+  o.push(`<text x="${L.W/2}" y="${(L.H+1).toFixed(2)}" font-size="2.3" text-anchor="middle" fill="#6b604c">Кућице: први нараштаји. Испод њих, у оквирима, сви потомци — увучени испод родитеља; масно = има потомке. Боје означавају гране Милошевих синова.</text>`);
   o.push('</g></svg>'); return o.join(''); }
-function posterPlan(rootId, mode){ const M=10; let pick=null; const HTS=[60,80,100,125,150,180,220,270,330,400]; const want=post().stampa.plakatPapir||'auto';
+function posterPlan(rootId, mode){ const M=10; let pick=null; const HTS=[60,80,100,125,150,180,220,270,330,400,500,600,700,800,900,1000]; const want=post().stampa.plakatPapir||'auto';
   if(want!=='auto'&&want!=='rolna'){ const pp=PAPERS.find(x=>x[0]===want); for(const B of [2,3,4]) for(const Ht of HTS){ const L=posterLayout(rootId, mode, B, Ht); for(const rot of [false,true]){ const W=rot?pp[2]:pp[1], H=rot?pp[1]:pp[2]; const s=Math.min((W-2*M)/L.W,(H-2*M-3)/L.H); const sc=Math.min(s,1.5)+(s>=0.95?(B-2)*0.08:0); if(!pick||sc>pick.sc) pick={L,paper:want,W,H,s:Math.min(s,1.7),sc,B,Ht,roll:false}; } } }
   if(want==='rolna'){ for(const B of [2,3]) for(const Ht of HTS){ const L=posterLayout(rootId, mode, B, Ht); const s=Math.min(1.3,(ROLL_W-2*M)/L.H); const len=L.W*s+2*M; if(s>=0.95&&(!pick||len<pick.len)) pick={L, paper:'ролна', W:Math.ceil(len), H:ROLL_W, s, len, B, Ht, roll:true}; } }
   if(!pick)
@@ -1781,7 +1782,7 @@ async function followupContent(ops){ const parts=[]; const txt=[];
       for(const n of want){ parts.push({type:'text', text:`Страна ${n} од ${B.pages.length}. Особе на страни: ${B.pages[n-1].names.slice(0,60).join('; ')}`}); try{ parts.push({type:'image', source:{type:'base64', media_type:'image/jpeg', data:await pageToJpeg(B,n-1)}}); }catch(e){ console.warn(e); } } } }
   return [{type:'text', text:'[програм: резултат провере — сада одговори кориснику]'+(txt.length?'\n'+txt.join('\n'):'')}, ...parts]; }
 function stripImages(){ for(const m of chatHist){ if(Array.isArray(m.content)&&m.content.some(c=>c.type==='image')) m.content=m.content.filter(c=>c.type!=='image').map(c=>c.type==='text'?c:{type:'text',text:'[слика стране]'}).concat([{type:'text',text:'[слике страна су биле приказане]'}]); } }
-const BTN_SEL={'особе':'nav button[data-view=personsView]','стабло':'nav button[data-view=treeView]','текст':'#kToc','помоћник':'nav button[data-view=aiView]','сачувај':'#saveBtn','поништи':'#undoBtn','претрага':'#search','нова_особа':'#newBtn','додај_дете':'#addDete','додај_брак':'#addBrak','штампај':null,'корен':'#rootBtn','уклопи':'#fitBtn','разговор':'#talkBtn','ворд':'#kWord','екран':'#shotBtn','штампај_књигу':'#kPrintAll','тражи':'#kSearchIn','инсталирај':'#updInstall'};
+const BTN_SEL={'особе':'nav button[data-view=personsView]','стабло':'nav button[data-view=treeView]','текст':'#kToc','помоћник':'nav button[data-view=aiView]','сачувај':'#saveBtn','поништи':'#undoBtn','претрага':'#search','нова_особа':'#newBtn','додај_дете':'#addDete','додај_брак':'#addBrak','штампај':null,'корен':'#rootBtn','уклопи':'#fitBtn','разговор':'#talkBtn','ворд':'#kWord','екран':'#shotBtn','штампај_књигу':'#kPrintAll','плакат':'#kPlakat','тражи':'#kSearchIn','инсталирај':'#updInstall'};
 function highlight(name){ let sel=BTN_SEL[name]; if(name==='штампај') sel=$('#textView').classList.contains('active')?'#printTextBtn':'#printTreeBtn';
   if(name==='корен'||name==='уклопи'||name==='штампај'&&sel==='#printTreeBtn'){ if(!$('#treeView').classList.contains('active')) showView('treeView'); }
   if(name==='додај_дете'||name==='додај_брак'){ if(!$('#personsView').classList.contains('active')) showView('personsView'); }
@@ -2456,6 +2457,7 @@ function kInit(){ KV.on=true; document.body.classList.add('knjiga');
   const body=$('#aiDrawerBody'); ['voicePanel','quick','chat','aiBar'].forEach(id=>{ const el=$('#'+id); if(el) body.appendChild(el); });
   ['wordBtn','printAllBtn'].forEach(id=>{ const el=$('#'+id); if(el) el.style.display='none'; });
   $('#kWord').onclick=async(e)=>{ if(e&&e.shiftKey){ try{ const h=await pickWordFile(); if(!h) return; logEv('ворд',{faza:'нови-фајл', fajl:h.name}); }catch(err){ return; } return importWord(false,true); } importWord(false); }; $('#kPrintAll').onclick=()=>printAllOpen(false);
+  $('#kPlakat').onclick=()=>{ const r0=post().stampa.raspored, p0=post().stampa.plakatPapir; setPost('stampa.raspored','plakat'); if(!p0||p0==='auto') setPost('stampa.plakatPapir','A0'); setPost('stampa.generacije','99'); let pl=null; try{ pl=posterPlan(D.koren,'s'); }catch(e){} logEv('плакат-дугме',{papir:pl?pl.opis:'?'}); const m='Правим плакат: цело стабло, '+(pl?pl.opis:'велики лист')+'. У прозору који се отвори, горе код „Odredište“ изаберите „Sačuvaj kao PDF“ (Save as PDF), па „Sačuvaj“ — тај PDF однесите на USB-у у копирницу.'; addMsg('ai',esc(m)); if(!conv.on&&!settings.tiho) speak(m); setTimeout(()=>{ try{ printTree('s', D.koren); } finally { setTimeout(()=>{ setPost('stampa.raspored',r0); if(!p0||p0==='auto') setPost('stampa.plakatPapir',p0||'auto'); },3000); } }, conv.on?200:1500); };
   $('#kToc').onclick=()=>{ kOpenBook(2); kRenderLeft(); }; $('#kIx').onclick=()=>{ const B=PV.B; if(B&&B.kind==='book'&&B.ixLen){ PV.page=B.pages.length-B.ixLen; renderPreview(false); kRenderLeft(); } };
   $('#kSearchIn').addEventListener('keydown',e=>{ if(e.key==='Enter') kSearch(e.target.value); }); $('#kSearchIn').addEventListener('change',()=>{ if($('#kSearchIn').value.trim().length>2) kSearch($('#kSearchIn').value); });
   $('#kPopX').onclick=kPopHide; $('#aiDrawerX').onclick=aiDrawerClose; $('#hdrAiBtn').onclick=()=>{ aiDrawerOpen(); if(!conv.on) startConversation(); };
